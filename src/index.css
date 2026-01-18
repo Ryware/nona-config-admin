@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+:root {
+  /* Nona Config Official Color Palette */
+  --background: #070A13;
+  --background-secondary: #0F1424;
+  --foreground: #E5E7EB;
+  --foreground-secondary: #93A4BF;
+  
+  /* Brand Colors */
+  --brand-blue: #60A5FA;
+  --brand-blue-hover: #3B82F6;
+  --brand-green: #34D399;
+  --brand-green-hover: #10B981;
+  --brand-amber: #F59E0B;
+  
+  /* Functional Colors */
+  --code-bg: #1F2937;
+  --muted-text: #9CA3AF;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
+  --color-foreground: var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
+  
+  /* Nona Brand Colors */
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-hover: var(--brand-blue-hover);
+  --color-brand-green: var(--brand-green);
+  --color-brand-green-hover: var(--brand-green-hover);
+  --color-brand-amber: var(--brand-amber);
+  
+  /* Semantic Color Mappings */
+  --color-primary: var(--brand-blue);
+  --color-primary-hover: var(--brand-blue-hover);
+  --color-success: var(--brand-green);
+  --color-success-hover: var(--brand-green-hover);
+  --color-warning: var(--brand-amber);
+  
+  /* Code & Muted */
+  --color-code-bg: var(--code-bg);
+  --color-muted: var(--muted-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Keep dark theme consistent */
+    --background: #070A13;
+    --foreground: #E5E7EB;
+  }
+}
+
+* {
+  border-color: #93A4BF;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Loading and animation improvements */
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation: slide-in-from-right 0.3s ease-out;
+}
+
+/* Focus improvements */
+:focus-visible {
+  outline: 2px solid #60A5FA;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
