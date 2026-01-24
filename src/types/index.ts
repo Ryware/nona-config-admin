@@ -1,12 +1,11 @@
 // Auth Types
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
 export interface LoginResponse {
   token: string;
-  username: string;
   role: string;
   expiresAt: string;
 }
@@ -24,7 +23,6 @@ export interface RegisterResult {
 }
 
 export interface RegisterRequest {
-  username: string;
   email: string;
   password: string;
 }
@@ -101,13 +99,13 @@ export interface UpdateConfigEntryRequest {
 // User Types
 export interface User {
   id: string;
-  username: string;
   email: string;
+  role: string;
+  resetPasswordToken?: string;
   createdAt: string;
 }
 
 export interface CreateUserRequest {
-  username: string;
   email: string;
   password: string;
 }

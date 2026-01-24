@@ -47,9 +47,12 @@ export default function ForgotPasswordPage() {
       >
         {isSubmitting() ? "Sending..." : "Send Reset Link"}
       </Button>
-      <p class="text-sm text-center text-gray-600">
+      <p class="text-sm text-center text-text-secondary">
         Remember your password?{" "}
-        <A href="/login" class="text-primary-600 hover:text-primary-700 font-medium hover:underline">
+        <A 
+          href="/login" 
+          class="text-brand-blue hover:text-blue-400 font-medium transition-colors"
+        >
           Sign in
         </A>
       </p>

@@ -1,43 +1,31 @@
-import { createSignal, Show, For } from "solid-js";
-import { createQuery, createMutation, useQueryClient } from "@tanstack/solid-query";
+import { Show, onMount, createMemo } from "solid-js";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
+import { createColumnHelper } from "@tanstack/solid-table";
 import { AppLayout } from "../../components/layout/AppLayout";
-import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
+import { DataTable } from "../../components/ui/data-table";
 import { userService } from "../../services/user.service";
 import { useToast } from "../../components/ui/toast";
-import type { CreateUserRequest } from "../../types";
+import { usePageTitle } from "../../contexts/PageTitleContext";
+import { useNavigate } from '@solidjs/router';
+import type { User } from "../../types";
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { addToast } = useToast();
-  const [showCreateForm, setShowCreateForm] = createSignal(false);
-  const [username, setUsername] = createSignal("");
-  const [email, setEmail] = createSignal("");
-  const [password, setPassword] = createSignal("");
+  const { setPageTitle } = usePageTitle();
 
-  const usersQuery = createQuery(() => ({
+  onMount(() => {
+    setPageTitle("Users List");
+  });
+
+  const usersQuery = useQuery(() => ({
     queryKey: ["users"],
     queryFn: () => userService.getAll(),
   }));
 
-  const createUserMutation = createMutation(() => ({
-    mutationFn: (data: CreateUserRequest) => userService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      setShowCreateForm(false);
-      setUsername("");
-      setEmail("");
-      setPassword("");
-      addToast("User created successfully!", "success");
-    },
-    onError: (error: Error) => {
-      addToast(error.message || "Failed to create user", "error");
-    },
-  }));
-
-  const deleteUserMutation = createMutation(() => ({
+  const deleteUserMutation = useMutation(() => ({
     mutationFn: (id: string) => userService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -47,143 +35,98 @@ export default function UsersPage() {
       addToast(error.message || "Failed to delete user", "error");
     },
   }));
-  const handleCreate = (e: Event) => {
-    e.preventDefault();
-    createUserMutation.mutate({
-      username: username(),
-      email: email(),
-      password: password(),
-    });
-  };
+
+  const columnHelper = createColumnHelper<User>();
+
+  const columns = [
+    columnHelper.accessor("email", {
+      header: "Email",
+      cell: (info) => <span class="font-medium text-text-primary text-right">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor("role", {
+      header: "Role",
+      cell: (info) => <span class="text-text-secondary">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor("createdAt", {
+      header: "Created",
+      cell: (info) => (
+        <span class="text-text-secondary">
+          {new Date(info.getValue()).toLocaleDateString()}
+        </span>
+      ),
+    }),
+    columnHelper.display({
+      id: "actions",
+      header: () => <span class="text-right block">Actions</span>,
+      cell: (info) => (
+        <div class="text-right">
+          <Show when={info.row.original.role !== "admin"}>
+            <Button
+              class="text-black transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm(`Delete user "${info.row.original.username}"?`)) {
+                  deleteUserMutation.mutate(info.row.original.id);
+                }
+              }}
+              disabled={deleteUserMutation.isPending}
+            >
+              Delete
+            </Button>
+          </Show>
+          <Button
+            class="text-black transition-colors"
+            onClick={() => {
+              navigate('/user', {
+                state: {
+                  userId: info.row.original.id
+                }
+              })
+            }}
+          >
+            Edit
+          </Button>
+        </div>
+      ),
+    }),
+  ];
+
+  const tableData = createMemo(() => usersQuery.data || []);
 
   return (
     <AppLayout>
-      <div class="space-y-6">
-        <div class="flex justify-between items-center">
+      <div class="bg-[#070A13] p-6">
+        {/* Page Header */}
+        <div class="mb-6 flex items-center justify-between">
           <div>
-            <h2 class="text-3xl font-bold tracking-tight">Users</h2>
-            <p class="text-gray-500">Manage system users</p>
-          </div>
-          <Button onClick={() => setShowCreateForm(!showCreateForm())}>
-            {showCreateForm() ? "Cancel" : "Create User"}
+            <h2 class="text-lg font-semibold text-text-primary">All Users</h2>
+            <p class="text-sm text-text-secondary mt-1">
+              {usersQuery.data?.length || 0} total users
+            </p>
+          </div>          <Button variant="default" onClick={() => navigate("/user")}>
+            <span class="mr-2">+</span>
+            Add user
           </Button>
         </div>
 
-        <Show when={showCreateForm()}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Create New User</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCreate} class="space-y-4">
-                <div class="space-y-2">
-                  <Label for="username">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Enter username"
-                    value={username()}
-                    onInput={(e) => setUsername(e.currentTarget.value)}
-                    required
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label for="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter email"
-                    value={email()}
-                    onInput={(e) => setEmail(e.currentTarget.value)}
-                    required
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label for="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter password"
-                    value={password()}                    onInput={(e) => setPassword(e.currentTarget.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" disabled={createUserMutation.isPending}>
-                  {createUserMutation.isPending ? "Creating..." : "Create"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </Show>
-
+        {/* Users Table */}
         <Show
           when={!usersQuery.isLoading}
-          fallback={<div class="text-center py-8">Loading users...</div>}
+          fallback={
+            <div class="bg-white/5 border border-white/10 rounded-lg py-12 text-center">
+              <p class="text-text-secondary">Loading users...</p>
+            </div>
+          }
         >
           <Show
             when={usersQuery.data && usersQuery.data.length > 0}
             fallback={
-              <Card>
-                <CardContent class="py-8">
-                  <p class="text-center text-gray-500">
-                    No users yet. Create the first user to get started!
-                  </p>
-                </CardContent>
-              </Card>
+              <div class="bg-white/5 border border-white/10 rounded-lg py-12 text-center">
+                <p class="text-text-secondary">No users found. Add your first user to get started!</p>
+              </div>
             }
           >
-            <Card>
-              <CardContent class="p-0">
-                <table class="w-full">
-                  <thead class="bg-gray-50 border-b">
-                    <tr>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Username
-                      </th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-200">
-                    <For each={usersQuery.data}>
-                      {(user) => (
-                        <tr class="hover:bg-gray-50">
-                          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {user.username}
-                          </td>
-                          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {user.email}
-                          </td>
-                          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                          </td>
-                          <td class="px-6 py-4 whitespace-nowrap text-right text-sm">                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => {
-                                if (confirm(`Delete user "${user.username}"?`)) {
-                                  deleteUserMutation.mutate(user.id);
-                                }
-                              }}
-                              disabled={deleteUserMutation.isPending}
-                            >
-                              Delete
-                            </Button>
-                          </td>
-                        </tr>
-                      )}
-                    </For>
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
+            <DataTable columns={columns} data={tableData()} />
           </Show>
         </Show>
       </div>

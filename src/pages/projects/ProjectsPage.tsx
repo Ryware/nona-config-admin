@@ -1,4 +1,4 @@
-import { createSignal, Show, For } from "solid-js";
+import { createSignal, Show, For, onMount } from "solid-js";
 import { useQueryClient, useMutation, useQuery } from "@tanstack/solid-query";
 import { A } from "@solidjs/router";
 import { AppLayout } from "../../components/layout/AppLayout";
@@ -8,11 +8,19 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { projectService } from "../../services/project.service";
 import { useToast } from "../../components/ui/toast";
+import { usePageTitle } from "../../contexts/PageTitleContext";
 import type { CreateProjectRequest } from "../../types";
 
 export default function ProjectsPage() {
     const queryClient = useQueryClient();
     const { addToast } = useToast();
+    const { setPageTitle } = usePageTitle();
+    
+    // Set page title on mount
+    onMount(() => {
+        setPageTitle("Projects");
+    });
+    
     const [showCreateForm, setShowCreateForm] = createSignal(false);
     const [name, setName] = createSignal("");
     const [description, setDescription] = createSignal("");

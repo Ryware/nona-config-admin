@@ -1,7 +1,7 @@
-import { createSignal, Show, For, createMemo } from "solid-js";
+import { createSignal, Show, For, createMemo, onMount } from "solid-js";
 import { createQuery, createMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
-import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/tabs";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
@@ -9,11 +9,18 @@ import { configEntryService } from "../../services/config-entry.service";
 import { projectService } from "../../services/project.service";
 import { environmentService } from "../../services/environment.service";
 import { useToast } from "../../components/ui/toast";
+import { usePageTitle } from "../../contexts/PageTitleContext";
 import type { CreateConfigEntryRequest } from "../../types";
 
 export default function ConfigEntriesPage() {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
+  const { setPageTitle } = usePageTitle();
+  
+  // Set page title on mount
+  onMount(() => {
+    setPageTitle("Parameters");
+  });
   
   const [showCreateForm, setShowCreateForm] = createSignal(false);
   const [selectedProjectId, setSelectedProjectId] = createSignal<string>("");
@@ -101,247 +108,286 @@ export default function ConfigEntriesPage() {
       return projectMatch && envMatch;
     });
   });
-
   return (
     <AppLayout>
-      <div class="space-y-6">
-        <div class="flex justify-between items-center">
-          <div>
-            <h2 class="text-3xl font-bold tracking-tight">Configuration Entries</h2>
-            <p class="text-gray-500">Manage configuration key-value pairs</p>
+      <div class="bg-[#070A13]">
+        {/* Page Header */}
+        <div class="px-6 py-6 border-b border-white/10">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-semibold text-text-primary">Parameters</h1>
+            </div>
+            <div class="flex items-center gap-3">
+              <Button variant="outline" class="text-text-secondary">
+                <span class="mr-2">📋</span>
+                Filter
+              </Button>
+              <Button onClick={() => setShowCreateForm(!showCreateForm())}>
+                <span class="mr-2">+</span>
+                Add parameter
+              </Button>
+            </div>
           </div>
-          <Button onClick={() => setShowCreateForm(!showCreateForm())}>
-            {showCreateForm() ? "Cancel" : "Create Entry"}
-          </Button>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent class="pt-6">
-            <div class="grid gap-4 md:grid-cols-2">
-              <div class="space-y-2">
-                <Label>Filter by Project</Label>
-                <select
-                  class="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm"
-                  value={selectedProjectId()}
-                  onChange={(e) => setSelectedProjectId(e.currentTarget.value)}
-                >
-                  <option value="">All Projects</option>
-                  <For each={projectsQuery.data}>
-                    {(project) => <option value={project.id}>{project.name}</option>}
-                  </For>
-                </select>
-              </div>
-              <div class="space-y-2">
-                <Label>Filter by Environment</Label>
-                <select
-                  class="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm"
-                  value={selectedEnvironmentId()}
-                  onChange={(e) => setSelectedEnvironmentId(e.currentTarget.value)}
-                  disabled={!selectedProjectId()}
-                >
-                  <option value="">All Environments</option>
-                  <For each={environmentsQuery.data}>
-                    {(env) => <option value={env.id}>{env.name}</option>}
-                  </For>
-                </select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Tabs */}
+        <Tabs defaultValue="parameters" class="flex-1">
+          <div class="px-6 border-b border-white/10">
+            <TabsList>
+              <TabsTrigger value="parameters">Parameters</TabsTrigger>
+              <TabsTrigger value="conditions">Conditions</TabsTrigger>
+              <TabsTrigger value="personalization">Personalization</TabsTrigger>
+            </TabsList>
+          </div>
 
-        {/* Create Form */}
-        <Show when={showCreateForm()}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Create New Config Entry</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCreate} class="space-y-4">
-                <div class="space-y-2">
-                  <Label for="project">Project *</Label>
+          {/* Parameters Tab Content */}
+          <TabsContent value="parameters" class="p-6">
+            <div class="space-y-4">
+              {/* Project/Environment Filters */}
+              <div class="flex gap-4">
+                <div class="w-64">
                   <select
-                    id="project"
-                    class="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm"
+                    class="w-full h-10 rounded-lg border border-white/10 bg-white/5 text-text-primary px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue"
                     value={selectedProjectId()}
                     onChange={(e) => setSelectedProjectId(e.currentTarget.value)}
-                    required
                   >
-                    <option value="">Select a project</option>
+                    <option value="">All Projects</option>
                     <For each={projectsQuery.data}>
                       {(project) => <option value={project.id}>{project.name}</option>}
                     </For>
                   </select>
                 </div>
-
-                <div class="space-y-2">
-                  <Label for="scope">Scope *</Label>
+                <div class="w-64">
                   <select
-                    id="scope"
-                    class="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm"
-                    value={scope()}
-                    onChange={(e) => setScope(e.currentTarget.value as "global" | "environment")}
-                    required
+                    class="w-full h-10 rounded-lg border border-white/10 bg-white/5 text-text-primary px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                    value={selectedEnvironmentId()}
+                    onChange={(e) => setSelectedEnvironmentId(e.currentTarget.value)}
+                    disabled={!selectedProjectId()}
                   >
-                    <option value="global">Global</option>
-                    <option value="environment">Environment-specific</option>
+                    <option value="">All Environments</option>
+                    <For each={environmentsQuery.data}>
+                      {(env) => <option value={env.id}>{env.name}</option>}
+                    </For>
                   </select>
                 </div>
+              </div>
 
-                <Show when={scope() === "environment"}>
-                  <div class="space-y-2">
-                    <Label for="environment">Environment *</Label>
-                    <select
-                      id="environment"
-                      class="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm"
-                      value={selectedEnvironmentId()}
-                      onChange={(e) => setSelectedEnvironmentId(e.currentTarget.value)}
-                      required={scope() === "environment"}
-                      disabled={!selectedProjectId()}
-                    >
-                      <option value="">Select an environment</option>
-                      <For each={environmentsQuery.data}>
-                        {(env) => <option value={env.id}>{env.name}</option>}
-                      </For>
-                    </select>
+              {/* Create Form */}
+              <Show when={showCreateForm()}>
+                <div class="bg-white/5 border border-white/10 rounded-lg p-6">
+                  <h3 class="text-lg font-semibold text-text-primary mb-4">Create New Parameter</h3>
+                  <form onSubmit={handleCreate} class="space-y-4">
+                    <div class="grid gap-4 md:grid-cols-2">
+                      <div class="space-y-2">
+                        <Label for="project" class="text-text-secondary">Project *</Label>
+                        <select
+                          id="project"
+                          class="w-full h-10 rounded-lg border border-white/10 bg-white/5 text-text-primary px-3 text-sm"
+                          value={selectedProjectId()}
+                          onChange={(e) => setSelectedProjectId(e.currentTarget.value)}
+                          required
+                        >
+                          <option value="">Select a project</option>
+                          <For each={projectsQuery.data}>
+                            {(project) => <option value={project.id}>{project.name}</option>}
+                          </For>
+                        </select>
+                      </div>
+
+                      <div class="space-y-2">
+                        <Label for="scope" class="text-text-secondary">Scope *</Label>
+                        <select
+                          id="scope"
+                          class="w-full h-10 rounded-lg border border-white/10 bg-white/5 text-text-primary px-3 text-sm"
+                          value={scope()}
+                          onChange={(e) => setScope(e.currentTarget.value as "global" | "environment")}
+                          required
+                        >
+                          <option value="global">Global</option>
+                          <option value="environment">Environment-specific</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <Show when={scope() === "environment"}>
+                      <div class="space-y-2">
+                        <Label for="environment" class="text-text-secondary">Environment *</Label>
+                        <select
+                          id="environment"
+                          class="w-full h-10 rounded-lg border border-white/10 bg-white/5 text-text-primary px-3 text-sm"
+                          value={selectedEnvironmentId()}
+                          onChange={(e) => setSelectedEnvironmentId(e.currentTarget.value)}
+                          required={scope() === "environment"}
+                          disabled={!selectedProjectId()}
+                        >
+                          <option value="">Select an environment</option>
+                          <For each={environmentsQuery.data}>
+                            {(env) => <option value={env.id}>{env.name}</option>}
+                          </For>
+                        </select>
+                      </div>
+                    </Show>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                      <div class="space-y-2">
+                        <Label for="key" class="text-text-secondary">Key *</Label>
+                        <Input
+                          id="key"
+                          type="text"
+                          placeholder="e.g., API_URL"
+                          value={key()}
+                          onInput={(e) => setKey(e.currentTarget.value)}
+                          required
+                        />
+                      </div>
+
+                      <div class="space-y-2">
+                        <Label for="valueType" class="text-text-secondary">Value Type *</Label>
+                        <select
+                          id="valueType"
+                          class="w-full h-10 rounded-lg border border-white/10 bg-white/5 text-text-primary px-3 text-sm"
+                          value={valueType()}
+                          onChange={(e) => setValueType(e.currentTarget.value as any)}
+                          required
+                        >
+                          <option value="string">String</option>
+                          <option value="number">Number</option>
+                          <option value="boolean">Boolean</option>
+                          <option value="json">JSON</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="space-y-2">
+                      <Label for="value" class="text-text-secondary">Value *</Label>
+                      <Input
+                        id="value"
+                        type="text"
+                        placeholder={valueType() === "json" ? '{"key": "value"}' : "Enter value"}
+                        value={value()}
+                        onInput={(e) => setValue(e.currentTarget.value)}
+                        required
+                      />
+                    </div>
+
+                    <div class="flex gap-3">
+                      <Button type="submit" disabled={createConfigMutation.isPending}>
+                        {createConfigMutation.isPending ? "Creating..." : "Create Parameter"}
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              </Show>
+
+              {/* Parameters Table */}
+              <Show
+                when={!configEntriesQuery.isLoading}
+                fallback={<div class="text-center py-12 text-text-secondary">Loading parameters...</div>}
+              >
+                <Show
+                  when={filteredEntries().length > 0}
+                  fallback={
+                    <div class="bg-white/5 border border-white/10 rounded-lg py-12 text-center">
+                      <p class="text-text-secondary">
+                        No parameters yet. Create your first parameter to get started!
+                      </p>
+                    </div>
+                  }
+                >
+                  <div class="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
+                    <table class="w-full">
+                      <thead class="bg-white/5 border-b border-white/10">
+                        <tr>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                            <input type="checkbox" class="rounded" />
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                            Name
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                            Value
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                            Type
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                            Scope
+                          </th>
+                          <th class="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-white/10">
+                        <For each={filteredEntries()}>
+                          {(entry) => (
+                            <tr class="hover:bg-white/5 transition-colors">
+                              <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="rounded" />
+                              </td>
+                              <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-text-primary">{entry.key}</div>
+                              </td>
+                              <td class="px-6 py-4">
+                                <div class="text-sm text-text-secondary max-w-md truncate">{entry.value}</div>
+                              </td>
+                              <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs rounded-full bg-brand-blue/20 text-brand-blue">
+                                  {entry.valueType}
+                                </span>
+                              </td>
+                              <td class="px-6 py-4 whitespace-nowrap">
+                                <span
+                                  class={`px-2 py-1 text-xs rounded-full ${
+                                    entry.scope === "global"
+                                      ? "bg-brand-green/20 text-brand-green"
+                                      : "bg-purple-500/20 text-purple-400"
+                                  }`}
+                                >
+                                  {entry.scope}
+                                </span>
+                              </td>
+                              <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <button
+                                  class="text-text-secondary hover:text-red-400 transition-colors"
+                                  onClick={() => {
+                                    if (confirm(`Delete parameter "${entry.key}"?`)) {
+                                      deleteConfigMutation.mutate(entry.id);
+                                    }
+                                  }}
+                                  disabled={deleteConfigMutation.isPending}
+                                >
+                                  🗑️
+                                </button>
+                              </td>
+                            </tr>
+                          )}
+                        </For>
+                      </tbody>
+                    </table>
                   </div>
                 </Show>
+              </Show>
+            </div>
+          </TabsContent>
 
-                <div class="space-y-2">
-                  <Label for="key">Key *</Label>
-                  <Input
-                    id="key"
-                    type="text"
-                    placeholder="e.g., API_URL"
-                    value={key()}
-                    onInput={(e) => setKey(e.currentTarget.value)}
-                    required
-                  />
-                </div>
+          {/* Conditions Tab Content */}
+          <TabsContent value="conditions" class="p-6">
+            <div class="bg-white/5 border border-white/10 rounded-lg py-12 text-center">
+              <p class="text-text-secondary">Conditions feature coming soon...</p>
+            </div>
+          </TabsContent>
 
-                <div class="space-y-2">
-                  <Label for="valueType">Value Type *</Label>
-                  <select
-                    id="valueType"
-                    class="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm"
-                    value={valueType()}
-                    onChange={(e) => setValueType(e.currentTarget.value as any)}
-                    required
-                  >
-                    <option value="string">String</option>
-                    <option value="number">Number</option>
-                    <option value="boolean">Boolean</option>
-                    <option value="json">JSON</option>
-                  </select>
-                </div>
-
-                <div class="space-y-2">
-                  <Label for="value">Value *</Label>
-                  <Input
-                    id="value"
-                    type="text"
-                    placeholder={valueType() === "json" ? '{"key": "value"}' : "Enter value"}
-                    value={value()}
-                    onInput={(e) => setValue(e.currentTarget.value)}
-                    required
-                  />
-                </div>                <Button type="submit" disabled={createConfigMutation.isPending}>
-                  {createConfigMutation.isPending ? "Creating..." : "Create"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </Show>
-
-        {/* Config Entries Table */}
-        <Show
-          when={!configEntriesQuery.isLoading}
-          fallback={<div class="text-center py-8">Loading config entries...</div>}
-        >
-          <Show
-            when={filteredEntries().length > 0}
-            fallback={
-              <Card>
-                <CardContent class="py-8">
-                  <p class="text-center text-gray-500">
-                    No config entries yet. Create your first entry to get started!
-                  </p>
-                </CardContent>
-              </Card>
-            }
-          >
-            <Card>
-              <CardContent class="p-0">
-                <div class="overflow-x-auto">
-                  <table class="w-full">
-                    <thead class="bg-gray-50 border-b">
-                      <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Key
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Value
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Type
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Scope
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                      <For each={filteredEntries()}>
-                        {(entry) => (
-                          <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {entry.key}
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-500 max-w-md truncate">
-                              {entry.value}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                                {entry.valueType}
-                              </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <span
-                                class={`px-2 py-1 text-xs rounded-full ${
-                                  entry.scope === "global"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-purple-100 text-purple-800"
-                                }`}
-                              >
-                                {entry.scope}
-                              </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                              <Button
-                                size="sm"
-                                variant="destructive"                                onClick={() => {
-                                  if (confirm(`Delete config entry "${entry.key}"?`)) {
-                                    deleteConfigMutation.mutate(entry.id);
-                                  }
-                                }}
-                                disabled={deleteConfigMutation.isPending}
-                              >
-                                Delete
-                              </Button>
-                            </td>
-                          </tr>
-                        )}
-                      </For>
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </Show>
-        </Show>
+          {/* Personalization Tab Content */}
+          <TabsContent value="personalization" class="p-6">
+            <div class="bg-white/5 border border-white/10 rounded-lg py-12 text-center">
+              <p class="text-text-secondary">Personalization feature coming soon...</p>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   );

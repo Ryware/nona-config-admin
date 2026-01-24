@@ -10,7 +10,6 @@ import type { RegisterRequest } from "../../types";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const [username, setUsername] = createSignal("");
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
@@ -46,7 +45,6 @@ export default function RegisterPage() {
     }
 
     registerMutation.mutate({
-      username: username(),
       email: email(),
       password: password(),
     });
@@ -54,6 +52,7 @@ export default function RegisterPage() {
 
   // Display local validation errors or API errors
   const displayError = error();
+
 
   const footer = (
     <>
@@ -78,16 +77,6 @@ export default function RegisterPage() {
       >
         <form id="register-form" onSubmit={handleSubmit}>
           <div class="space-y-4">
-            <FormField
-              id="username"
-              label="Username"
-              type="text"
-              placeholder="Choose a username"
-              value={username()}
-              onInput={(e) => setUsername(e.currentTarget.value)}
-              required
-              autofocus
-            />
             <FormField
               id="email"
               label="Email"

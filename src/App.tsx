@@ -3,6 +3,7 @@ import { Router, Route, Navigate } from "@solidjs/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import { authService } from "./services/auth.service";
 import { ToastProvider } from "./components/ui/toast";
+import { PageTitleProvider } from "./contexts/PageTitleContext";
 import "./App.css";
 
 // Lazy load pages
@@ -12,6 +13,7 @@ const ForgotPasswordPage = lazy(() => import("./pages/auth/ForgotPasswordPage"))
 const DashboardPage = lazy(() => import("./pages/dashboard/DashboardPage"));
 const ProjectsPage = lazy(() => import("./pages/projects/ProjectsPage"));
 const UsersPage = lazy(() => import("./pages/users/UsersPage"));
+const UserPage = lazy(() => import("./pages/users/UserPage"));
 const ConfigEntriesPage = lazy(() => import("./pages/config-entries/ConfigEntriesPage"));
 const EnvironmentsPage = lazy(() => import("./pages/environments/EnvironmentsPage"));
 
@@ -44,19 +46,22 @@ const PublicRoute: Component<{ component: Component }> = (props) => {
 const App: Component = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <Router>
-          <Route path="/" component={() => <Navigate href="/dashboard" />} />
-          <Route path="/login" component={() => <PublicRoute component={LoginPage} />} />
-          <Route path="/register" component={() => <PublicRoute component={RegisterPage} />} />
-          <Route path="/forgot-password" component={() => <PublicRoute component={ForgotPasswordPage} />} />
-          <Route path="/dashboard" component={() => <ProtectedRoute component={DashboardPage} />} />
-          <Route path="/projects" component={() => <ProtectedRoute component={ProjectsPage} />} />
-          <Route path="/users" component={() => <ProtectedRoute component={UsersPage} />} />
-          <Route path="/config-entries" component={() => <ProtectedRoute component={ConfigEntriesPage} />} />
-          <Route path="/environments" component={() => <ProtectedRoute component={EnvironmentsPage} />} />
-        </Router>
-      </ToastProvider>
+      <PageTitleProvider>
+        <ToastProvider>
+          <Router>
+            <Route path="/" component={() => <Navigate href="/dashboard" />} />
+            <Route path="/login" component={() => <PublicRoute component={LoginPage} />} />
+            <Route path="/register" component={() => <PublicRoute component={RegisterPage} />} />
+            <Route path="/forgot-password" component={() => <PublicRoute component={ForgotPasswordPage} />} />
+            <Route path="/dashboard" component={() => <ProtectedRoute component={DashboardPage} />} />
+            <Route path="/projects" component={() => <ProtectedRoute component={ProjectsPage} />} />
+            <Route path="/users" component={() => <ProtectedRoute component={UsersPage} />} />
+            <Route path="/user" component={() => <ProtectedRoute component={UserPage} />} />
+            <Route path="/config-entries" component={() => <ProtectedRoute component={ConfigEntriesPage} />} />
+            <Route path="/environments" component={() => <ProtectedRoute component={EnvironmentsPage} />} />
+          </Router>
+        </ToastProvider>
+      </PageTitleProvider>
     </QueryClientProvider>
   );
 };

@@ -1,4 +1,4 @@
-import { createSignal, Show, For } from "solid-js";
+import { createSignal, Show, For, onMount } from "solid-js";
 import { createQuery, createMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
@@ -8,11 +8,18 @@ import { Label } from "../../components/ui/label";
 import { environmentService } from "../../services/environment.service";
 import { projectService } from "../../services/project.service";
 import { useToast } from "../../components/ui/toast";
+import { usePageTitle } from "../../contexts/PageTitleContext";
 import type { CreateEnvironmentRequest } from "../../types";
 
 export default function EnvironmentsPage() {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
+  const { setPageTitle } = usePageTitle();
+  
+  // Set page title on mount
+  onMount(() => {
+    setPageTitle("Environments");
+  });
   
   const [showCreateForm, setShowCreateForm] = createSignal(false);
   const [selectedProjectId, setSelectedProjectId] = createSignal<string>("");
