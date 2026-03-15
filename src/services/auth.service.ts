@@ -1,7 +1,7 @@
 import { apiClient } from "./api-client";
 import type {
   LoginRequest,
-  LoginResult,
+  LoginResponse,
   RegisterRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
@@ -9,8 +9,8 @@ import type {
 } from "../types";
 
 export const authService = {
-  async login(credentials: LoginRequest): Promise<LoginResult> {
-    const response = await apiClient.post<LoginResult>(
+  async login(credentials: LoginRequest): Promise<LoginResponse> {
+    const response = await apiClient.post<LoginResponse>(
       "/auth/login",
       credentials
     );

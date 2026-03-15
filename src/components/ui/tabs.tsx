@@ -30,7 +30,7 @@ interface TabsListProps {
 
 export const TabsList: ParentComponent<TabsListProps> = (props) => {
   return (
-    <div class={`flex gap-6 border-b border-white/10 ${props.class || ""}`}>
+    <div class={`flex gap-1 ${props.class || ""}`}>
       {props.children}
     </div>
   );
@@ -49,10 +49,10 @@ export const TabsTrigger: ParentComponent<TabsTriggerProps> = (props) => {
 
   return (
     <button
-      class={`px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
+      class={`px-4 py-2.5 text-[13px] font-medium transition-colors border-b-2 -mb-px ${
         isActive()
-          ? "text-brand-blue border-brand-blue"
-          : "text-text-secondary border-transparent hover:text-text-primary hover:border-white/20"
+          ? "text-[#818CF8] border-[#6366F1]"
+          : "text-[#64748B] border-transparent hover:text-[#94A3B8] hover:border-white/20"
       } ${props.class || ""}`}
       onClick={() => context.setActiveTab(props.value)}
     >

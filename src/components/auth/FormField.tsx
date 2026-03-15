@@ -15,7 +15,7 @@ interface FormFieldProps {
 
 export const FormField: Component<FormFieldProps> = (props) => {
   return (
-    <div class="space-y-2">
+    <div class="space-y-1.5">
       <Label for={props.id}>{props.label}</Label>
       <Input
         id={props.id}

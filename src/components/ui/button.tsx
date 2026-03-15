@@ -4,24 +4,24 @@ import { type VariantProps, cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded cursor-pointer text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl cursor-pointer text-[13.5px] font-semibold tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1]/40 disabled:pointer-events-none disabled:opacity-40",
   {
     variants: {
       variant: {
-        default: "bg-white text-black hover:bg-white/90 active:scale-[0.98]",
-        success: "bg-[#34D399] text-black hover:bg-[#10B981] active:scale-[0.98]",
-        destructive: "bg-[#EF4444] text-white hover:bg-red-600",
-        outline: "border border-white/20 bg-white/5 text-white hover:bg-white/10",
-        secondary: "border border-white/10 bg-transparent text-white/80 hover:bg-white/5",
-        ghost: "text-white/60 hover:bg-white/5 hover:text-white",
-        link: "text-white/80 underline-offset-4 hover:underline hover:text-white",
-        google: "bg-white text-gray-900 hover:bg-gray-100 active:scale-[0.98]",
+        default:     "bg-[#6366F1] text-white hover:bg-[#4F46E5] active:scale-[0.97] shadow-lg shadow-[#6366F1]/20",
+        success:     "bg-[#10B981] text-white hover:bg-[#059669] active:scale-[0.97] shadow-lg shadow-[#10B981]/20",
+        destructive: "bg-[#EF4444] text-white hover:bg-red-600 active:scale-[0.97]",
+        outline:     "border border-white/12 bg-white/4 text-[#94A3B8] hover:bg-white/8 hover:text-white hover:border-white/20",
+        secondary:   "border border-white/10 bg-transparent text-[#94A3B8] hover:bg-white/5 hover:text-white",
+        ghost:       "text-[#64748B] hover:bg-white/5 hover:text-white",
+        link:        "text-[#818CF8] underline-offset-4 hover:underline p-0 h-auto",
+        google:      "bg-white text-gray-900 hover:bg-gray-100 active:scale-[0.97] shadow-md",
       },
       size: {
-        default: "h-6 px-6",
-        sm: "h-9  px-4 text-xs",
-        lg: "h-14  px-8 text-base",
-        icon: "h-10 w-10",
+        default: "h-11 px-5",
+        sm:      "h-8 px-3 text-[12px] rounded-lg",
+        lg:      "h-12 px-7 text-[15px]",
+        icon:    "h-9 w-9 rounded-lg",
       },
     },
     defaultVariants: {

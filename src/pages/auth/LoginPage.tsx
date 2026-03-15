@@ -17,18 +17,8 @@ export default function LoginPage() {
     const loginMutation = useMutation(() => ({
         mutationFn: (credentials: LoginRequest) => authService.login(credentials),
         onSuccess: (result) => {
-            if (result.success && result.response?.token) {
-                // Store the token
-                localStorage.setItem("auth_token", result.response.token);
-                // Navigate to dashboard
-                navigate("/dashboard");
-            } else if (result.error) {
-                // Set the error from the API
-                setError(result.error);
-            } else {
-                // Generic error fallback
-                setError("Login failed. Please try again.");
-            }
+            localStorage.setItem("auth_token", result.token);
+            navigate("/dashboard");
         },
         onError: () => {
             // Network or unexpected errors
@@ -46,26 +36,26 @@ export default function LoginPage() {
         if (firstTimeQuery.isSuccess && firstTimeQuery.data === true) {
             navigate("/register");
         }
-    });    const handleSubmit = (e: Event) => {
+    }); const handleSubmit = (e: Event) => {
         e.preventDefault();
         setError(""); // Clear previous errors
         loginMutation.mutate({
             email: email(),
             password: password(),
         });
-    }; 
+    };
     const footer = (
         <div class="space-y-4 w-full">
             <Button
                 type="submit"
                 form="login-form"
-                class="w-full pt-5"
+                class="w-full "
                 disabled={loginMutation.isPending}
             >
                 {loginMutation.isPending ? "Signing in..." : "Sign in"}
             </Button>
         </div>
-    );    return (
+    ); return (
         <AuthLayout>
             <AuthCard
                 title="Sign in to your Account"

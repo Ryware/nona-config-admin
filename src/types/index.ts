@@ -10,12 +10,6 @@ export interface LoginResponse {
   expiresAt: string;
 }
 
-export interface LoginResult {
-  success: boolean;
-  response: LoginResponse | null;
-  error: string | null;
-}
-
 export interface RegisterResult {
   success: boolean;
   response: LoginResponse | null;
@@ -107,7 +101,7 @@ export interface User {
 
 export interface CreateUserRequest {
   email: string;
-  password: string;
+  role?: string;
 }
 
 // API Response Types
@@ -121,4 +115,10 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface DashboardCounts {
+  projects: number;
+  configEntries: number;
+  users: number;
 }

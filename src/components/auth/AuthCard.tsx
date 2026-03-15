@@ -16,7 +16,8 @@ export const AuthCard: Component<AuthCardProps> = (props) => {
       <CardHeader>
         <Logo />
         <CardTitle>{props.title}</CardTitle>
-      </CardHeader>      <CardContent class="space-y-4">
+      </CardHeader>
+      <CardContent class="space-y-4">
         <Show when={props.error}>
           <div class="p-3 text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl">
             {props.error}

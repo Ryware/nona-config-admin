@@ -65,7 +65,7 @@ export const TableHead: ParentComponent<JSX.ThHTMLAttributes<HTMLTableCellElemen
   return (
     <th
       class={cn(
-        "h-12 px-4 text-left  font-medium text-text-secondary [&:has([role=checkbox])]:pr-0",
+        "h-11 px-4 text-left text-[11px] font-semibold text-[#475569] uppercase tracking-wider [&:has([role=checkbox])]:pr-0",
         local.class
       )}
       {...others}

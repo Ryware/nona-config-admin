@@ -8,7 +8,20 @@ export function Input(props: InputProps) {
   return (
     <input
       class={cn(
-        "flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:border-white/20 focus-visible:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 hover:border-white/20",
+        // base
+        "flex h-11 w-full rounded-xl px-3.5 text-[13.5px] font-normal text-white",
+        // background & border
+        "bg-[#0D1117] border border-white/10",
+        // placeholder
+        "placeholder:text-[#3D4E68]",
+        // transition
+        "transition-all duration-200",
+        // focus: left accent bar + border glow
+        "focus:outline-none focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20",
+        // hover
+        "hover:border-white/20",
+        // disabled
+        "disabled:cursor-not-allowed disabled:opacity-40",
         local.class
       )}
       {...others}

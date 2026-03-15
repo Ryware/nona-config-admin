@@ -49,7 +49,7 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
   });
 
   return (
-    <div class="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
+    <div class="bg-[#111827] border rounded-xl overflow-hidden" style="border-color: rgba(255,255,255,0.07);">
       <Table>
         <TableHeader>
           <For each={table.getHeaderGroups()}>
