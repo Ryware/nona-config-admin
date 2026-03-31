@@ -25,7 +25,7 @@ export const authService = {
     return response;
   },
 
-  async requestPasswordReset(data: ForgotPasswordRequest): Promise<void> {
+  async requestPasswordReset(_data: ForgotPasswordRequest): Promise<void> {
     // TODO: Implement when backend endpoint is ready
     // await apiClient.post('/auth/forgot-password', data);
     throw new Error(
@@ -33,7 +33,7 @@ export const authService = {
     );
   },
 
-  async resetPassword(data: ResetPasswordRequest): Promise<void> {
+  async resetPassword(_data: ResetPasswordRequest): Promise<void> {
     // TODO: Implement when backend endpoint is ready
     // await apiClient.post('/auth/reset-password', data);
     throw new Error(

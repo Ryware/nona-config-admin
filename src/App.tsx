@@ -12,10 +12,12 @@ const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/auth/ForgotPasswordPage"));
 const DashboardPage = lazy(() => import("./pages/dashboard/DashboardPage"));
 const ProjectsPage = lazy(() => import("./pages/projects/ProjectsPage"));
+const ProjectPage = lazy(() => import("./pages/projects/ProjectPage"));
 const UsersPage = lazy(() => import("./pages/users/UsersPage"));
 const UserPage = lazy(() => import("./pages/users/UserPage"));
 const ConfigEntriesPage = lazy(() => import("./pages/config-entries/ConfigEntriesPage"));
 const EnvironmentsPage = lazy(() => import("./pages/environments/EnvironmentsPage"));
+const AuditLogsPage = lazy(() => import("./pages/audit-logs/AuditLogsPage"));
 
 // Create a client
 const queryClient = new QueryClient({
@@ -55,10 +57,12 @@ const App: Component = () => {
             <Route path="/forgot-password" component={() => <PublicRoute component={ForgotPasswordPage} />} />
             <Route path="/dashboard" component={() => <ProtectedRoute component={DashboardPage} />} />
             <Route path="/projects" component={() => <ProtectedRoute component={ProjectsPage} />} />
+            <Route path="/projects/:slug" component={() => <ProtectedRoute component={ProjectPage} />} />
             <Route path="/users" component={() => <ProtectedRoute component={UsersPage} />} />
             <Route path="/user" component={() => <ProtectedRoute component={UserPage} />} />
             <Route path="/config-entries" component={() => <ProtectedRoute component={ConfigEntriesPage} />} />
             <Route path="/environments" component={() => <ProtectedRoute component={EnvironmentsPage} />} />
+            <Route path="/audit-logs" component={() => <ProtectedRoute component={AuditLogsPage} />} />
           </Router>
         </ToastProvider>
       </PageTitleProvider>

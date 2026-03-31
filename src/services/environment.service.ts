@@ -2,20 +2,19 @@ import { apiClient } from './api-client';
 import type { Environment, CreateEnvironmentRequest } from '../types';
 
 export const environmentService = {
-  async getAll(projectId?: string): Promise<Environment[]> {
-    const query = projectId ? `?projectId=${projectId}` : '';
-    return apiClient.get<Environment[]>(`/admin/environments${query}`);
+  async getAll(projectSlug?: string): Promise<Environment[]> {
+    return apiClient.get<Environment[]>(`/admin/projects/${projectSlug}/environments`);
   },
 
-  async getById(id: string): Promise<Environment> {
-    return apiClient.get<Environment>(`/admin/environments/${id}`);
+  async getById(projectSlug: string, id: string): Promise<Environment> {
+    return apiClient.get<Environment>(`/admin/projects/${projectSlug}/environments/${id}`);
   },
 
   async create(data: CreateEnvironmentRequest): Promise<Environment> {
-    return apiClient.post<Environment>('/admin/environments', data);
+    return apiClient.post<Environment>(`/admin/projects/${data.projectSlug}/environments`, data);
   },
 
-  async delete(id: string): Promise<void> {
-    return apiClient.delete(`/admin/environments/${id}`);
+  async delete(projectSlug: string, id: string): Promise<void> {
+    return apiClient.delete(`/admin/projects/${projectSlug}/environments/${id}`);
   },
 };

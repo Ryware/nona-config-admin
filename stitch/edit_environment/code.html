@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Edit Environment | Nona Config</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-low": "#161b2b",
+              "on-error": "#690005",
+              "on-tertiary": "#2d3134",
+              "on-secondary-fixed-variant": "#37485f",
+              "on-primary-fixed-variant": "#004883",
+              "primary": "#a4c9ff",
+              "outline": "#8b919d",
+              "outline-variant": "#414751",
+              "primary-container": "#60a5fa",
+              "on-surface": "#dee1f8",
+              "background": "#0e1323",
+              "on-primary": "#00315d",
+              "on-secondary-fixed": "#0a1c31",
+              "secondary-container": "#394a61",
+              "on-tertiary-fixed": "#191c1f",
+              "on-tertiary-container": "#36393d",
+              "tertiary-fixed": "#e0e2e6",
+              "on-tertiary-fixed-variant": "#44474a",
+              "inverse-on-surface": "#2b3041",
+              "inverse-surface": "#dee1f8",
+              "on-primary-container": "#003a6b",
+              "tertiary-fixed-dim": "#c4c7ca",
+              "surface-container-lowest": "#080d1d",
+              "tertiary": "#c4c7ca",
+              "primary-fixed": "#d4e3ff",
+              "primary-fixed-dim": "#a4c9ff",
+              "on-background": "#dee1f8",
+              "tertiary-container": "#a0a3a7",
+              "on-primary-fixed": "#001c39",
+              "secondary-fixed-dim": "#b6c8e4",
+              "secondary-fixed": "#d3e3ff",
+              "on-secondary-container": "#a8b9d5",
+              "surface-dim": "#0e1323",
+              "surface": "#0e1323",
+              "on-error-container": "#ffdad6",
+              "surface-bright": "#34394a",
+              "surface-container-high": "#24293a",
+              "on-secondary": "#203147",
+              "surface-tint": "#a4c9ff",
+              "surface-container-highest": "#2f3446",
+              "on-surface-variant": "#c1c7d3",
+              "secondary": "#b6c8e4",
+              "inverse-primary": "#0060ac",
+              "error-container": "#93000a",
+              "surface-container": "#1a1f2f",
+              "surface-variant": "#2f3446",
+              "error": "#ffb4ab"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-obsidian-gradient {
+            background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30 antialiased">
+<!-- SideNavBar Component -->
+<aside class="fixed left-0 top-0 h-full flex flex-col z-50 h-screen w-64 border-r border-[#1e2333] bg-[#080d1d] dark:bg-[#080d1d] font-['Space_Grotesk'] antialiased tracking-tight">
+<div class="p-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-sm bg-obsidian-gradient flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-sm">terminal</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tighter text-[#a4c9ff] drop-shadow-[0_0_8px_rgba(164,201,255,0.3)]">Nona Config</h1>
+<p class="text-[10px] text-slate-500 font-mono tracking-widest uppercase">v2.4.0</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-2 py-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-[#a4c9ff] bg-[#161b2b] border-r-2 border-[#a4c9ff] font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<span>Projects</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-[#161b2b]" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span>Team</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-[#161b2b]" href="#">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+<span>Logs</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-[#1e2333] px-2 py-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-[#161b2b]" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-[#161b2b]" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span>Support</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar Component -->
+<header class="fixed top-0 right-0 left-64 h-16 flex items-center justify-between px-8 z-40 bg-[#0e1323]/80 backdrop-blur-md font-['Space_Grotesk'] text-sm font-medium">
+<div class="flex items-center gap-6">
+<a class="text-[#a4c9ff] font-bold flex items-center gap-2 hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+                Back to Projects
+            </a>
+<div class="h-4 w-px bg-outline-variant/30"></div>
+<span class="text-on-surface-variant/60 font-mono tracking-tight">ENV / PRODUCTION / EDIT</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center bg-surface-container-low rounded-sm px-3 py-1.5 border-b border-outline-variant/30 focus-within:border-primary transition-all">
+<span class="material-symbols-outlined text-slate-500 text-lg mr-2">search</span>
+<input class="bg-transparent border-none p-0 text-xs focus:ring-0 text-on-surface placeholder:text-slate-600 w-48" placeholder="Quick search..." type="text"/>
+</div>
+<button class="p-2 text-slate-400 hover:text-[#a4c9ff] transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-1.5 h-1.5 bg-primary-container rounded-full"></span>
+</button>
+<button class="p-2 text-slate-400 hover:text-[#a4c9ff] transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-sm overflow-hidden border border-[#1e2333]">
+<img class="w-full h-full object-cover" data-alt="User profile avatar with professional lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEkP4MP6e2lMo603q-S4uz1nVUh_FPZ8ohfAaTMdaTHkBVMPUKkNjQgxrW2-bvK7YHJpvspRsLuXyIn1AeSB1tYI7zyc14OYoq9zEBrH5KqnGUHs8Ii8qAPNsFxakA3Tdlk4xRhJGYaJ9pST8DaFi7dARvovMXianBWyiCn6T0u3ZEc8ok65dhaJzl4VUY9p5Ycar3GBaB9nF-UINRDucko6ZnUp9lXEejMXZb_lMcn_3pEY-3t1UVu5upXTRJD3-_gGMdZx23tq0"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pl-64 pt-16 min-h-screen">
+<div class="max-w-4xl mx-auto p-12">
+<!-- Page Header -->
+<div class="mb-12">
+<h2 class="font-headline text-3xl font-bold tracking-tighter text-on-surface mb-2 italic">Edit Environment</h2>
+<p class="text-on-surface-variant font-body text-sm max-w-xl leading-relaxed"> Modify the core settings for your configuration environment. Changes take effect across all linked clusters upon deployment.</p>
+</div>
+<!-- Focused Form Section -->
+<div class="grid grid-cols-1 gap-8">
+<!-- Main Form Card -->
+<div class="bg-surface-container-low p-8 shadow-[0_24px_48px_rgba(222,225,248,0.02)] relative overflow-hidden group">
+<!-- Accent Decoration -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+<form class="space-y-10 relative z-10">
+<!-- Field: Environment Name -->
+<div class="space-y-3">
+<label class="block font-headline text-xs font-bold uppercase tracking-widest text-[#a4c9ff]" for="env-name">Environment Name</label>
+<div class="relative">
+<input class="w-full bg-surface-container-highest border-none border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-4 font-mono text-lg text-primary placeholder:text-slate-700 transition-all" id="env-name" type="text" value="Production"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-sm">lock</span>
+<span class="text-[10px] font-mono uppercase tracking-tighter">Read Only ID: PRD-01</span>
+</div>
+</div>
+<p class="text-xs text-on-surface-variant/60 italic">Unique identifier used for API endpoints and CLI commands.</p>
+</div>
+<!-- Field: Description -->
+<div class="space-y-3">
+<label class="block font-headline text-xs font-bold uppercase tracking-widest text-[#a4c9ff]" for="env-desc">Description</label>
+<textarea class="w-full bg-surface-container-highest border-none border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-4 font-body text-sm text-on-surface leading-relaxed placeholder:text-slate-700 transition-all" id="env-desc" placeholder="Enter environment purpose and constraints..." rows="4">Primary customer-facing environment. Restricted access. Requires multi-signature approval for any configuration drift exceeding 5% variance.</textarea>
+</div>
+<!-- Environment Health/Status Metadata (Visual Tonal Layering) -->
+<div class="grid grid-cols-3 gap-1 pt-6">
+<div class="bg-surface-container-lowest p-4">
+<span class="block text-[10px] font-headline font-bold text-slate-500 uppercase tracking-widest mb-1">Status</span>
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.4)]"></div>
+<span class="text-xs font-mono text-emerald-400">HEALTHY</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4">
+<span class="block text-[10px] font-headline font-bold text-slate-500 uppercase tracking-widest mb-1">Clusters</span>
+<span class="text-sm font-mono text-on-surface">12 active</span>
+</div>
+<div class="bg-surface-container-lowest p-4">
+<span class="block text-[10px] font-headline font-bold text-slate-500 uppercase tracking-widest mb-1">Last Update</span>
+<span class="text-sm font-mono text-on-surface">14m ago</span>
+</div>
+</div>
+<!-- Form Actions -->
+<div class="flex items-center justify-end gap-6 pt-8 border-t border-outline-variant/10">
+<button class="text-slate-400 font-headline font-bold text-sm tracking-tight hover:text-white transition-colors py-3 px-6" type="button">
+                                Cancel
+                            </button>
+<button class="bg-obsidian-gradient text-on-primary font-headline font-bold text-sm tracking-tight px-8 py-3 rounded-sm shadow-xl shadow-primary/10 hover:opacity-90 active:scale-95 transition-all" type="submit">
+                                Update Environment
+                            </button>
+</div>
+</form>
+</div>
+<!-- Secondary Context / Helper Panel -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-surface-container-low p-6 flex items-start gap-4">
+<span class="material-symbols-outlined text-primary-container p-2 bg-surface-container-highest rounded-sm">security</span>
+<div>
+<h4 class="text-sm font-bold font-headline mb-1">Access Control</h4>
+<p class="text-xs text-on-surface-variant leading-normal">Only users with 'Admin' or 'Lead Architect' roles can modify production parameters.</p>
+</div>
+</div>
+<div class="bg-surface-container-low p-6 flex items-start gap-4">
+<span class="material-symbols-outlined text-primary-container p-2 bg-surface-container-highest rounded-sm">history</span>
+<div>
+<h4 class="text-sm font-bold font-headline mb-1">Audit Trail</h4>
+<p class="text-xs text-on-surface-variant leading-normal">This action will be logged under the identifier <span class="font-mono text-primary-fixed">ACT-9902-X</span> for compliance.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Ghost Bottom Border (Decorative) -->
+<div class="fixed bottom-0 left-64 right-0 h-1 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 opacity-30"></div>
+</body></html>

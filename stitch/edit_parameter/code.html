@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nona Config | Edit Parameter</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-low": "#161b2b",
+              "on-error": "#690005",
+              "on-tertiary": "#2d3134",
+              "on-secondary-fixed-variant": "#37485f",
+              "on-primary-fixed-variant": "#004883",
+              "primary": "#a4c9ff",
+              "outline": "#8b919d",
+              "outline-variant": "#414751",
+              "primary-container": "#60a5fa",
+              "on-surface": "#dee1f8",
+              "background": "#0e1323",
+              "on-primary": "#00315d",
+              "on-secondary-fixed": "#0a1c31",
+              "secondary-container": "#394a61",
+              "on-tertiary-fixed": "#191c1f",
+              "on-tertiary-container": "#36393d",
+              "tertiary-fixed": "#e0e2e6",
+              "on-tertiary-fixed-variant": "#44474a",
+              "inverse-on-surface": "#2b3041",
+              "inverse-surface": "#dee1f8",
+              "on-primary-container": "#003a6b",
+              "tertiary-fixed-dim": "#c4c7ca",
+              "surface-container-lowest": "#080d1d",
+              "tertiary": "#c4c7ca",
+              "primary-fixed": "#d4e3ff",
+              "primary-fixed-dim": "#a4c9ff",
+              "on-background": "#dee1f8",
+              "tertiary-container": "#a0a3a7",
+              "on-primary-fixed": "#001c39",
+              "secondary-fixed-dim": "#b6c8e4",
+              "secondary-fixed": "#d3e3ff",
+              "on-secondary-container": "#a8b9d5",
+              "surface-dim": "#0e1323",
+              "surface": "#0e1323",
+              "on-error-container": "#ffdad6",
+              "surface-bright": "#34394a",
+              "surface-container-high": "#24293a",
+              "on-secondary": "#203147",
+              "surface-tint": "#a4c9ff",
+              "surface-container-highest": "#2f3446",
+              "on-surface-variant": "#c1c7d3",
+              "secondary": "#b6c8e4",
+              "inverse-primary": "#0060ac",
+              "error-container": "#93000a",
+              "surface-container": "#1a1f2f",
+              "surface-variant": "#2f3446",
+              "error": "#ffb4ab"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        background-color: #0e1323;
+        color: #dee1f8;
+      }
+      .tonal-layering-via-bg-shifts {
+        background-color: #080d1d;
+      }
+      .tonal-separation-no-borders {
+        background-color: rgba(14, 19, 35, 0.8);
+      }
+    </style>
+</head>
+<body class="font-body selection:bg-primary/30">
+<!-- SideNavBar (Shared Component) -->
+<aside class="fixed left-0 top-0 h-full flex flex-col z-50 h-screen w-64 border-r border-[#1e2333] bg-[#080d1d] dark:bg-[#080d1d] font-['Space_Grotesk'] antialiased tracking-tight">
+<div class="p-6">
+<div class="text-xl font-bold tracking-tighter text-[#a4c9ff] drop-shadow-[0_0_8px_rgba(164,201,255,0.3)] flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+                Nona Config
+            </div>
+<p class="text-[0.65rem] text-slate-500 mt-1 uppercase tracking-widest px-1">v2.4.0</p>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-[#a4c9ff] bg-[#161b2b] border-r-2 border-[#a4c9ff] font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<span>Projects</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-[#161b2b]" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span>Team</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-[#161b2b]" href="#">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+<span>Logs</span>
+</a>
+</nav>
+<div class="px-3 py-6 mt-auto space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-[#161b2b]" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-[#161b2b]" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span>Support</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 right-0 left-64 h-16 flex items-center justify-between px-8 z-40 bg-[#0e1323]/80 backdrop-blur-md font-['Space_Grotesk'] text-sm font-medium shadow-[0_24px_48px_rgba(222,225,248,0.06)]">
+<div class="flex items-center gap-6">
+<a class="text-slate-400 hover:text-[#a4c9ff] transition-colors flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_back">arrow_back</span>
+                Back to Projects
+            </a>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline" data-icon="search">search</span>
+<input class="bg-surface-container-low border-none h-9 w-64 pl-10 pr-4 text-xs rounded-none focus:ring-1 focus:ring-primary" placeholder="Search parameters..." type="text"/>
+</div>
+<div class="flex items-center gap-4 border-l border-outline-variant/30 pl-6">
+<button class="text-outline hover:text-primary transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-outline hover:text-primary transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-primary/20">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="User profile avatar close up" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWB520KhCRiCbXM5bBSNJusNnTh_A6NllmifD0gcVBllmc7FPHcRTUIBd6_uN7azMOYn-EpEf0IrRRniiRqVgpSgzHoJQ9RJ0YzY8wx4tU42woP0BhNrY9t2Ie5Q0cJOyeaiZH3L7VW8uQoR3E8Bw6UhgYyQfO3r4h8hyXSW9LjMkywEWkUmnsNIgetFzNxMmNJGF-6Dt8cYKNfMrhZ-gO8Uc1K1cF16XK8uGyP6B2NXWjKcmz3NbcYU6ddJoOx36ZrsLcpQxxEo8"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-64 pt-16 min-h-screen bg-surface flex flex-col">
+<!-- View Header -->
+<div class="px-10 py-8 border-b border-outline-variant/10">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 text-xs font-label text-primary uppercase tracking-widest font-bold">
+<span class="material-symbols-outlined text-sm" data-icon="tune">tune</span>
+                    Configuration Parameter
+                </div>
+<h1 class="text-4xl font-headline font-bold text-on-surface tracking-tighter">Edit Parameter</h1>
+</div>
+</div>
+<!-- Editor Layout (Asymmetric / Bento Inspired) -->
+<div class="p-10 grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1">
+<!-- Main Form Canvas -->
+<div class="lg:col-span-8 space-y-6">
+<section class="bg-surface-container-low p-8 rounded-lg shadow-sm">
+<form class="space-y-8">
+<!-- Config Key Field -->
+<div class="space-y-2">
+<label class="block text-xs font-label text-outline uppercase tracking-wider">Config Key</label>
+<div class="flex items-center bg-surface-container-lowest h-14 px-4 border-b-2 border-outline-variant/30 group">
+<span class="material-symbols-outlined text-outline mr-3" data-icon="lock">lock</span>
+<input class="bg-transparent border-none w-full font-mono text-primary-fixed opacity-60 cursor-not-allowed focus:ring-0" disabled="" type="text" value="API_GATEWAY_URL"/>
+</div>
+<p class="text-[0.7rem] text-outline/60 italic">Keys are immutable once deployed to production environments.</p>
+</div>
+<!-- Data Type Field -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-2">
+<label class="block text-xs font-label text-outline uppercase tracking-wider">Data Type</label>
+<div class="relative h-14 bg-surface-container-highest flex items-center px-4 border-b-2 border-outline-variant">
+<select class="bg-transparent border-none w-full appearance-none focus:ring-0 text-on-surface cursor-pointer pr-8 font-label">
+<option value="string">String</option>
+<option value="boolean">Boolean</option>
+<option value="number">Number</option>
+<option selected="" value="json">JSON</option>
+</select>
+<span class="absolute right-4 pointer-events-none material-symbols-outlined text-outline" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block text-xs font-label text-outline uppercase tracking-wider">Environment Scope</label>
+<div class="flex items-center gap-2 pt-2">
+<span class="bg-primary/10 text-primary text-[0.65rem] px-2 py-1 font-bold rounded-full border border-primary/20">PRODUCTION</span>
+<span class="bg-surface-variant text-outline text-[0.65rem] px-2 py-1 font-bold rounded-full">GLOBAL</span>
+</div>
+</div>
+</div>
+<!-- Value Field -->
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="block text-xs font-label text-outline uppercase tracking-wider">Parameter Value</label>
+<button class="text-[0.65rem] font-mono text-primary hover:underline" type="button">Format JSON</button>
+</div>
+<div class="bg-surface-container-lowest border-b-2 border-outline-variant focus-within:border-primary transition-all">
+<textarea class="w-full bg-transparent border-none focus:ring-0 font-mono text-sm p-4 text-[#a4c9ff]" rows="8" spellcheck="false">{
+  "endpoint": "https://gateway.internal.nona.tech/v3",
+  "timeout": 5000,
+  "retry_policy": "exponential_backoff",
+  "secure": true,
+  "headers": {
+    "X-Origin-ID": "NONA_PROD_01"
+  }
+}</textarea>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-4 pt-6">
+<button class="h-12 px-8 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold text-sm tracking-tight rounded-sm hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10 flex items-center gap-2" type="submit">
+<span class="material-symbols-outlined text-lg" data-icon="save">save</span>
+                                Save Changes
+                            </button>
+<button class="h-12 px-8 border border-outline-variant/30 text-outline font-bold text-sm tracking-tight rounded-sm hover:bg-surface-container-highest hover:text-on-surface transition-all active:scale-95" type="button">
+                                Discard
+                            </button>
+</div>
+</form>
+</section>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-surface-container-high/50 p-6 rounded-lg flex items-start gap-4">
+<span class="material-symbols-outlined text-primary p-2 bg-primary/10 rounded-full" data-icon="security">security</span>
+<div>
+<h4 class="text-sm font-bold text-on-surface">Encrypted Storage</h4>
+<p class="text-xs text-outline leading-relaxed mt-1">This value is stored using AES-256-GCM encryption at rest.</p>
+</div>
+</div>
+<div class="bg-surface-container-high/50 p-6 rounded-lg flex items-start gap-4">
+<span class="material-symbols-outlined text-secondary p-2 bg-secondary/10 rounded-full" data-icon="history_edu">history_edu</span>
+<div>
+<h4 class="text-sm font-bold text-on-surface">Audit Logging</h4>
+<p class="text-xs text-outline leading-relaxed mt-1">Every modification is logged and linked to your root identity.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- History Sidebar -->
+<div class="lg:col-span-4 space-y-6">
+<div class="bg-surface-container-low p-6 rounded-lg border-l border-primary/20">
+<h3 class="text-xs font-label text-outline uppercase tracking-widest mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="history">history</span>
+                        Change History
+                    </h3>
+<div class="space-y-8 relative">
+<!-- Timeline Line -->
+<div class="absolute left-4 top-0 bottom-0 w-[1px] bg-outline-variant/20"></div>
+<!-- History Item 1 -->
+<div class="relative pl-10">
+<div class="absolute left-[0.85rem] top-1.5 w-1.5 h-1.5 rounded-full bg-primary border border-surface shadow-[0_0_8px_rgba(164,201,255,0.8)]"></div>
+<div class="text-xs font-bold text-on-surface">Last updated 2m ago</div>
+<div class="flex items-center gap-2 mt-1">
+<img class="w-4 h-4 rounded-full" data-alt="Small admin avatar thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPMwOgRyEks-0U_Kv61C0Eol_g_MMP4-yo-I1ISLLxoGrPDKq0aI7IEOlkwtPQiZlQiCy-xLbF5cIZKzMHqA46Y8UiI5X-IWaIdqrEXdfo8s2K5sgT85F3o_zy4q7QY1J85YPsCJDOB1g6PVQHV59DTm3IzrBcX6mX99W0UC2N5Ml-JBT3PW9BPs5oLmkRfQD46Lqa6q4g5f3R9IaQQW9p8Z3402A3J5LBtMldvJxUB34PtVeDqdvF3bASIGN7oPNwoNBCkI8VZRI"/>
+<span class="text-[0.7rem] font-mono text-primary">admin_root</span>
+</div>
+<p class="text-[0.7rem] text-outline mt-2 bg-surface-container-lowest p-2 rounded italic">"Bumped timeout for v3 gateway migration"</p>
+</div>
+<!-- History Item 2 -->
+<div class="relative pl-10 opacity-60">
+<div class="absolute left-[0.85rem] top-1.5 w-1.5 h-1.5 rounded-full bg-outline-variant border border-surface"></div>
+<div class="text-xs font-bold text-on-surface">Updated 5h ago</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[0.7rem] font-mono text-outline">system_auto</span>
+</div>
+<p class="text-[0.7rem] text-outline mt-2">Automatic rollback from failed canary</p>
+</div>
+<!-- History Item 3 -->
+<div class="relative pl-10 opacity-40">
+<div class="absolute left-[0.85rem] top-1.5 w-1.5 h-1.5 rounded-full bg-outline-variant border border-surface"></div>
+<div class="text-xs font-bold text-on-surface">Created 4 days ago</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[0.7rem] font-mono text-outline">dev_lead_marcus</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-10 py-3 border border-outline-variant/20 text-[0.7rem] font-label text-outline uppercase tracking-widest hover:bg-surface-container-high transition-colors">
+                        View Full Ledger
+                    </button>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg overflow-hidden relative">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl" data-icon="cloud_done">cloud_done</span>
+</div>
+<h3 class="text-xs font-label text-outline uppercase tracking-widest mb-4">Deployment Status</h3>
+<div class="flex items-end gap-3">
+<span class="text-3xl font-headline font-bold text-on-surface tracking-tighter">99.8%</span>
+<span class="text-[0.65rem] text-primary pb-1 font-bold">PROPAGATED</span>
+</div>
+<div class="mt-4 h-1.5 w-full bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[99.8%]"></div>
+</div>
+<p class="mt-3 text-[0.65rem] text-outline">Active on 42 clusters worldwide.</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Contextual Footer (Help Tooltip Area) -->
+<footer class="ml-64 bg-surface-container-lowest border-t border-outline-variant/5 px-10 py-4 flex items-center justify-between">
+<div class="flex gap-6 text-[0.65rem] text-outline/50 uppercase tracking-widest">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs" data-icon="keyboard_command_key">keyboard_command_key</span> S to Save</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs" data-icon="keyboard_command_key">keyboard_command_key</span> ESC to Discard</span>
+</div>
+<div class="text-[0.65rem] text-outline/50">
+            Nona Precision UI Engine © 2024
+        </div>
+</footer>
+</body></html>

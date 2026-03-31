@@ -1,189 +1,157 @@
-import { onMount, For, Show, type JSX } from "solid-js";
 import { useQuery } from "@tanstack/solid-query";
 import { A } from "@solidjs/router";
+import { For, Show } from "solid-js";
 import { AppLayout } from "../../components/layout/AppLayout";
 import { usePageTitle } from "../../contexts/PageTitleContext";
 import { dashboardService } from "../../services/dashboard.service";
 import { projectService } from "../../services/project.service";
-import { IconFolder, IconUsers, IconSliders } from "../../components/ui/icons";
 
-// ── Sub-components ─────────────────────────────────────────────────────────
-function StatCard(props: {
-  label: string;
-  value: string | number;
-  icon: JSX.Element;
-  iconBg: string;
-  trend?: string;
-}) {
-  return (
-    <div class="rounded-xl p-5 flex flex-col gap-5 bg-[#111827] border border-white/[0.07]">
-      <div class="flex items-start justify-between">
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0"
-          style={`background: ${props.iconBg}`}>
-          {props.icon}
-        </div>
-        <Show when={props.trend}>
-          <span class="text-xs font-semibold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-            {props.trend}
-          </span>
-        </Show>
-      </div>
-      <div>
-        <div class="text-3xl font-bold text-white tracking-tight">{props.value}</div>
-        <div class="text-[13px] text-[#64748B] mt-1">{props.label}</div>
-      </div>
-    </div>
-  );
-}
-
-const PROJECT_COLORS = [
-  { bg: "rgba(99,102,241,0.18)", text: "#818CF8" },
-  { bg: "rgba(16,185,129,0.18)", text: "#34D399" },
-  { bg: "rgba(245,158,11,0.18)", text: "#FCD34D" },
-  { bg: "rgba(239,68,68,0.18)", text: "#F87171" },
-  { bg: "rgba(139,92,246,0.18)", text: "#A78BFA" },
-  { bg: "rgba(59,130,246,0.18)", text: "#60A5FA" },
-] as const;
-
-function ProjectCard(props: {
-  name: string;
-  description?: string;
-  createdAt: string;
-  colorIndex: number;
-}) {
-  const c = PROJECT_COLORS[props.colorIndex % PROJECT_COLORS.length];
-  const initials = props.name.slice(0, 2).toUpperCase();
-  return (
-    <div class="rounded-xl p-4 bg-[#111827] border border-white/[0.07] flex flex-col gap-3
-                hover:bg-white/3 transition-colors">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0"
-          style={`background: ${c.bg}; color: ${c.text}`}>
-          {initials}
-        </div>
-        <div class="min-w-0">
-          <h3 class="font-semibold text-white text-[14px] truncate">{props.name}</h3>
-          <p class="text-[12px] text-[#64748B] truncate">{props.description || "No description"}</p>
-        </div>
-      </div>
-      <div class="flex items-center justify-between">
-        <span class="text-[11px] text-[#475569]">
-          {new Date(props.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-        </span>
-        <A href="/projects" class="text-[12px] font-medium text-[#818CF8] hover:text-[#A5B4FC]
-                                   px-2.5 py-1 rounded-lg hover:bg-white/10 transition-colors">
-          View →
-        </A>
-      </div>
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────────────────────────────────
+const PROJECT_ICONS = ["hub", "database", "language", "storage", "cloud", "api"];
 
 export default function DashboardPage() {
   const { setPageTitle } = usePageTitle();
+  setPageTitle("Dashboard");
 
-  onMount(() => setPageTitle("Dashboard"));
-
-  const dashboardQuery = useQuery(() => ({
-    queryKey: ["dashboard"],
+  const countsQuery = useQuery(() => ({
+    queryKey: ["dashboard-counts"],
     queryFn: () => dashboardService.counts(),
   }));
 
-  const projectQuery = useQuery(() => ({
+  const projectsQuery = useQuery(() => ({
     queryKey: ["projects"],
     queryFn: () => projectService.getAll(),
   }));
 
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long", year: "numeric", month: "long", day: "numeric",
-  });
+  const stats = [
+    {
+      label: "Total Projects",
+      icon: "folder_open",
+      value: () => countsQuery.data?.projects ?? "—",
+      sub: "active modules",
+    },
+    {
+      label: "Config Entries",
+      icon: "tune",
+      value: () => countsQuery.data?.configEntries ?? "—",
+      sub: "parameters tracked",
+    },
+    {
+      label: "Team Members",
+      icon: "group",
+      value: () => countsQuery.data?.users ?? "—",
+      sub: "collaborators",
+    },
+  ];
 
   return (
     <AppLayout>
-      <div class="space-y-7 max-w-7xl animate-fade-in">
+      <div class="space-y-10">
 
-        {/* Page heading */}
-        <div>
-          <h2 class="text-xl font-semibold text-white">Overview</h2>
-          <p class="text-[13px] text-[#64748B] mt-1">{today}</p>
+        {/* Page header */}
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div class="space-y-2">
+            <h2 class="text-4xl font-headline font-bold text-primary tracking-tight">Overview</h2>
+            <p class="text-on-surface-variant max-w-xl leading-relaxed text-sm">
+              Monitor your configuration system at a glance. Track projects, parameters, and team activity.
+            </p>
+          </div>
+          <A
+            href="/projects"
+            class="flex items-center gap-2 px-6 py-3 rounded font-bold text-on-primary text-[13px] transition-all active:scale-[0.98] hover:opacity-90 w-fit"
+            style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+          >
+            <span class="material-symbols-outlined text-[18px]">folder_open</span>
+            View Projects
+          </A>
         </div>
 
-        {/* ── Stat cards ── */}
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            label="Total Projects"
-            value={dashboardQuery.isLoading ? "—" : (dashboardQuery.data?.projects ?? 0)}
-            icon={<IconFolder />}
-            iconBg="rgba(99,102,241,0.15)"
-          />
-          <StatCard
-            label="Total Users"
-            value={dashboardQuery.isLoading ? "—" : (dashboardQuery.data?.users ?? 0)}
-            icon={<IconUsers />}
-            iconBg="rgba(16,185,129,0.15)"
-          />
-          <StatCard
-            label="Config Entries"
-            value={dashboardQuery.isLoading ? "—" : (dashboardQuery.data?.configEntries ?? 0)}
-            icon={<IconSliders />}
-            iconBg="rgba(245,158,11,0.15)"
-          />
+        {/* Stats row */}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <For each={stats}>
+            {(stat) => (
+              <div class="bg-[#161b2b] p-6 rounded relative overflow-hidden">
+                <div class="absolute top-4 right-4 opacity-10">
+                  <span class="material-symbols-outlined text-5xl text-primary">{stat.icon}</span>
+                </div>
+                <p class="text-xs font-bold uppercase tracking-widest text-outline mb-3">{stat.label}</p>
+                <p class="text-4xl font-headline font-bold text-primary mb-1">
+                  {countsQuery.isLoading ? (
+                    <span class="text-2xl text-outline">Loading…</span>
+                  ) : (
+                    stat.value()
+                  )}
+                </p>
+                <p class="text-xs text-on-surface-variant">{stat.sub}</p>
+              </div>
+            )}
+          </For>
         </div>
 
-        {/* ── Recent projects ── */}
+        {/* Recent Projects */}
         <div>
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-white">Recent Projects</h3>
-            <A href="/projects" class="text-[13px] font-medium text-[#818CF8] hover:text-[#A5B4FC] transition-colors">
-              View all →
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Recent Projects</h3>
+            <A href="/projects" class="text-xs text-primary hover:text-primary-fixed transition-colors flex items-center gap-1">
+              View all
+              <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
             </A>
           </div>
 
           <Show
-            when={!dashboardQuery.isLoading}
+            when={(projectsQuery.data?.length ?? 0) > 0}
             fallback={
-              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <For each={[1, 2, 3]}>
-                  {() => <div class="h-24 rounded-xl bg-[#111827] border border-white/[0.07] animate-pulse" />}
-                </For>
+              <div class="bg-[#161b2b] rounded p-12 text-center">
+                <span class="material-symbols-outlined text-5xl text-outline mb-4 block">folder_open</span>
+                <p class="text-on-surface-variant text-sm mb-4">No projects yet</p>
+                <A
+                  href="/projects"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 rounded font-bold text-on-primary text-[13px] hover:opacity-90 transition-all"
+                  style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+                >
+                  <span class="material-symbols-outlined text-[16px]">add</span>
+                  Create Project
+                </A>
               </div>
             }
           >
-            <Show
-              when={projectQuery.data && projectQuery.data.length > 0}
-              fallback={
-                <div class="rounded-xl p-10 text-center bg-[#111827] border border-dashed border-white/10">
-                  <div class="flex justify-center mb-3 text-[#3B4A6B]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                    </svg>
-                  </div>
-                  <p class="font-semibold text-white mb-1">No projects yet</p>
-                  <p class="text-[13px] text-[#64748B] mb-5">Create your first project to get started</p>
-                  <A href="/projects"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium
-                            text-white bg-[#6366F1] hover:bg-[#4F46E5] transition-colors">
-                    Create Project
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <For each={(projectsQuery.data ?? []).slice(0, 6)}>
+                {(project, i) => (
+                  <A
+                    href={`/projects/${project.urlSlug}`}
+                    class="group bg-[#161b2b] p-6 rounded relative overflow-hidden transition-all hover:bg-[#1a1f2f] border-l-2"
+                    style={i() === 0 ? "border-left-color: #a4c9ff;" : "border-left-color: rgba(96,165,250,0.4);"}
+                  >
+                    <div class="absolute top-4 right-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                      <span class="material-symbols-outlined text-5xl text-primary">
+                        {PROJECT_ICONS[i() % PROJECT_ICONS.length]}
+                      </span>
+                    </div>
+                    <div class="relative z-10">
+                      <h4 class="text-base font-headline font-bold text-on-surface mb-2 truncate">{project.name}</h4>
+                      <p class="text-on-surface-variant text-xs leading-relaxed line-clamp-2 mb-4">
+                        {project.description || "No description"}
+                      </p>
+                      <div class="flex items-center gap-2 text-outline">
+                        <span class="material-symbols-outlined text-[14px]">schedule</span>
+                        <span class="text-[11px]">{new Date(project.updatedAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
                   </A>
-                </div>
-              }
-            >
-              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <For each={projectQuery.data?.slice(0, 6)}>
-                  {(project, i) => (
-                    <ProjectCard
-                      name={project.name}
-                      description={project.description}
-                      createdAt={project.createdAt}
-                      colorIndex={i()}
-                    />
-                  )}
-                </For>
-              </div>
-            </Show>
+                )}
+              </For>
+            </div>
           </Show>
+        </div>
+
+        {/* Status footer bar */}
+        <div class="flex items-center justify-between py-3 px-4 bg-[#080d1d] rounded text-[10px] uppercase tracking-widest text-outline font-mono border border-outline-variant/10">
+          <div class="flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse-dot"></span>
+            System Ready
+          </div>
+          <span>Active Projects: {countsQuery.data?.projects ?? "—"}</span>
+          <span>Last Sync: {new Date().toLocaleTimeString()} UTC</span>
         </div>
       </div>
     </AppLayout>

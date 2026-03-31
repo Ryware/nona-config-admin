@@ -4,34 +4,34 @@ import { cn } from "../../lib/utils";
 export const Card: ParentComponent<JSX.HTMLAttributes<HTMLDivElement>> = (props) => {
   return (
     <div
-      class={cn("rounded-xl border bg-[#111827] text-[#F1F5F9]", props.class)}
-      style="border-color: rgba(255,255,255,0.07);"
+      class={cn("rounded bg-surface-container-low text-on-surface", props.class)}
       {...props}
     />
   );
 };
 
 export const CardHeader: ParentComponent<JSX.HTMLAttributes<HTMLDivElement>> = (props) => {
-  return <div class={cn("flex flex-col space-y-1.5 p-5", props.class)} {...props} />;
+  return <div class={cn("flex flex-col space-y-1.5 p-6", props.class)} {...props} />;
 };
 
 export const CardTitle: ParentComponent<JSX.HTMLAttributes<HTMLHeadingElement>> = (props) => {
   return (
     <h3
-      class={cn("font-semibold leading-none tracking-tight text-white text-base", props.class)}
+      class={cn("font-bold leading-none tracking-tight text-on-surface text-lg font-headline", props.class)}
       {...props}
     />
   );
 };
 
 export const CardDescription: ParentComponent<JSX.HTMLAttributes<HTMLParagraphElement>> = (props) => {
-  return <p class={cn("text-[13px] text-[#94A3B8]", props.class)} {...props} />;
+  return <p class={cn("text-[13px] text-on-surface-variant", props.class)} {...props} />;
 };
 
 export const CardContent: ParentComponent<JSX.HTMLAttributes<HTMLDivElement>> = (props) => {
-  return <div class={cn("p-5 pt-0", props.class)} {...props} />;
+  return <div class={cn("p-6 pt-0", props.class)} {...props} />;
 };
 
 export const CardFooter: ParentComponent<JSX.HTMLAttributes<HTMLDivElement>> = (props) => {
-  return <div class={cn("flex items-center p-5 pt-0", props.class)} {...props} />;
+  return <div class={cn("flex items-center p-6 pt-0", props.class)} {...props} />;
 };
+

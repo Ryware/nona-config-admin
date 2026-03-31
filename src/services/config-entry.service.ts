@@ -8,22 +8,22 @@ export const configEntryService = {
     if (environmentId) params.append('environmentId', environmentId);
     
     const query = params.toString() ? `?${params}` : '';
-    return apiClient.get<ConfigEntry[]>(`/admin/config-entries${query}`);
+    return apiClient.get<ConfigEntry[]>(`/admin/projects/${projectId}/environments/${environmentId}/config-entries${query}`);
   },
 
-  async getById(id: string): Promise<ConfigEntry> {
-    return apiClient.get<ConfigEntry>(`/admin/config-entries/${id}`);
+  async getById(projectId: string, environmentId: string, id: string): Promise<ConfigEntry> {
+    return apiClient.get<ConfigEntry>(`/admin/projects/${projectId}/environments/${environmentId}/config-entries/${id}`);
   },
 
   async create(data: CreateConfigEntryRequest): Promise<ConfigEntry> {
-    return apiClient.post<ConfigEntry>('/admin/config-entries', data);
+    return apiClient.post<ConfigEntry>(`/admin/projects/${data.projectSlug}/environments/${data.environmentId}/config-entries`, data);
   },
 
-  async update(id: string, data: UpdateConfigEntryRequest): Promise<ConfigEntry> {
-    return apiClient.put<ConfigEntry>(`/admin/config-entries/${id}`, data);
+  async update(projectId: string, environmentId: string, id: string, data: UpdateConfigEntryRequest): Promise<ConfigEntry> {
+    return apiClient.put<ConfigEntry>(`/admin/projects/${projectId}/environments/${environmentId}/config-entries/${id}`, data);
   },
 
-  async delete(id: string): Promise<void> {
-    return apiClient.delete(`/admin/config-entries/${id}`);
+  async delete(projectId: string, environmentId: string, id: string): Promise<void> {
+    return apiClient.delete(`/admin/projects/${projectId}/environments/${environmentId}/config-entries/${id}`);
   },
 };

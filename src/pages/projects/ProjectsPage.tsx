@@ -1,226 +1,241 @@
-import { createSignal, Show, For, onMount } from "solid-js";
-import { useQueryClient, useMutation, useQuery } from "@tanstack/solid-query";
-import { A } from "@solidjs/router";
+import { createSignal, Show, For } from "solid-js";
+import { useNavigate } from "@solidjs/router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { projectService } from "../../services/project.service";
-import { useToast } from "../../components/ui/toast";
 import { usePageTitle } from "../../contexts/PageTitleContext";
-import type { CreateProjectRequest } from "../../types";
+import { useToast } from "../../components/ui/toast";
+import { projectService } from "../../services/project.service";
 
-const PROJECT_COLORS = [
-  { bg: "rgba(99,102,241,0.18)",  text: "#818CF8"  },
-  { bg: "rgba(16,185,129,0.18)",  text: "#34D399"  },
-  { bg: "rgba(245,158,11,0.18)",  text: "#FCD34D"  },
-  { bg: "rgba(239,68,68,0.18)",   text: "#F87171"  },
-  { bg: "rgba(139,92,246,0.18)",  text: "#A78BFA"  },
-  { bg: "rgba(59,130,246,0.18)",  text: "#60A5FA"  },
-] as const;
+const PROJECT_ICONS = ["hub", "database", "language", "storage", "cloud", "api"];
 
 export default function ProjectsPage() {
-    const queryClient = useQueryClient();
-    const { addToast } = useToast();
-    const { setPageTitle } = usePageTitle();
+  const { setPageTitle } = usePageTitle();
+  setPageTitle("Projects");
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { addToast } = useToast();
 
-    onMount(() => setPageTitle("Projects"));
+  const [showCreate, setShowCreate] = createSignal(false);
+  const [name, setName] = createSignal("");
+  const [description, setDescription] = createSignal("");
+  const [deleteTarget, setDeleteTarget] = createSignal<string | null>(null);
 
-    const [showCreateForm, setShowCreateForm] = createSignal(false);
-    const [name, setName] = createSignal("");
-    const [description, setDescription] = createSignal("");
+  const projectsQuery = useQuery(() => ({
+    queryKey: ["projects"],
+    queryFn: () => projectService.getAll(),
+  }));
 
-    const projectsQuery = useQuery(() => ({
-        queryKey: ["projects"],
-        queryFn: () => projectService.getAll(),
-    }));
+  const createMutation = useMutation(() => ({
+    mutationFn: (data: { name: string; description?: string }) =>
+      projectService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      setShowCreate(false);
+      setName("");
+      setDescription("");
+      addToast("Project created", "success");
+    },
+    onError: () => addToast("Failed to create project", "error"),
+  }));
 
-    const createProjectMutation = useMutation(() => ({
-        mutationFn: (data: CreateProjectRequest) => projectService.create(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["projects"] });
-            setShowCreateForm(false);
-            setName("");
-            setDescription("");
-            addToast("Project created successfully!", "success");
-        },
-        onError: (error: Error) => {
-            addToast(error.message || "Failed to create project", "error");
-        },
-    }));
+  const deleteMutation = useMutation(() => ({
+    mutationFn: (slug: string) => projectService.delete(slug),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      setDeleteTarget(null);
+      addToast("Project deleted", "success");
+    },
+    onError: () => addToast("Failed to delete project", "error"),
+  }));
 
-    const deleteProjectMutation = useMutation(() => ({
-        mutationFn: (id: string) => projectService.delete(id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["projects"] });
-            addToast("Project deleted successfully!", "success");
-        },
-        onError: (error: Error) => {
-            addToast(error.message || "Failed to delete project", "error");
-        },
-    }));
+  const handleCreate = (e: Event) => {
+    e.preventDefault();
+    if (!name().trim()) return;
+    createMutation.mutate({ name: name().trim(), description: description().trim() || undefined });
+  };
 
-    const handleCreate = (e: Event) => {
-        e.preventDefault();
-        createProjectMutation.mutate({ name: name(), description: description() });
-    };
+  return (
+    <AppLayout>
+      <div class="space-y-10">
 
-    return (
-        <AppLayout>
-            <div class="space-y-6 max-w-7xl animate-fade-in">
+        {/* Page header */}
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div class="space-y-2">
+            <h2 class="text-4xl text-start font-headline font-bold text-primary tracking-tight">Projects</h2>
+            <p class="text-on-surface-variant text-start max-w-xl leading-relaxed text-sm">
+              Manage and organize your configuration projects. Centralize parameters and streamline deployments.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreate(!showCreate())}
+            class="flex items-center gap-2 px-6 py-3 rounded font-bold text-on-primary text-[13px] transition-all active:scale-[0.98] hover:opacity-90 w-fit"
+            style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+          >
+            <span class="material-symbols-outlined text-[18px]">{showCreate() ? "close" : "add"}</span>
+            {showCreate() ? "Cancel" : "Create New Project"}
+          </button>
+        </div>
 
-                {/* ── Page header ── */}
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-xl font-semibold text-white">Projects</h2>
-                        <p class="text-[13px] text-[#64748B] mt-1">
-                            {projectsQuery.data?.length ?? 0} project{projectsQuery.data?.length !== 1 ? "s" : ""}
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => setShowCreateForm(!showCreateForm())}
-                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold
-                               text-white cursor-pointer border-0 transition-colors"
-                        style="background: #6366F1;"
-                        onMouseOver={(e) => (e.currentTarget.style.background = "#4F46E5")}
-                        onMouseOut={(e) => (e.currentTarget.style.background = "#6366F1")}
-                    >
-                        <span class="text-lg leading-none">+</span>
-                        {showCreateForm() ? "Cancel" : "New Project"}
-                    </button>
-                </div>
+        {/* Create form */}
+        <Show when={showCreate()}>
+          <div class="bg-[#161b2b] rounded p-6 border border-outline-variant/10">
+            <h3 class="text-sm font-headline font-bold text-on-surface uppercase tracking-widest mb-6">New Project</h3>
+            <form onSubmit={handleCreate} class="grid md:grid-cols-2 gap-6">
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2 group-focus-within:text-primary transition-colors">
+                  Project Name *
+                </label>
+                <input
+                  type="text"
+                  placeholder="My Project"
+                  value={name()}
+                  onInput={(e) => setName(e.currentTarget.value)}
+                  required
+                  class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface placeholder:text-outline/40 py-3 px-0 transition-all font-mono text-[13px] outline-none"
+                />
+              </div>
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2 group-focus-within:text-primary transition-colors">
+                  Description
+                </label>
+                <input
+                  type="text"
+                  placeholder="Optional description"
+                  value={description()}
+                  onInput={(e) => setDescription(e.currentTarget.value)}
+                  class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface placeholder:text-outline/40 py-3 px-0 transition-all font-mono text-[13px] outline-none"
+                />
+              </div>
+              <div class="md:col-span-2 flex gap-3">
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending}
+                  class="px-6 py-2.5 rounded font-bold text-on-primary text-[13px] transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                  style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+                >
+                  <span class="material-symbols-outlined text-[16px]">add</span>
+                  {createMutation.isPending ? "Creating…" : "Create Project"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreate(false)}
+                  class="px-6 py-2.5 rounded font-bold text-on-surface-variant text-[13px] bg-surface-container-high hover:bg-surface-bright transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </Show>
 
-                {/* ── Create form ── */}
-                <Show when={showCreateForm()}>
-                    <div class="rounded-xl p-6 bg-[#111827] border border-white/[0.07]">
-                        <h3 class="font-semibold text-white mb-5">Create New Project</h3>
-                        <form onSubmit={handleCreate} class="space-y-4">
-                            <div class="grid gap-4 sm:grid-cols-2">
-                                <div class="space-y-1.5">
-                                    <Label for="name" class="text-[13px] text-[#94A3B8]">Project Name *</Label>
-                                    <Input
-                                        id="name"
-                                        type="text"
-                                        placeholder="e.g. My App"
-                                        value={name()}
-                                        onInput={(e) => setName(e.currentTarget.value)}
-                                        required
-                                    />
-                                </div>
-                                <div class="space-y-1.5">
-                                    <Label for="description" class="text-[13px] text-[#94A3B8]">Description</Label>
-                                    <Input
-                                        id="description"
-                                        type="text"
-                                        placeholder="Optional description"
-                                        value={description()}
-                                        onInput={(e) => setDescription(e.currentTarget.value)}
-                                    />
-                                </div>
-                            </div>
-                            <div class="flex gap-2 pt-1">
-                                <Button type="submit" disabled={createProjectMutation.isPending}>
-                                    {createProjectMutation.isPending ? "Creating…" : "Create Project"}
-                                </Button>
-                                <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
-                                    Cancel
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
-                </Show>
-
-                {/* ── Project grid ── */}
-                <Show when={!projectsQuery.isLoading}>
-                    <Show
-                        when={projectsQuery.data && projectsQuery.data.length > 0}
-                        fallback={
-                            <div class="rounded-xl p-14 text-center bg-[#111827] border border-dashed border-white/10">
-                                <div class="text-5xl mb-4">📁</div>
-                                <p class="font-semibold text-white mb-1">No projects yet</p>
-                                <p class="text-[13px] text-[#64748B] mb-5">Create your first project to get started</p>
-                                <button
-                                    onClick={() => setShowCreateForm(true)}
-                                    class="px-4 py-2 rounded-lg text-[13px] font-semibold text-white
-                                           bg-[#6366F1] hover:bg-[#4F46E5] transition-colors border-0 cursor-pointer"
-                                >
-                                    + Create Project
-                                </button>
-                            </div>
-                        }
-                    >
-                        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            <For each={projectsQuery.data}>
-                                {(project, i) => {
-                                    const c = PROJECT_COLORS[i() % PROJECT_COLORS.length];
-                                    return (
-                                        <div class="rounded-xl bg-[#111827] border border-white/[0.07]
-                                                    hover:bg-white/3 transition-colors flex flex-col">
-                                            {/* Card header strip */}
-                                            <div class="h-1.5 rounded-t-xl" style={`background: ${c.text}`} />
-
-                                            <div class="p-5 flex flex-col gap-4 flex-1">
-                                                {/* Project identity */}
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center
-                                                                text-sm font-bold shrink-0"
-                                                         style={`background: ${c.bg}; color: ${c.text}`}>
-                                                        {project.name.slice(0, 2).toUpperCase()}
-                                                    </div>
-                                                    <div class="min-w-0">
-                                                        <h3 class="font-semibold text-white truncate">{project.name}</h3>
-                                                        <p class="text-[12px] text-[#64748B] truncate mt-0.5">
-                                                            {project.description || "No description"}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Meta */}
-                                                <div class="flex items-center gap-2">
-                                                    <span class="text-[11px] px-2 py-0.5 rounded-full font-medium"
-                                                          style={`background: ${c.bg}; color: ${c.text}`}>
-                                                        Active
-                                                    </span>
-                                                    <span class="text-[11px] text-[#475569]">
-                                                        {new Date(project.createdAt).toLocaleDateString("en-US", {
-                                                            month: "short", day: "numeric", year: "numeric",
-                                                        })}
-                                                    </span>
-                                                </div>
-
-                                                {/* Actions */}
-                                                <div class="flex gap-2 pt-1 border-t border-white/6">
-                                                    <A href={`/projects/${project.id}`} class="flex-1">
-                                                        <button class="w-full h-8 rounded-lg text-[12px] font-medium
-                                                                       bg-white/5 text-[#94A3B8] hover:bg-white/10
-                                                                       hover:text-white transition-colors border-0 cursor-pointer">
-                                                            View Details
-                                                        </button>
-                                                    </A>
-                                                    <button
-                                                        class="h-8 px-3 rounded-lg text-[12px] font-medium
-                                                               bg-red-500/10 text-red-400 hover:bg-red-500/20
-                                                               transition-colors border-0 cursor-pointer"
-                                                        onClick={() => {
-                                                            if (confirm(`Delete "${project.name}"?`)) {
-                                                                deleteProjectMutation.mutate(project.id);
-                                                            }
-                                                        }}
-                                                        disabled={deleteProjectMutation.isPending}
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                }}
-                            </For>
-                        </div>
-                    </Show>
-                </Show>
-
+        {/* Project grid */}
+        <Show
+          when={(projectsQuery.data?.length ?? 0) > 0}
+          fallback={
+            <div class="bg-[#161b2b] rounded p-16 text-center">
+              <span class="material-symbols-outlined text-5xl text-outline mb-4 block">folder_open</span>
+              <p class="text-on-surface text-base font-headline font-bold mb-1">No projects yet</p>
+              <p class="text-on-surface-variant text-sm mb-6">Create your first project to start managing configuration.</p>
+              <button
+                onClick={() => setShowCreate(true)}
+                class="inline-flex items-center gap-2 px-6 py-3 rounded font-bold text-on-primary text-[13px] hover:opacity-90 transition-all"
+                style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+              >
+                <span class="material-symbols-outlined text-[18px]">add</span>
+                Create Project
+              </button>
             </div>
-        </AppLayout>
-    );
+          }
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <For each={projectsQuery.data ?? []}>
+              {(project, i) => (
+                <div
+                  class="group bg-[#161b2b] rounded relative overflow-hidden transition-all hover:bg-[#1a1f2f] border-l-2 cursor-pointer"
+                  style={i() === 0 ? "border-left-color: #a4c9ff;" : "border-left-color: rgba(96,165,250,0.4);"}
+                  onClick={() => navigate(`/projects/${project.urlSlug}`)}
+                >
+                  {/* Watermark icon */}
+                  <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-25 transition-opacity pointer-events-none">
+                    <span class="material-symbols-outlined text-6xl text-primary">
+                      {PROJECT_ICONS[i() % PROJECT_ICONS.length]}
+                    </span>
+                  </div>
+
+                  <div class="relative z-10 p-6 flex flex-col h-full">
+                    <div class="flex items-start justify-between mb-4">
+                      <h3 class="text-base font-headline font-bold text-on-surface leading-tight">{project.name}</h3>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(project.urlSlug); }}
+                        class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded text-outline hover:text-error hover:bg-error-container/20 bg-transparent border-0 cursor-pointer ml-2 shrink-0"
+                        title="Delete project"
+                      >
+                        <span class="material-symbols-outlined text-[18px]">delete_outline</span>
+                      </button>
+                    </div>
+
+                    <p class="text-on-surface-variant text-xs leading-relaxed flex-1 mb-4 line-clamp-3">
+                      {project.description || "No description"}
+                    </p>
+
+                    <div class="flex items-center justify-between pt-4 border-t border-outline-variant/15">
+                      <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-primary-container text-[14px]">settings_ethernet</span>
+                        <span class="text-[11px] font-mono text-on-surface-variant">{project.urlSlug}</span>
+                      </div>
+                      <div class="flex items-center gap-1.5 text-outline">
+                        <span class="material-symbols-outlined text-[13px]">schedule</span>
+                        <span class="text-[11px]">{new Date(project.updatedAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </For>
+
+            {/* Add new placeholder */}
+            <button
+              onClick={() => setShowCreate(true)}
+              class="bg-transparent border-2 border-dashed border-outline-variant/30 rounded p-6 flex flex-col items-center justify-center gap-3 text-outline hover:border-primary/40 hover:text-primary transition-all cursor-pointer min-h-[180px]"
+            >
+              <span class="material-symbols-outlined text-4xl">add_circle_outline</span>
+              <span class="text-xs font-bold uppercase tracking-widest">New Project</span>
+            </button>
+          </div>
+        </Show>
+
+        {/* Delete confirmation modal */}
+        <Show when={deleteTarget()}>
+          <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div class="bg-[#161b2b] rounded p-8 max-w-sm w-full mx-4 border border-outline-variant/20 shadow-2xl">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="material-symbols-outlined text-error text-[24px]">warning</span>
+                <h3 class="font-headline font-bold text-on-surface">Delete Project?</h3>
+              </div>
+              <p class="text-on-surface-variant text-sm mb-6">
+                This will permanently delete <span class="font-mono text-primary">{deleteTarget()}</span> and all its configuration data.
+              </p>
+              <div class="flex gap-3">
+                <button
+                  onClick={() => deleteMutation.mutate(deleteTarget()!)}
+                  disabled={deleteMutation.isPending}
+                  class="flex-1 py-2.5 rounded font-bold text-on-error text-[13px] hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  style="background-color: #93000a;"
+                >
+                  <span class="material-symbols-outlined text-[16px]">delete</span>
+                  {deleteMutation.isPending ? "Deleting…" : "Delete"}
+                </button>
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  class="flex-1 py-2.5 rounded font-bold text-on-surface-variant text-[13px] bg-surface-container-high hover:bg-surface-bright transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </Show>
+      </div>
+    </AppLayout>
+  );
 }

@@ -8,19 +8,12 @@ export function Input(props: InputProps) {
   return (
     <input
       class={cn(
-        // base
-        "flex h-11 w-full rounded-xl px-3.5 text-[13.5px] font-normal text-white",
-        // background & border
-        "bg-[#0D1117] border border-white/10",
-        // placeholder
-        "placeholder:text-[#3D4E68]",
-        // transition
+        "flex w-full px-0 py-3 text-[13px] font-mono text-on-surface",
+        "bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30",
+        "placeholder:text-outline/40",
         "transition-all duration-200",
-        // focus: left accent bar + border glow
-        "focus:outline-none focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20",
-        // hover
-        "hover:border-white/20",
-        // disabled
+        "focus:outline-none focus:border-b-primary focus:ring-0",
+        "hover:border-b-outline",
         "disabled:cursor-not-allowed disabled:opacity-40",
         local.class
       )}
@@ -28,3 +21,4 @@ export function Input(props: InputProps) {
     />
   );
 }
+

@@ -1,6 +1,4 @@
 import { type Component } from "solid-js";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 
 interface FormFieldProps {
   id: string;
@@ -15,9 +13,14 @@ interface FormFieldProps {
 
 export const FormField: Component<FormFieldProps> = (props) => {
   return (
-    <div class="space-y-1.5">
-      <Label for={props.id}>{props.label}</Label>
-      <Input
+    <div class="group">
+      <label
+        for={props.id}
+        class="block text-xs font-bold text-start uppercase tracking-widest text-outline mb-2 group-focus-within:text-primary transition-colors"
+      >
+        {props.label}
+      </label>
+      <input
         id={props.id}
         type={props.type || "text"}
         placeholder={props.placeholder}
@@ -25,7 +28,9 @@ export const FormField: Component<FormFieldProps> = (props) => {
         onInput={props.onInput}
         required={props.required}
         autofocus={props.autofocus}
+        class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface placeholder:text-outline/40 py-4  transition-all font-mono text-[13px] outline-none pl-4"
       />
     </div>
   );
 };
+

@@ -1,4 +1,4 @@
-import { createContext, useContext, type ParentComponent } from "solid-js";
+﻿import { createContext, useContext, type ParentComponent } from "solid-js";
 import { createStore } from "solid-js/store";
 
 export type ToastType = "success" | "error" | "info" | "warning";
@@ -23,10 +23,7 @@ export const ToastProvider: ParentComponent = (props) => {
 
   const addToast = (message: string, type: ToastType = "info", duration = 3000) => {
     const id = Math.random().toString(36).substring(7);
-    const toast: Toast = { id, message, type, duration };
-
-    setState("toasts", (toasts) => [...toasts, toast]);
-
+    setState("toasts", (toasts) => [...toasts, { id, message, type, duration }]);
     if (duration > 0) {
       setTimeout(() => removeToast(id), duration);
     }
@@ -46,35 +43,38 @@ export const ToastProvider: ParentComponent = (props) => {
 
 export const useToast = () => {
   const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error("useToast must be used within ToastProvider");
-  }
+  if (!context) throw new Error("useToast must be used within ToastProvider");
   return context;
 };
 
-const ToastContainer: ParentComponent<{ toasts: Toast[]; removeToast: (id: string) => void }> = (
-  props
-) => {
+const toastStyles: Record<ToastType, string> = {
+  success: "bg-[#1a2f20] border border-[#10B981]/30 text-[#6ee7b7]",
+  error:   "bg-[#2f1a1a] border border-error/30 text-error",
+  warning: "bg-[#2f2a1a] border border-[#F59E0B]/30 text-[#fcd34d]",
+  info:    "bg-surface-container-high border border-primary/20 text-primary",
+};
+
+const toastIcons: Record<ToastType, string> = {
+  success: "check_circle",
+  error:   "error",
+  warning: "warning",
+  info:    "info",
+};
+
+const ToastContainer: ParentComponent<{ toasts: Toast[]; removeToast: (id: string) => void }> = (props) => {
   return (
-    <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+    <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2">
       {props.toasts.map((toast) => (
         <div
-          class={`px-4 py-3 rounded-lg shadow-lg text-white flex items-center justify-between gap-4 min-w-[300px] animate-in slide-in-from-right ${
-            toast.type === "success"
-              ? "bg-green-600"
-              : toast.type === "error"
-              ? "bg-red-600"
-              : toast.type === "warning"
-              ? "bg-yellow-600"
-              : "bg-blue-600"
-          }`}
+          class={`flex items-center gap-3 rounded px-4 py-3 shadow-xl max-w-sm ${toastStyles[toast.type]}`}
         >
-          <span class="text-sm">{toast.message}</span>
+          <span class="material-symbols-outlined text-[18px] shrink-0">{toastIcons[toast.type]}</span>
+          <span class="text-[13px] flex-1">{toast.message}</span>
           <button
             onClick={() => props.removeToast(toast.id)}
-            class="text-white hover:text-gray-200 font-bold"
+            class="shrink-0 text-current opacity-60 hover:opacity-100 transition-opacity bg-transparent border-0 cursor-pointer"
           >
-            ×
+            <span class="material-symbols-outlined text-[16px]">close</span>
           </button>
         </div>
       ))}

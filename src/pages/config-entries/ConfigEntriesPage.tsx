@@ -1,376 +1,341 @@
-import { createSignal, Show, For, createMemo, onMount } from "solid-js";
-import { createQuery, createMutation, useQueryClient } from "@tanstack/solid-query";
+import { createSignal, Show, For, createMemo } from "solid-js";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/tabs";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Select } from "../../components/ui/select";
+import { usePageTitle } from "../../contexts/PageTitleContext";
+import { useToast } from "../../components/ui/toast";
 import { configEntryService } from "../../services/config-entry.service";
 import { projectService } from "../../services/project.service";
 import { environmentService } from "../../services/environment.service";
-import { useToast } from "../../components/ui/toast";
-import { usePageTitle } from "../../contexts/PageTitleContext";
 import type { CreateConfigEntryRequest } from "../../types";
 
+const TYPE_STYLE: Record<string, string> = {
+  string:  "bg-[#161b2b] border border-primary/20 text-primary",
+  number:  "bg-[#162b1b] border border-[#10B981]/20 text-[#6ee7b7]",
+  boolean: "bg-[#2b2216] border border-[#F59E0B]/20 text-[#fcd34d]",
+  json:    "bg-[#211b2b] border border-secondary/20 text-secondary",
+};
+
+const SCOPE_STYLE: Record<string, string> = {
+  global:       "bg-[#1a1f2f] border border-outline-variant/20 text-outline",
+  environment:  "bg-[#161b2b] border border-primary/20 text-primary",
+};
+
 export default function ConfigEntriesPage() {
+  const { setPageTitle } = usePageTitle();
+  setPageTitle("Parameters");
   const queryClient = useQueryClient();
   const { addToast } = useToast();
-  const { setPageTitle } = usePageTitle();
-  
-  // Set page title on mount
-  onMount(() => {
-    setPageTitle("Parameters");
-  });
-  
-  const [showCreateForm, setShowCreateForm] = createSignal(false);
-  const [selectedProjectId, setSelectedProjectId] = createSignal<string>("");
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = createSignal<string>("");
-  const [key, setKey] = createSignal("");
-  const [value, setValue] = createSignal("");
-  const [valueType, setValueType] = createSignal<"string" | "number" | "boolean" | "json">("string");
-  const [scope, setScope] = createSignal<"global" | "environment">("global");
 
-  // Queries
-  const projectsQuery = createQuery(() => ({
+  const [selectedProjectSlug, setSelectedProjectSlug] = createSignal("");
+  const [selectedEnvId, setSelectedEnvId] = createSignal("");
+  const [activeTab, setActiveTab] = createSignal<"server" | "client">("server");
+  const [showAddForm, setShowAddForm] = createSignal(false);
+  const [deleteTarget, setDeleteTarget] = createSignal<string | null>(null);
+
+  const [cfgKey, setCfgKey] = createSignal("");
+  const [cfgValue, setCfgValue] = createSignal("");
+  const [cfgType, setCfgType] = createSignal<"string" | "number" | "boolean" | "json">("string");
+  const [cfgScope] = createSignal<"global" | "environment">("global");
+
+  const projectsQuery = useQuery(() => ({
     queryKey: ["projects"],
     queryFn: () => projectService.getAll(),
   }));
 
-  const environmentsQuery = createQuery(() => ({
-    queryKey: ["environments", selectedProjectId()],
-    queryFn: () => environmentService.getAll(selectedProjectId()),
-    enabled: !!selectedProjectId(),
+  const environmentsQuery = useQuery(() => ({
+    queryKey: ["environments", selectedProjectSlug()],
+    queryFn: () => environmentService.getAll(selectedProjectSlug()),
+    enabled: !!selectedProjectSlug(),
   }));
 
-  const configEntriesQuery = createQuery(() => ({
-    queryKey: ["config-entries", selectedProjectId(), selectedEnvironmentId()],
-    queryFn: () => configEntryService.getAll(selectedProjectId(), selectedEnvironmentId()),
+  const configQuery = useQuery(() => ({
+    queryKey: ["config-entries-page", selectedProjectSlug(), selectedEnvId()],
+    queryFn: () => configEntryService.getAll(selectedProjectSlug(), selectedEnvId()),
+    enabled: !!selectedProjectSlug() && !!selectedEnvId(),
   }));
 
-  const createConfigMutation = createMutation(() => ({
-    mutationFn: (data: CreateConfigEntryRequest) => configEntryService.create(data),
+  const createMutation = useMutation(() => ({
+    mutationFn: (req: CreateConfigEntryRequest) =>
+      configEntryService.create(req),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["config-entries"] });
-      setShowCreateForm(false);
-      resetForm();
-      addToast("Config entry created successfully!", "success");
+      queryClient.invalidateQueries({ queryKey: ["config-entries-page"] });
+      setShowAddForm(false);
+      setCfgKey(""); setCfgValue("");
+      addToast("Parameter created", "success");
     },
-    onError: (error: Error) => {
-      addToast(error.message || "Failed to create config entry", "error");
-    },
+    onError: () => addToast("Failed to create parameter", "error"),
   }));
 
-  const deleteConfigMutation = createMutation(() => ({
-    mutationFn: (id: string) => configEntryService.delete(id),
+  const deleteMutation = useMutation(() => ({
+    mutationFn: (id: string) =>
+      configEntryService.delete(selectedProjectSlug(), selectedEnvId(), id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["config-entries"] });
-      addToast("Config entry deleted successfully!", "success");
+      queryClient.invalidateQueries({ queryKey: ["config-entries-page"] });
+      setDeleteTarget(null);
+      addToast("Parameter deleted", "success");
     },
-    onError: (error: Error) => {
-      addToast(error.message || "Failed to delete config entry", "error");
-    },
+    onError: () => addToast("Failed to delete parameter", "error"),
   }));
 
-  const resetForm = () => {
-    setKey("");
-    setValue("");
-    setValueType("string");
-    setScope("global");
-    setSelectedEnvironmentId("");
-  };
   const handleCreate = (e: Event) => {
     e.preventDefault();
-    
-    if (!selectedProjectId()) {
-      addToast("Please select a project", "error");
-      return;
-    }
-
-    createConfigMutation.mutate({
-      projectId: selectedProjectId(),
-      environmentId: scope() === "environment" ? selectedEnvironmentId() : undefined,
-      key: key(),
-      value: value(),
-      valueType: valueType(),
-      scope: scope(),
+    if (!cfgKey().trim()) return;
+    createMutation.mutate({
+      projectSlug: selectedProjectSlug(),
+      key: cfgKey().trim(),
+      value: cfgValue(),
+      valueType: cfgType(),
+      scope: cfgScope(),
+      environmentId: cfgScope() === "environment" ? selectedEnvId() : undefined,
     });
   };
 
-  const filteredEntries = createMemo(() => {
-    const entries = configEntriesQuery.data || [];
-    if (!selectedProjectId()) return entries;
-    
-    return entries.filter((entry) => {
-      const projectMatch = entry.projectId === selectedProjectId();
-      const envMatch = selectedEnvironmentId() 
-        ? entry.environmentId === selectedEnvironmentId() 
-        : true;
-      return projectMatch && envMatch;
-    });
-  });
+  const entries = createMemo(() => configQuery.data ?? []);
+
   return (
     <AppLayout>
-      <div class="max-w-7xl animate-fade-in">
-        {/* Page Header */}
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h2 class="text-xl font-semibold text-white">Parameters</h2>
-            <p class="text-[13px] text-[#64748B] mt-1">Manage project configuration entries</p>
+      <div class="space-y-6">
+
+        {/* Page header */}
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div class="space-y-2">
+            <h2 class="text-4xl font-headline font-bold text-primary tracking-tight">Parameters</h2>
+            <p class="text-on-surface-variant max-w-xl leading-relaxed text-sm">
+              Manage configuration parameters across projects and environments.
+            </p>
           </div>
-          <button
-            onClick={() => setShowCreateForm(!showCreateForm())}
-            class="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold
-                   text-white bg-[#6366F1] hover:bg-[#4F46E5] transition-colors border-0 cursor-pointer"
-          >
-            <span class="text-lg leading-none">+</span>
-            Add Parameter
-          </button>
+          <Show when={selectedProjectSlug() && selectedEnvId()}>
+            <button
+              onClick={() => setShowAddForm(!showAddForm())}
+              class="flex items-center gap-2 px-6 py-3 rounded font-bold text-on-primary text-[13px] transition-all active:scale-[0.98] hover:opacity-90 w-fit border-0 cursor-pointer"
+              style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+            >
+              <span class="material-symbols-outlined text-[18px]">{showAddForm() ? "close" : "add"}</span>
+              {showAddForm() ? "Cancel" : "Add Parameter"}
+            </button>
+          </Show>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="parameters" class="flex-1">
-          <div class="border-b border-white/[0.07] mb-6">
-            <TabsList>
-              <TabsTrigger value="parameters">Parameters</TabsTrigger>
-              <TabsTrigger value="conditions">Conditions</TabsTrigger>
-              <TabsTrigger value="personalization">Personalization</TabsTrigger>
-            </TabsList>
+        {/* Sub-navigation: Server Side / Client Side tabs + env picker */}
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+          {/* Tabs */}
+          <nav class="flex p-1 bg-surface-container-lowest rounded border border-white/5 w-fit">
+            <button
+              onClick={() => setActiveTab("server")}
+              class={`px-6 py-1.5 text-xs font-bold rounded font-headline transition-all ${
+                activeTab() === "server"
+                  ? "bg-surface-container-highest text-primary shadow-sm"
+                  : "text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              Server Side
+            </button>
+            <button
+              onClick={() => setActiveTab("client")}
+              class={`px-6 py-1.5 text-xs font-bold rounded font-headline transition-all ${
+                activeTab() === "client"
+                  ? "bg-surface-container-highest text-primary shadow-sm"
+                  : "text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              Client Side
+            </button>
+          </nav>
+
+          {/* Project selector */}
+          <div class="flex flex-col gap-1">
+            <span class="text-[10px] text-outline font-bold uppercase tracking-widest">Project</span>
+            <div class="relative">
+              <select
+                value={selectedProjectSlug()}
+                onChange={(e) => { setSelectedProjectSlug(e.currentTarget.value); setSelectedEnvId(""); }}
+                class="bg-[#161b2b] px-3 py-2 rounded text-[13px] font-mono text-on-surface appearance-none min-w-[160px] border border-outline-variant/20 focus:outline-none focus:border-primary transition-colors"
+              >
+                <option value="">— Select project —</option>
+                <For each={projectsQuery.data ?? []}>
+                  {(p) => <option value={p.urlSlug}>{p.name}</option>}
+                </For>
+              </select>
+              <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline text-[16px] pointer-events-none">expand_more</span>
+            </div>
           </div>
 
-          {/* Parameters Tab Content */}
-          <TabsContent value="parameters" class="">
-            <div class="space-y-5">
-              {/* Project/Environment Filters */}
-              <div class="flex gap-3">
-                <div class="w-64">
-                  <Select
-                    value={selectedProjectId()}
-                    onChange={(e) => setSelectedProjectId(e.currentTarget.value)}
-                  >
-                    <option value="">All Projects</option>
-                    <For each={projectsQuery.data}>
-                      {(project) => <option value={project.id}>{project.name}</option>}
-                    </For>
-                  </Select>
-                </div>
-                <div class="w-64">
-                  <Select
-                    value={selectedEnvironmentId()}
-                    onChange={(e) => setSelectedEnvironmentId(e.currentTarget.value)}
-                    disabled={!selectedProjectId()}
-                  >
-                    <option value="">All Environments</option>
-                    <For each={environmentsQuery.data}>
-                      {(env) => <option value={env.id}>{env.name}</option>}
-                    </For>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Create Form */}
-              <Show when={showCreateForm()}>
-                <div class="rounded-xl bg-[#111827] border border-white/[0.07] p-6">
-                  <h3 class="font-semibold text-white mb-5">Create New Parameter</h3>
-                  <form onSubmit={handleCreate} class="space-y-4">
-                    <div class="grid gap-4 md:grid-cols-2">
-                      <div>
-                        <Label for="project">Project *</Label>
-                        <Select
-                          id="project"
-                          value={selectedProjectId()}
-                          onChange={(e) => setSelectedProjectId(e.currentTarget.value)}
-                          required
-                        >
-                          <option value="">Select a project</option>
-                          <For each={projectsQuery.data}>
-                            {(project) => <option value={project.id}>{project.name}</option>}
-                          </For>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label for="scope">Scope *</Label>
-                        <Select
-                          id="scope"
-                          value={scope()}
-                          onChange={(e) => setScope(e.currentTarget.value as "global" | "environment")}
-                          required
-                        >
-                          <option value="global">Global</option>
-                          <option value="environment">Environment-specific</option>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <Show when={scope() === "environment"}>
-                      <div>
-                        <Label for="environment">Environment *</Label>
-                        <Select
-                          id="environment"
-                          value={selectedEnvironmentId()}
-                          onChange={(e) => setSelectedEnvironmentId(e.currentTarget.value)}
-                          required={scope() === "environment"}
-                          disabled={!selectedProjectId()}
-                        >
-                          <option value="">Select an environment</option>
-                          <For each={environmentsQuery.data}>
-                            {(env) => <option value={env.id}>{env.name}</option>}
-                          </For>
-                        </Select>
-                      </div>
-                    </Show>
-
-                    <div class="grid gap-4 md:grid-cols-2">
-                      <div>
-                        <Label for="key">Key *</Label>
-                        <Input
-                          id="key"
-                          type="text"
-                          placeholder="e.g., API_URL"
-                          value={key()}
-                          onInput={(e) => setKey(e.currentTarget.value)}
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label for="valueType">Value Type *</Label>
-                        <Select
-                          id="valueType"
-                          value={valueType()}
-                          onChange={(e) => setValueType(e.currentTarget.value as any)}
-                          required
-                        >
-                          <option value="string">String</option>
-                          <option value="number">Number</option>
-                          <option value="boolean">Boolean</option>
-                          <option value="json">JSON</option>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label for="value">Value *</Label>
-                      <Input
-                        id="value"
-                        type="text"
-                        placeholder={valueType() === "json" ? '{"key": "value"}' : "Enter value"}
-                        value={value()}
-                        onInput={(e) => setValue(e.currentTarget.value)}
-                        required
-                      />
-                    </div>
-
-                    <div class="flex gap-3">
-                      <Button type="submit" disabled={createConfigMutation.isPending}>
-                        {createConfigMutation.isPending ? "Creating..." : "Create Parameter"}
-                      </Button>
-                      <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              </Show>
-
-              {/* Parameters Table */}
-              <Show
-                when={!configEntriesQuery.isLoading}
-                fallback={<div class="text-center py-12 text-[#64748B] text-[13px]">Loading parameters…</div>}
-              >
-                <Show
-                  when={filteredEntries().length > 0}
-                  fallback={
-                    <div class="rounded-xl py-14 text-center bg-[#111827] border border-dashed border-white/10">
-                      <div class="text-4xl mb-3">⚙️</div>
-                      <p class="font-semibold text-white mb-1">No parameters yet</p>
-                      <p class="text-[13px] text-[#64748B]">Create your first parameter to get started</p>
-                    </div>
-                  }
+          {/* Environment selector */}
+          <Show when={selectedProjectSlug()}>
+            <div class="flex flex-col gap-1">
+              <span class="text-[10px] text-outline font-bold uppercase tracking-widest">Environment</span>
+              <div class="relative">
+                <select
+                  value={selectedEnvId()}
+                  onChange={(e) => setSelectedEnvId(e.currentTarget.value)}
+                  class="bg-[#161b2b] px-3 py-2 rounded text-[13px] font-mono text-on-surface appearance-none min-w-[160px] border border-outline-variant/20 focus:outline-none focus:border-primary transition-colors"
                 >
-                  <div class="rounded-xl overflow-hidden bg-[#111827] border border-white/[0.07]">
-                    <table class="w-full">
-                      <thead class="border-b border-white/[0.07]">
-                        <tr>
-                          <th class="px-5 py-3 text-left text-[11px] font-semibold text-[#475569] uppercase tracking-wider">
-                            <input type="checkbox" class="rounded" />
-                          </th>
-                          <th class="px-5 py-3 text-left text-[11px] font-semibold text-[#475569] uppercase tracking-wider">Name</th>
-                          <th class="px-5 py-3 text-left text-[11px] font-semibold text-[#475569] uppercase tracking-wider">Value</th>
-                          <th class="px-5 py-3 text-left text-[11px] font-semibold text-[#475569] uppercase tracking-wider">Type</th>
-                          <th class="px-5 py-3 text-left text-[11px] font-semibold text-[#475569] uppercase tracking-wider">Scope</th>
-                          <th class="px-5 py-3 text-right text-[11px] font-semibold text-[#475569] uppercase tracking-wider">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody class="divide-y divide-white/6">
-                        <For each={filteredEntries()}>
-                          {(entry) => (
-                            <tr class="hover:bg-white/3 transition-colors">
-                              <td class="px-5 py-3.5 whitespace-nowrap">
-                                <input type="checkbox" class="rounded" />
-                              </td>
-                              <td class="px-5 py-3.5 whitespace-nowrap">
-                                <div class="text-[13px] font-medium text-white font-mono">{entry.key}</div>
-                              </td>
-                              <td class="px-5 py-3.5">
-                                <div class="text-[13px] text-[#64748B] max-w-xs truncate">{entry.value}</div>
-                              </td>
-                              <td class="px-5 py-3.5 whitespace-nowrap">
-                                <span class="px-2.5 py-0.5 text-[11px] rounded-full font-semibold"
-                                      style="background: rgba(99,102,241,0.18); color: #818CF8;">
-                                  {entry.valueType}
-                                </span>
-                              </td>
-                              <td class="px-5 py-3.5 whitespace-nowrap">
-                                <span
-                                  class="px-2.5 py-0.5 text-[11px] rounded-full font-semibold"
-                                  style={entry.scope === "global"
-                                    ? "background: rgba(16,185,129,0.18); color: #34D399;"
-                                    : "background: rgba(139,92,246,0.18); color: #A78BFA;"}
-                                >
-                                  {entry.scope}
-                                </span>
-                              </td>
-                              <td class="px-5 py-3.5 whitespace-nowrap text-right">
-                                <button
-                                  class="h-8 px-3 rounded-lg text-[12px] font-medium bg-red-500/10 text-red-400
-                                         hover:bg-red-500/20 transition-colors border-0 cursor-pointer"
-                                  onClick={() => {
-                                    if (confirm(`Delete parameter "${entry.key}"?`)) {
-                                      deleteConfigMutation.mutate(entry.id);
-                                    }
-                                  }}
-                                  disabled={deleteConfigMutation.isPending}
-                                >
-                                  Delete
-                                </button>
-                              </td>
-                            </tr>
-                          )}
-                        </For>
-                      </tbody>
-                    </table>
-                  </div>
-                </Show>
-              </Show>
+                  <option value="">— Select environment —</option>
+                  <For each={environmentsQuery.data ?? []}>
+                    {(env) => <option value={env.id}>{env.name}</option>}
+                  </For>
+                </select>
+                <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline text-[16px] pointer-events-none">expand_more</span>
+              </div>
             </div>
-          </TabsContent>
+          </Show>
+        </div>
 
-          {/* Conditions Tab */}
-          <TabsContent value="conditions">
-            <div class="rounded-xl py-14 text-center bg-[#111827] border border-dashed border-white/10">
-              <p class="text-[#64748B] text-[13px]">Conditions feature coming soon…</p>
+        {/* Add form */}
+        <Show when={showAddForm()}>
+          <form onSubmit={handleCreate} class="bg-[#161b2b] rounded p-6 border border-outline-variant/10 grid md:grid-cols-4 gap-4">
+            {[
+              { label: "Config Key", value: cfgKey, setter: setCfgKey, placeholder: "API_GATEWAY_URL", mono: true },
+              { label: "Value", value: cfgValue, setter: setCfgValue, placeholder: "https://…", mono: false },
+            ].map((field) => (
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2 group-focus-within:text-primary transition-colors">{field.label}</label>
+                <input
+                  type="text"
+                  placeholder={field.placeholder}
+                  value={field.value()}
+                  onInput={(e) => field.setter(e.currentTarget.value)}
+                  class={`w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface placeholder:text-outline/40 py-3 px-0 transition-all text-[13px] outline-none ${field.mono ? "font-mono" : ""}`}
+                />
+              </div>
+            ))}
+            <div class="group">
+              <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Type</label>
+              <select value={cfgType()} onChange={(e) => setCfgType(e.currentTarget.value as any)}
+                class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface py-3 px-0 transition-all font-mono text-[13px] outline-none appearance-none">
+                <option value="string">string</option>
+                <option value="number">number</option>
+                <option value="boolean">boolean</option>
+                <option value="json">json</option>
+              </select>
             </div>
-          </TabsContent>
+            <div class="flex gap-2 items-end pt-2">
+              <button type="submit" disabled={createMutation.isPending}
+                class="flex-1 py-3 rounded font-bold text-on-primary text-[12px] hover:opacity-90 transition-all disabled:opacity-50 border-0 cursor-pointer"
+                style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);">
+                {createMutation.isPending ? "…" : "Save"}
+              </button>
+              <button type="button" onClick={() => setShowAddForm(false)}
+                class="flex-1 py-3 rounded font-bold text-on-surface-variant text-[12px] bg-surface-container-high hover:bg-surface-bright transition-all border-0 cursor-pointer">
+                Discard
+              </button>
+            </div>
+          </form>
+        </Show>
 
-          {/* Personalization Tab */}
-          <TabsContent value="personalization">
-            <div class="rounded-xl py-14 text-center bg-[#111827] border border-dashed border-white/10">
-              <p class="text-[#64748B] text-[13px]">Personalization feature coming soon…</p>
+        {/* Empty state */}
+        <Show when={!selectedProjectSlug() || !selectedEnvId()}>
+          <div class="bg-[#161b2b] rounded p-16 text-center">
+            <span class="material-symbols-outlined text-5xl text-outline mb-4 block">tune</span>
+            <p class="text-on-surface text-base font-headline font-bold mb-1">Select a project and environment</p>
+            <p class="text-on-surface-variant text-sm">Choose a project and environment above to view its parameters.</p>
+          </div>
+        </Show>
+
+        {/* The Ledger — parameter table */}
+        <Show when={selectedProjectSlug() && selectedEnvId()}>
+          <div class="bg-[#161b2b] rounded overflow-hidden border border-outline-variant/10">
+            {/* Table header bar */}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant/10">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-outline">
+                {entries().length} Parameter{entries().length !== 1 ? "s" : ""}
+              </span>
+              <span class="text-[10px] text-outline font-mono">Configuration signed by Master Key</span>
             </div>
-          </TabsContent>
-        </Tabs>
+
+            <Show
+              when={entries().length > 0}
+              fallback={
+                <div class="p-12 text-center text-on-surface-variant text-sm">
+                  No parameters found for this environment
+                </div>
+              }
+            >
+              <table class="w-full text-[12px]">
+                <thead>
+                  <tr class="border-b border-outline-variant/10">
+                    <th class="text-left py-3 px-6 text-[10px] font-bold uppercase tracking-widest text-outline w-[40%]">Key</th>
+                    <th class="text-left py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-outline w-[10%]">Type</th>
+                    <th class="text-left py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-outline">Value</th>
+                    <th class="text-left py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-outline w-[12%]">Scope</th>
+                    <th class="py-3 px-4 w-20"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <For each={entries()}>
+                    {(entry) => (
+                      <tr class="group border-b border-outline-variant/10 hover:bg-[#1a1f2f] transition-colors">
+                        <td class="py-3 px-6">
+                          <span class="font-mono text-on-surface bg-primary/10 px-2 py-0.5 rounded text-[11px]">{entry.key}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                          <span class={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${TYPE_STYLE[entry.valueType] ?? ""}`}>
+                            {entry.valueType}
+                          </span>
+                        </td>
+                        <td class="py-3 px-4">
+                          <span class="font-mono text-on-surface-variant text-[11px] truncate max-w-[300px] block">{entry.value}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                          <span class={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${SCOPE_STYLE[entry.scope] ?? ""}`}>
+                            {entry.scope}
+                          </span>
+                        </td>
+                        <td class="py-3 px-4">
+                          <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => setDeleteTarget(entry.id)}
+                              class="p-1 rounded text-outline hover:text-error hover:bg-error-container/20 bg-transparent border-0 cursor-pointer"
+                              title="Delete"
+                            >
+                              <span class="material-symbols-outlined text-[16px]">delete_outline</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </For>
+                </tbody>
+              </table>
+
+              {/* Pagination footer */}
+              <div class="flex items-center justify-between px-6 py-3 border-t border-outline-variant/10">
+                <span class="text-[10px] text-outline font-mono">
+                  Showing 1–{entries().length} of {entries().length} parameters
+                </span>
+                <span class="text-[10px] text-outline font-mono">All changes logged.</span>
+              </div>
+            </Show>
+          </div>
+        </Show>
+
+        {/* Delete confirmation */}
+        <Show when={deleteTarget()}>
+          <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div class="bg-[#161b2b] rounded p-8 max-w-sm w-full mx-4 border border-error/20 shadow-2xl">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="material-symbols-outlined text-error text-[24px]">warning</span>
+                <h3 class="font-headline font-bold text-on-surface">Delete Parameter?</h3>
+              </div>
+              <p class="text-on-surface-variant text-sm mb-6">This action cannot be undone.</p>
+              <div class="flex gap-3">
+                <button
+                  onClick={() => deleteMutation.mutate(deleteTarget()!)}
+                  disabled={deleteMutation.isPending}
+                  class="flex-1 py-2.5 rounded font-bold text-sm text-white hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 border-0 cursor-pointer"
+                  style="background-color: #93000a;"
+                >
+                  <span class="material-symbols-outlined text-[16px]">delete</span>
+                  Delete Parameter
+                </button>
+                <button onClick={() => setDeleteTarget(null)}
+                  class="flex-1 py-2.5 rounded font-bold text-sm text-on-surface-variant bg-surface-container-high hover:bg-surface-bright transition-all border-0 cursor-pointer">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </Show>
       </div>
     </AppLayout>
   );

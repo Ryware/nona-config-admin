@@ -1,101 +1,161 @@
 @import "tailwindcss";
 
+/* ── Obsidian Architect Design System ─────────────────────────────────── */
 :root {
-  /* Page backgrounds */
-  --background: #0B0F1E;
-  --background-secondary: #0E1225;
-  --background-card: #111827;
+  /* Surface hierarchy (tonal layering — no drop shadows) */
+  --background:                  #0e1323;
+  --surface:                     #0e1323;
+  --surface-dim:                 #0e1323;
+  --surface-container-lowest:    #080d1d;
+  --surface-container-low:       #161b2b;
+  --surface-container:           #1a1f2f;
+  --surface-container-high:      #24293a;
+  --surface-container-highest:   #2f3446;
+  --surface-bright:              #34394a;
+  --surface-variant:             #2f3446;
 
-  /* Text */
-  --foreground: #F1F5F9;
-  --foreground-secondary: #94A3B8;
-  --foreground-muted: #475569;
+  /* Primary (steel blue) */
+  --primary:                     #a4c9ff;
+  --primary-fixed:               #d4e3ff;
+  --primary-fixed-dim:           #a4c9ff;
+  --primary-container:           #60a5fa;
+  --on-primary:                  #00315d;
+  --on-primary-container:        #003a6b;
+  --on-primary-fixed:            #001c39;
+  --on-primary-fixed-variant:    #004883;
+  --inverse-primary:             #0060ac;
 
-  /* Brand / Accent */
-  --brand-blue: #6366F1;
-  --brand-blue-hover: #4F46E5;
-  --brand-purple: #8B5CF6;
-  --brand-green: #10B981;
-  --brand-green-hover: #059669;
-  --brand-amber: #F59E0B;
-  --brand-red: #EF4444;
+  /* Secondary */
+  --secondary:                   #b6c8e4;
+  --secondary-container:         #394a61;
+  --secondary-fixed:             #d3e3ff;
+  --secondary-fixed-dim:         #b6c8e4;
+  --on-secondary:                #203147;
+  --on-secondary-container:      #a8b9d5;
+  --on-secondary-fixed:          #0a1c31;
+  --on-secondary-fixed-variant:  #37485f;
 
-  /* Borders */
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.12);
+  /* Tertiary */
+  --tertiary:                    #c4c7ca;
+  --tertiary-container:          #a0a3a7;
+  --tertiary-fixed:              #e0e2e6;
+  --tertiary-fixed-dim:          #c4c7ca;
+  --on-tertiary:                 #2d3134;
+  --on-tertiary-container:       #36393d;
+  --on-tertiary-fixed:           #191c1f;
+  --on-tertiary-fixed-variant:   #44474a;
 
-  /* Misc */
-  --code-bg: #1E2740;
-  --muted-text: #94A3B8;
+  /* Error */
+  --error:                       #ffb4ab;
+  --error-container:             #93000a;
+  --on-error:                    #690005;
+  --on-error-container:          #ffdad6;
+
+  /* Surface text */
+  --on-background:               #dee1f8;
+  --on-surface:                  #dee1f8;
+  --on-surface-variant:          #c1c7d3;
+  --inverse-surface:             #dee1f8;
+  --inverse-on-surface:          #2b3041;
+
+  /* Outline */
+  --outline:                     #8b919d;
+  --outline-variant:             #414751;
+
+  /* Surface tint */
+  --surface-tint:                #a4c9ff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-background-secondary: var(--background-secondary);
-  --color-background-card: var(--background-card);
-  --color-foreground: var(--foreground);
-  --color-foreground-secondary: var(--foreground-secondary);
-  --color-foreground-muted: var(--foreground-muted);
-
-  /* Text utilities */
-  --color-text-primary: var(--foreground);
-  --color-text-secondary: var(--foreground-secondary);
-  --color-text-muted: var(--foreground-muted);
-
-  /* Brand */
-  --color-brand-blue: var(--brand-blue);
-  --color-brand-blue-hover: var(--brand-blue-hover);
-  --color-brand-purple: var(--brand-purple);
-  --color-brand-green: var(--brand-green);
-  --color-brand-green-hover: var(--brand-green-hover);
-  --color-brand-amber: var(--brand-amber);
-  --color-brand-red: var(--brand-red);
-
-  /* Semantic */
-  --color-primary: var(--brand-blue);
-  --color-primary-hover: var(--brand-blue-hover);
-  --color-success: var(--brand-green);
-  --color-success-hover: var(--brand-green-hover);
-  --color-warning: var(--brand-amber);
-  --color-danger: var(--brand-red);
-
-  /* Misc */
-  --color-code-bg: var(--code-bg);
-  --color-muted: var(--muted-text);
+  --color-background:                var(--background);
+  --color-surface:                   var(--surface);
+  --color-surface-dim:               var(--surface-dim);
+  --color-surface-container-lowest:  var(--surface-container-lowest);
+  --color-surface-container-low:     var(--surface-container-low);
+  --color-surface-container:         var(--surface-container);
+  --color-surface-container-high:    var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-surface-bright:            var(--surface-bright);
+  --color-surface-variant:           var(--surface-variant);
+  --color-primary:                   var(--primary);
+  --color-primary-fixed:             var(--primary-fixed);
+  --color-primary-fixed-dim:         var(--primary-fixed-dim);
+  --color-primary-container:         var(--primary-container);
+  --color-on-primary:                var(--on-primary);
+  --color-on-primary-container:      var(--on-primary-container);
+  --color-inverse-primary:           var(--inverse-primary);
+  --color-secondary:                 var(--secondary);
+  --color-secondary-container:       var(--secondary-container);
+  --color-on-secondary:              var(--on-secondary);
+  --color-on-secondary-container:    var(--on-secondary-container);
+  --color-error:                     var(--error);
+  --color-error-container:           var(--error-container);
+  --color-on-error:                  var(--on-error);
+  --color-on-error-container:        var(--on-error-container);
+  --color-on-background:             var(--on-background);
+  --color-on-surface:                var(--on-surface);
+  --color-on-surface-variant:        var(--on-surface-variant);
+  --color-inverse-surface:           var(--inverse-surface);
+  --color-inverse-on-surface:        var(--inverse-on-surface);
+  --color-outline:                   var(--outline);
+  --color-outline-variant:           var(--outline-variant);
+  --color-surface-tint:              var(--surface-tint);
+  /* Legacy aliases for compatibility */
+  --color-brand-blue:                var(--primary-container);
+  --color-brand-red:                 var(--error);
 }
 
 * {
-  border-color: var(--border);
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
   background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  color: var(--on-surface);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.font-headline {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'ui-monospace', 'SFMono-Regular', monospace;
 }
 
 a {
   text-decoration: none;
 }
 
+/* Material Symbols */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  vertical-align: middle;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #080d1d;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
+  background: #2f3446;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: #a4c9ff;
 }
 
 /* Animations */
@@ -107,6 +167,10 @@ a {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
 
 .animate-in {
   animation: slide-in-from-right 0.3s ease-out;
@@ -114,19 +178,22 @@ a {
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
 }
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
 
 /* Focus */
 :focus-visible {
-  outline: 2px solid #6366F1;
+  outline: 2px solid #a4c9ff;
   outline-offset: 2px;
-  border-radius: 0.375rem;
+  border-radius: 0.125rem;
 }
 
-/* Select element dark styling */
+/* Select element styling */
 select {
-  background-color: #111827;
-  color: #F1F5F9;
+  background-color: var(--surface-container-highest);
+  color: var(--on-surface);
 }
 select option {
-  background-color: #1E2740;
+  background-color: var(--surface-container);
 }

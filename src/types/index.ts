@@ -33,6 +33,7 @@ export interface ResetPasswordRequest {
 // Project Types
 export interface Project {
   id: string;
+  urlSlug: string;
   name: string;
   description?: string;
   createdAt: string;
@@ -59,7 +60,7 @@ export interface Environment {
 }
 
 export interface CreateEnvironmentRequest {
-  projectId: string;
+  projectSlug: string;
   name: string;
 }
 
@@ -77,7 +78,7 @@ export interface ConfigEntry {
 }
 
 export interface CreateConfigEntryRequest {
-  projectId: string;
+  projectSlug: string;
   environmentId?: string;
   key: string;
   value: string;
@@ -95,6 +96,7 @@ export interface User {
   id: string;
   email: string;
   role: string;
+  name: string;
   resetPasswordToken?: string;
   createdAt: string;
 }

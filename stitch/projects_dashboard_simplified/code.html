@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nona Config | Projects Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "outline-variant": "#414751",
+              "on-error": "#690005",
+              "on-background": "#dee1f8",
+              "tertiary": "#c4c7ca",
+              "on-secondary-fixed": "#0a1c31",
+              "background": "#0e1323",
+              "secondary": "#b6c8e4",
+              "tertiary-fixed": "#e0e2e6",
+              "outline": "#8b919d",
+              "surface-dim": "#0e1323",
+              "surface-tint": "#a4c9ff",
+              "surface-bright": "#34394a",
+              "surface-container-low": "#161b2b",
+              "inverse-surface": "#dee1f8",
+              "on-tertiary-container": "#36393d",
+              "on-primary": "#00315d",
+              "error-container": "#93000a",
+              "tertiary-fixed-dim": "#c4c7ca",
+              "inverse-on-surface": "#2b3041",
+              "secondary-fixed": "#d3e3ff",
+              "surface-container-highest": "#2f3446",
+              "on-primary-fixed": "#001c39",
+              "on-tertiary-fixed": "#191c1f",
+              "tertiary-container": "#a0a3a7",
+              "on-surface": "#dee1f8",
+              "surface": "#0e1323",
+              "on-primary-fixed-variant": "#004883",
+              "on-secondary-container": "#a8b9d5",
+              "surface-variant": "#2f3446",
+              "surface-container-high": "#24293a",
+              "primary": "#a4c9ff",
+              "on-tertiary-fixed-variant": "#44474a",
+              "on-secondary-fixed-variant": "#37485f",
+              "surface-container-lowest": "#080d1d",
+              "inverse-primary": "#0060ac",
+              "primary-fixed": "#d4e3ff",
+              "on-secondary": "#203147",
+              "primary-fixed-dim": "#a4c9ff",
+              "primary-container": "#60a5fa",
+              "surface-container": "#1a1f2f",
+              "secondary-fixed-dim": "#b6c8e4",
+              "on-tertiary": "#2d3134",
+              "on-surface-variant": "#c1c7d3",
+              "error": "#ffb4ab",
+              "on-primary-container": "#003a6b",
+              "on-error-container": "#ffdad6",
+              "secondary-container": "#394a61"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);
+        }
+        body {
+            background-color: #0e1323;
+            color: #dee1f8;
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #080d1d;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2f3446;
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+<!-- SideNavBar (Shared Component) -->
+<aside class="fixed left-0 top-0 h-full flex flex-col p-4 z-40 bg-[#080d1d] dark:bg-[#080d1d] w-64 shadow-2xl shadow-black/50 font-['Space_Grotesk'] font-medium text-sm">
+<div class="flex items-center gap-3 mb-10 px-2">
+<div class="w-10 h-10 primary-gradient rounded-sm flex items-center justify-center text-on-primary shadow-[0_0_15px_rgba(164,201,255,0.2)]">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-[#a4c9ff] leading-none">Nona Config</h1>
+<p class="text-[10px] text-slate-500 tracking-widest mt-1 uppercase">v2.4.0-obsidian</p>
+</div>
+</div>
+<nav class="flex-1 space-y-2">
+<!-- Active Tab: Projects -->
+<a class="flex items-center gap-3 px-4 py-3 bg-[#161b2b] text-[#a4c9ff] rounded-sm transition-transform scale-[0.99]" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<span>Projects</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-300 hover:bg-[#161b2b] transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Team Management</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-300 hover:bg-[#161b2b] transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span>Activity Logs</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-outline-variant/10 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-slate-300 transition-all" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="help_outline">help_outline</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-slate-300 transition-all" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="description">description</span>
+<span>Documentation</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen relative flex flex-col bg-surface overflow-y-auto custom-scrollbar">
+<!-- TopNavBar (Shared Component - Integrated Style) -->
+<header class="flex justify-between items-center w-full px-8 h-20 bg-[#0e1323] dark:bg-[#0e1323] border-b border-[#2f3446]/15 z-30 sticky top-0 backdrop-blur-md bg-opacity-90">
+<div class="flex items-center gap-6">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="bg-surface-container-low border-none rounded-sm pl-10 pr-4 py-2 w-80 text-sm focus:ring-1 focus:ring-primary text-on-surface placeholder-slate-500" placeholder="Search projects..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-slate-400">
+<button class="hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant/20 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="text-xs font-bold text-on-surface leading-none">Alex Rivera</p>
+<p class="text-[10px] text-primary leading-none mt-1">Administrator</p>
+</div>
+<img alt="User profile avatar" class="w-10 h-10 rounded-sm bg-surface-container-highest border border-outline-variant/20" data-alt="Professional user avatar portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAu4rwh4MtzmHja8P8gCroAcw6xouphpaLE-Z1ixCm5Li-NQt15bvMb3YPVOlsVZz7PBH9tbJ5rYadqWkIPA5dL5xp55aQmVR8ojUK6OP3YwIR3UA06XFDJs04zJ7Q93FvMD4JI1un0jVt3TthUq7B4we-VSCpG0woWDluSG3ECE3gKQXUCGgmKirsJKkYgGapg-gK8QicxXFb-gV0qhEGCXv03G8yfCRj75OWH4KP75hxpiuBdR0aTfdyDSG-ZpE6RF5Pq65OUdE"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Body -->
+<section class="p-10 flex-1">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+<div class="space-y-2">
+<h2 class="text-4xl font-headline font-bold text-primary tracking-tight">Projects</h2>
+<p class="text-on-surface-variant max-w-xl font-body leading-relaxed">
+                        Manage and organize your configuration projects at a glance. Centralize parameters and streamline your deployment workflow.
+                    </p>
+</div>
+<!-- Primary CTA -->
+<button class="primary-gradient text-on-primary px-6 py-4 rounded-sm font-bold flex items-center gap-3 shadow-lg shadow-primary/10 hover:opacity-90 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+<span>Create New Project</span>
+</button>
+</div>
+<!-- Dashboard Grid (Asymmetric/Bento style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Project Card 1 -->
+<div class="group bg-surface-container-low p-8 rounded-sm relative overflow-hidden transition-all hover:bg-surface-container-high border-l-2 border-primary">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+<span class="material-symbols-outlined text-6xl" data-icon="hub">hub</span>
+</div>
+<div class="relative z-10 flex flex-col h-full">
+<div class="flex justify-between items-start mb-6">
+<h3 class="text-xl font-headline font-bold text-on-surface">Main Application</h3>
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+<p class="text-on-surface-variant text-sm font-body leading-relaxed mb-8 flex-1">
+                            Core config for the primary web portal. Includes authentication rules, feature flags, and UI theme overrides.
+                        </p>
+<div class="flex items-center justify-between pt-6 border-t border-outline-variant/15">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-sm" data-icon="settings_ethernet">settings_ethernet</span>
+<span class="text-xs font-mono text-slate-300">142 Parameters</span>
+</div>
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+<span class="text-[11px]">2m ago</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Project Card 2 -->
+<div class="group bg-surface-container-low p-8 rounded-sm relative overflow-hidden transition-all hover:bg-surface-container-high border-l-2 border-primary-container/40">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+<span class="material-symbols-outlined text-6xl" data-icon="database">database</span>
+</div>
+<div class="relative z-10 flex flex-col h-full">
+<div class="flex justify-between items-start mb-6">
+<h3 class="text-xl font-headline font-bold text-on-surface">User Service</h3>
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+<p class="text-on-surface-variant text-sm font-body leading-relaxed mb-8 flex-1">
+                            Identity management and profile orchestration logic. Secured environment variables for OAuth and session handling.
+                        </p>
+<div class="flex items-center justify-between pt-6 border-t border-outline-variant/15">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-sm" data-icon="settings_ethernet">settings_ethernet</span>
+<span class="text-xs font-mono text-slate-300">89 Parameters</span>
+</div>
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+<span class="text-[11px]">14h ago</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Project Card 3 -->
+<div class="group bg-surface-container-low p-8 rounded-sm relative overflow-hidden transition-all hover:bg-surface-container-high border-l-2 border-primary-container/40">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+<span class="material-symbols-outlined text-6xl" data-icon="language">language</span>
+</div>
+<div class="relative z-10 flex flex-col h-full">
+<div class="flex justify-between items-start mb-6">
+<h3 class="text-xl font-headline font-bold text-on-surface">Marketing Site</h3>
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+<p class="text-on-surface-variant text-sm font-body leading-relaxed mb-8 flex-1">
+                            Static asset paths and CMS integration keys for the public-facing marketing site and blogs.
+                        </p>
+<div class="flex items-center justify-between pt-6 border-t border-outline-variant/15">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-sm" data-icon="settings_ethernet">settings_ethernet</span>
+<span class="text-xs font-mono text-slate-300">34 Parameters</span>
+</div>
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+<span class="text-[11px]">3d ago</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Project Card 4 -->
+<div class="group bg-surface-container-low p-8 rounded-sm relative overflow-hidden transition-all hover:bg-surface-container-high border-l-2 border-primary-container/40">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+<span class="material-symbols-outlined text-6xl" data-icon="api">api</span>
+</div>
+<div class="relative z-10 flex flex-col h-full">
+<div class="flex justify-between items-start mb-6">
+<h3 class="text-xl font-headline font-bold text-on-surface">API Gateway</h3>
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+<p class="text-on-surface-variant text-sm font-body leading-relaxed mb-8 flex-1">
+                            Routing tables and rate limiting thresholds for external traffic ingestion and internal microservice communication.
+                        </p>
+<div class="flex items-center justify-between pt-6 border-t border-outline-variant/15">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-sm" data-icon="settings_ethernet">settings_ethernet</span>
+<span class="text-xs font-mono text-slate-300">112 Parameters</span>
+</div>
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+<span class="text-[11px]">6h ago</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Project Card 5 -->
+<div class="group bg-surface-container-low p-8 rounded-sm relative overflow-hidden transition-all hover:bg-surface-container-high border-l-2 border-primary-container/40">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+<span class="material-symbols-outlined text-6xl" data-icon="analytics">analytics</span>
+</div>
+<div class="relative z-10 flex flex-col h-full">
+<div class="flex justify-between items-start mb-6">
+<h3 class="text-xl font-headline font-bold text-on-surface">Data Pipeline</h3>
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+<p class="text-on-surface-variant text-sm font-body leading-relaxed mb-8 flex-1">
+                            ETL job schedules and stream processing configuration for real-time analytics and data warehouse syncing.
+                        </p>
+<div class="flex items-center justify-between pt-6 border-t border-outline-variant/15">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-sm" data-icon="settings_ethernet">settings_ethernet</span>
+<span class="text-xs font-mono text-slate-300">56 Parameters</span>
+</div>
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+<span class="text-[11px]">1w ago</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Create New Card Placeholder -->
+<div class="group border-2 border-dashed border-outline-variant/20 p-8 rounded-sm flex flex-col items-center justify-center gap-4 hover:border-primary/40 transition-all cursor-pointer bg-surface-container-lowest/30">
+<div class="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-3xl text-slate-500 group-hover:text-primary transition-colors" data-icon="add_circle">add_circle</span>
+</div>
+<p class="font-headline font-bold text-slate-400 group-hover:text-primary transition-colors">Add New Module</p>
+</div>
+</div>
+</section>
+<!-- Footer / Status Bar -->
+<footer class="h-10 bg-surface-container-lowest border-t border-outline-variant/5 px-8 flex items-center justify-between text-[10px] text-slate-500 font-mono tracking-widest uppercase">
+<div class="flex items-center gap-6">
+<span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> System Ready</span>
+<span>Active Projects: 5</span>
+</div>
+<div class="flex items-center gap-4">
+<span>Last Sync: 12:45:02 UTC</span>
+<span class="text-primary-container">Nona Config Intelligence Engine</span>
+</div>
+</footer>
+</main>
+</body></html>
