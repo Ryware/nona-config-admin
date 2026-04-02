@@ -1,9 +1,8 @@
-import { createSignal, createEffect, Show, For, onMount } from "solid-js";
+import { createSignal, createEffect, Show, For } from "solid-js";
 import { Title } from "@solidjs/meta";
 import { useNavigate, useLocation } from "@solidjs/router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
-import { usePageTitle } from "../../contexts/PageTitleContext";
 import { useToast } from "../../components/ui/toast";
 import { userService, type UpdateUserRequest } from "../../services/user.service";
 import { projectService } from "../../services/project.service";
@@ -14,7 +13,6 @@ export default function UserPage() {
   const location = useLocation<{ userId?: string }>();
   const queryClient = useQueryClient();
   const { addToast } = useToast();
-  const { setPageTitle } = usePageTitle();
 
   const [name, setName] = createSignal("");
   const [email, setEmail] = createSignal("");
@@ -23,8 +21,6 @@ export default function UserPage() {
 
   const userId = () => location.state?.userId;
   const isEditMode = () => !!userId();
-
-  onMount(() => setPageTitle(isEditMode() ? "Edit Member" : "Invite Member"));
 
   const userQuery = useQuery(() => ({
     queryKey: ["user", userId()],

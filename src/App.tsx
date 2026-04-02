@@ -14,7 +14,6 @@ const ProjectsPage = lazy(() => import("./pages/projects/ProjectsPage"));
 const ProjectPage = lazy(() => import("./pages/projects/ProjectPage"));
 const UsersPage = lazy(() => import("./pages/users/UsersPage"));
 const UserPage = lazy(() => import("./pages/users/UserPage"));
-const ConfigEntriesPage = lazy(() => import("./pages/config-entries/ConfigEntriesPage"));
 const AuditLogsPage = lazy(() => import("./pages/audit-logs/AuditLogsPage"));
 
 // Create a client
@@ -58,7 +57,6 @@ const App: Component = () => {
               <Route path="/projects/:slug" component={() => <ProtectedRoute component={ProjectPage} />} />
               <Route path="/users" component={() => <ProtectedRoute component={UsersPage} />} />
               <Route path="/user" component={() => <ProtectedRoute component={UserPage} />} />
-              <Route path="/config-entries" component={() => <ProtectedRoute component={ConfigEntriesPage} />} />
               <Route path="/audit-logs" component={() => <ProtectedRoute component={AuditLogsPage} />} />
             </Router>
           </ToastProvider>

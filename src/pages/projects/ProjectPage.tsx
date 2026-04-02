@@ -19,8 +19,9 @@ const TYPE_STYLE: Record<string, string> = {
 };
 
 const SCOPE_STYLE: Record<string, string> = {
-  global: "bg-[#1a1f2f] border border-outline-variant/20 text-outline",
-  environment: "bg-[#161b2b] border border-primary/20 text-primary",
+  all: "bg-[#1a1f2f] border border-outline-variant/20 text-outline",
+  client: "bg-[#161b2b] border border-primary/20 text-primary",
+  server: "bg-[#162b1b] border border-[#10B981]/20 text-[#6ee7b7]",
 };
 
 export default function ProjectPage() {
@@ -87,7 +88,7 @@ export default function ProjectPage() {
   const [cfgKey, setCfgKey] = createSignal("");
   const [cfgValue, setCfgValue] = createSignal("");
   const [cfgType, setCfgType] = createSignal<"string" | "number" | "boolean" | "json">("string");
-  const [cfgScope] = createSignal<"global" | "environment">("global");
+  const [cfgScope] = createSignal<"client" | "server" | "all">("all");
 
   const createConfigMutation = useMutation(() => ({
     mutationFn: (req: CreateConfigEntryRequest) =>
@@ -259,9 +260,8 @@ export default function ProjectPage() {
                   projectSlug: project()!.urlSlug,
                   key: cfgKey().trim(),
                   value: cfgValue().trim(),
-                  valueType: cfgType(),
+                  contentType: cfgType(),
                   scope: cfgScope(),
-                  environmentName: cfgScope() === "environment" ? activeEnvName() : undefined,
                 });
               }}
               class="bg-[#161b2b] rounded p-6 border border-outline-variant/10 mb-4 grid md:grid-cols-4 gap-4"
@@ -339,8 +339,8 @@ export default function ProjectPage() {
                           <span class="font-mono text-on-surface-variant truncate max-w-[200px] block">{entry.value}</span>
                         </td>
                         <td class="py-3 px-4">
-                          <span class={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${TYPE_STYLE[entry.valueType] ?? ""}`}>
-                            {entry.valueType}
+                          <span class={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${TYPE_STYLE[entry.contentType] ?? ""}`}>
+                            {entry.contentType}
                           </span>
                         </td>
                         <td class="py-3 px-4">
@@ -350,7 +350,7 @@ export default function ProjectPage() {
                         </td>
                         <td class="py-3 px-4">
                           <button
-                            onClick={() => deleteConfigMutation.mutate(entry.id)}
+                            onClick={() => deleteConfigMutation.mutate(entry.key)}
                             class="opacity-0 group-hover:opacity-100 transition-opacity text-outline hover:text-error bg-transparent border-0 cursor-pointer"
                           >
                             <span class="material-symbols-outlined text-[16px]">delete_outline</span>

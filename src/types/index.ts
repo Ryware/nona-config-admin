@@ -66,29 +66,28 @@ export interface CreateEnvironmentRequest {
 
 // Config Entry Types
 export interface ConfigEntry {
-  id: string;
-  projectId: string;
-  environmentName?: string;
+  project: string;
+  environment: string;
   key: string;
   value: string;
-  valueType: 'string' | 'number' | 'boolean' | 'json';
-  scope: 'global' | 'environment';
+  contentType: 'string' | 'number' | 'boolean' | 'json';
+  scope: 'client' | 'server' | 'all';
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateConfigEntryRequest {
   projectSlug: string;
-  environmentName?: string;
   key: string;
   value: string;
-  valueType: 'string' | 'number' | 'boolean' | 'json';
-  scope: 'global' | 'environment';
+  contentType: 'string' | 'number' | 'boolean' | 'json';
+  scope: 'client' | 'server' | 'all';
 }
 
 export interface UpdateConfigEntryRequest {
   value: string;
-  valueType: 'string' | 'number' | 'boolean' | 'json';
+  contentType?: 'string' | 'number' | 'boolean' | 'json';
+  scope?: 'client' | 'server' | 'all';
 }
 
 // User Types
