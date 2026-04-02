@@ -7,7 +7,6 @@ import { environmentService } from "../../services/environment.service";
 import { configEntryService } from "../../services/config-entry.service";
 import { useToast } from "../../components/ui/toast";
 import type { CreateEnvironmentRequest, CreateConfigEntryRequest, Environment } from "../../types";
-import { Title } from "@solidjs/meta";
 import { FormField } from "../../components/auth/FormField";
 import { Select } from "../../components/ui/select";
 
@@ -120,7 +119,6 @@ export default function ProjectPage() {
 
   return (
     <AppLayout>
-      <Title>{project() ? project()!.name + " | Nona Config Admin" : "Project Not Found | Nona Config Admin"}</Title>
       <div class="space-y-8">
 
         {/* Breadcrumb */}
