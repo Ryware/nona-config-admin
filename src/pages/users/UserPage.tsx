@@ -1,4 +1,5 @@
 import { createSignal, createEffect, Show, For, onMount } from "solid-js";
+import { Title } from "@solidjs/meta";
 import { useNavigate, useLocation } from "@solidjs/router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
@@ -15,9 +16,9 @@ export default function UserPage() {
   const { addToast } = useToast();
   const { setPageTitle } = usePageTitle();
 
-  const [username, setUsername] = createSignal("");
+  const [name, setName] = createSignal("");
   const [email, setEmail] = createSignal("");
-  const [role, setRole] = createSignal<"admin" | "viewer">("viewer");
+  const [role, setRole] = createSignal<"editor" | "viewer">("editor");
   const [selectedProjects, setSelectedProjects] = createSignal<Set<string>>(new Set());
 
   const userId = () => location.state?.userId;
@@ -39,7 +40,8 @@ export default function UserPage() {
   createEffect(() => {
     if (userQuery.data) {
       setEmail(userQuery.data.email);
-      setRole(userQuery.data.role as "admin" | "viewer");
+      setRole(userQuery.data.role as "editor" | "viewer");
+      setName(userQuery.data.name);
     }
   });
 
@@ -69,7 +71,7 @@ export default function UserPage() {
     e.preventDefault();
     if (isEditMode()) {
       const updates: UpdateUserRequest = { email: email(), role: role() };
-      if (username()) updates.username = username();
+      if (name()) updates.name = name();
       updateMutation.mutate({ id: userId()!, updates });
     } else {
       if (!email()) { addToast("Email is required", "error"); return; }
@@ -89,9 +91,9 @@ export default function UserPage() {
 
   const ROLE_CARDS = [
     {
-      value: "admin" as const,
+      value: "editor" as const,
       icon: "shield_person",
-      label: "Admin",
+      label: "Editor",
       desc: "Full access to modify projects, manage team members, and view billing logs.",
     },
     {
@@ -104,6 +106,7 @@ export default function UserPage() {
 
   return (
     <AppLayout>
+      <Title>{(isEditMode() ? "Edit " + name() : "Invite Team Member") + " | Nona Config Admin"}</Title>
       <div class="max-w-4xl mx-auto space-y-0">
 
         {/* Back button */}
@@ -157,9 +160,9 @@ export default function UserPage() {
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Alex Rivera"
-                      value={username()}
-                      onInput={(e) => setUsername(e.currentTarget.value)}
+                      placeholder="e.g. John Smith"
+                      value={name()}
+                      onInput={(e) => setName(e.currentTarget.value)}
                       class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:border-b-primary focus:ring-0 text-on-surface px-4 py-3 transition-all placeholder:text-outline/40 outline-none"
                     />
                   </div>
@@ -193,11 +196,10 @@ export default function UserPage() {
                       return (
                         <div
                           onClick={() => setRole(card.value)}
-                          class={`p-6 rounded-lg border-2 transition-all h-full cursor-pointer select-none ${
-                            isSelected()
+                          class={`p-6 rounded-lg border-2 transition-all h-full cursor-pointer select-none ${isSelected()
                               ? "border-primary bg-primary/5"
                               : "bg-surface-container-highest border-transparent hover:border-outline-variant/50"
-                          }`}
+                            }`}
                         >
                           <div class="flex items-start justify-between mb-4">
                             <span
@@ -207,9 +209,8 @@ export default function UserPage() {
                             </span>
                             {/* Radio indicator */}
                             <div
-                              class={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                                isSelected() ? "border-primary bg-primary" : "border-outline-variant"
-                              }`}
+                              class={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected() ? "border-primary bg-primary" : "border-outline-variant"
+                                }`}
                             >
                               <Show when={isSelected()}>
                                 <div class="w-2 h-2 bg-on-primary rounded-full"></div>

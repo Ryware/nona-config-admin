@@ -6,8 +6,8 @@ import { projectService } from "../../services/project.service";
 import { environmentService } from "../../services/environment.service";
 import { configEntryService } from "../../services/config-entry.service";
 import { useToast } from "../../components/ui/toast";
-import { usePageTitle } from "../../contexts/PageTitleContext";
 import type { CreateEnvironmentRequest, CreateConfigEntryRequest, Environment } from "../../types";
+import { Title } from "@solidjs/meta";
 
 const TYPE_STYLE: Record<string, string> = {
   string:  "bg-[#161b2b] border border-primary/20 text-primary",
@@ -25,9 +25,6 @@ export default function ProjectPage() {
   const params = useParams<{ slug: string }>();
   const queryClient = useQueryClient();
   const { addToast } = useToast();
-  const { setPageTitle } = usePageTitle();
-
-  onMount(() => setPageTitle("Project"));
 
   const projectsQuery = useQuery(() => ({
     queryKey: ["projects"],
@@ -37,10 +34,6 @@ export default function ProjectPage() {
   const project = createMemo(() =>
     projectsQuery.data?.find((p) => p.urlSlug === params.slug)
   );
-
-  createEffect(() => {
-    if (project()) setPageTitle(project()!.name);
-  });
 
   const environmentsQuery = useQuery(() => ({
     queryKey: ["environments", project()?.urlSlug],
@@ -112,6 +105,7 @@ export default function ProjectPage() {
 
   return (
     <AppLayout>
+      <Title>{project() ? project()!.name + " | Nona Config Admin" : "Project Not Found | Nona Config Admin"}</Title>
       <div class="space-y-8">
 
         {/* Breadcrumb */}

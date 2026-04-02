@@ -1,7 +1,6 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { useQuery } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
-import { usePageTitle } from "../../contexts/PageTitleContext";
 import { projectService } from "../../services/project.service";
 import { userService } from "../../services/user.service";
 
@@ -67,9 +66,6 @@ function actorStyle(str: string) {
 const PAGE_SIZE = 25;
 
 export default function AuditLogsPage() {
-  const { setPageTitle } = usePageTitle();
-  setPageTitle("Activity Feed");
-
   const [search, setSearch] = createSignal("");
   const [filterAction, setFilterAction] = createSignal("all");
   const [filterEnv, setFilterEnv] = createSignal("all");

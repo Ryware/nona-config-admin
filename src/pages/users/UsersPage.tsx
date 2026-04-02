@@ -2,10 +2,10 @@ import { createSignal, Show, For } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
-import { usePageTitle } from "../../contexts/PageTitleContext";
 import { useToast } from "../../components/ui/toast";
 import { userService } from "../../services/user.service";
 import type { User } from "../../types";
+import { Title } from "@solidjs/meta";
 
 // Derive initials and avatar color from role
 const avatarStyle = (role: string) =>
@@ -18,16 +18,8 @@ const roleLabel = (role: string) =>
     ? { name: "Admin", subColor: "text-primary" }
     : { name: "Viewer", subColor: "text-slate-400" };
 
-// Static activity log entries (no API for this)
-const ACTIVITY_LOG = [
-  { dot: "bg-primary", text: "System initialized team access module.", time: "Just now • system" },
-  { dot: "bg-slate-700", text: "Role definitions synced from identity provider.", time: "5m ago • system" },
-  { dot: "bg-primary", text: "Admin configured project-level scopes.", time: "1h ago • system" },
-];
 
 export default function UsersPage() {
-  const { setPageTitle } = usePageTitle();
-  setPageTitle("Team");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { addToast } = useToast();
@@ -52,11 +44,14 @@ export default function UsersPage() {
   }));
 
   const users = () => usersQuery.data ?? [];
-  const adminCount = () => users().filter((u: User) => u.role === "admin").length;
-  const viewerCount = () => users().filter((u: User) => u.role !== "admin").length;
+
+  const editorsCount = () => users().filter((u: User) => u.role === 'editor').length;
+  const viewersCount = () => users().filter((u: User) => u.role === 'viewer').length;
 
   return (
     <AppLayout>
+      <Title>Team Management | Nona Config Admin</Title>
+
       <div class="space-y-8">
 
         {/* Hero section */}
@@ -75,12 +70,28 @@ export default function UsersPage() {
           </button>
         </section>
 
+        {/* Stats bar */}
+        <div class="grid grid-cols-3 gap-6">
+          <div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant/10">
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Members</p>
+            <p class="font-headline text-3xl font-bold text-on-surface">{users().length}</p>
+          </div>
+          <div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant/10">
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Editors</p>
+            <p class="font-headline text-3xl font-bold text-primary">{editorsCount()}</p>
+          </div>
+          <div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant/10">
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Viewers</p>
+            <p class="font-headline text-3xl font-bold text-primary">{viewersCount()}</p>
+          </div>
+        </div>
+
         {/* Main 8/4 grid */}
         <div class="grid grid-cols-12 gap-6">
 
           {/* Member table — 9 cols */}
-          <div class="col-span-12 lg:col-span-9 bg-surface-container-low rounded-lg p-1">
-            <div class="overflow-x-auto">
+          <div class="col-span-12 lg:col-span-12 bg-surface-container-low rounded-lg p-1">
+            <div>
               <table class="w-full text-left border-separate border-spacing-y-2 px-4">
                 <thead>
                   <tr class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
@@ -171,48 +182,9 @@ export default function UsersPage() {
               </table>
             </div>
           </div>
-
-          {/* Right rail — 3 cols */}
-          <div class="col-span-12 lg:col-span-3 space-y-6">
-            <div class="bg-surface-container-low rounded-lg p-6 space-y-4 h-full">
-              <div class="flex items-center justify-between">
-                <h4 class="font-headline font-bold text-on-surface uppercase tracking-widest text-xs">Recent Activity</h4>
-                <span class="material-symbols-outlined text-slate-500 text-lg">history</span>
-              </div>
-              <div class="space-y-6 mt-4">
-                <For each={ACTIVITY_LOG}>
-                  {(entry) => (
-                    <div class="flex gap-4 items-start">
-                      <div class={`w-1.5 h-1.5 rounded-full ${entry.dot} mt-1.5 shrink-0`}></div>
-                      <div>
-                        <p class="text-xs text-on-surface leading-relaxed">{entry.text}</p>
-                        <p class="text-[10px] text-slate-500 font-mono mt-1">{entry.time}</p>
-                      </div>
-                    </div>
-                  )}
-                </For>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Stats bar */}
-        <div class="grid grid-cols-3 gap-6">
-          <div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant/10">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Members</p>
-            <p class="font-headline text-3xl font-bold text-on-surface">{users().length}</p>
-          </div>
-          <div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant/10">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Admins</p>
-            <p class="font-headline text-3xl font-bold text-primary">{adminCount()}</p>
-          </div>
-          <div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant/10">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Active Roles</p>
-            <p class="font-headline text-3xl font-bold text-emerald-400">
-              {adminCount() > 0 && viewerCount() > 0 ? "2 Types" : "1 Type"}
-            </p>
-          </div>
-        </div>
+
       </div>
 
       {/* Invite modal */}

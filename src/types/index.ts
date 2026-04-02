@@ -95,6 +95,7 @@ export interface UpdateConfigEntryRequest {
 export interface User {
   id: string;
   email: string;
+  isAdmin: boolean;
   role: string;
   name: string;
   resetPasswordToken?: string;

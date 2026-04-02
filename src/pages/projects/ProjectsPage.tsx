@@ -2,15 +2,13 @@ import { createSignal, Show, For } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
-import { usePageTitle } from "../../contexts/PageTitleContext";
 import { useToast } from "../../components/ui/toast";
 import { projectService } from "../../services/project.service";
+import { Title } from "@solidjs/meta";
 
 const PROJECT_ICONS = ["hub", "database", "language", "storage", "cloud", "api"];
 
 export default function ProjectsPage() {
-  const { setPageTitle } = usePageTitle();
-  setPageTitle("Projects");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { addToast } = useToast();
@@ -56,6 +54,7 @@ export default function ProjectsPage() {
 
   return (
     <AppLayout>
+      <Title>Projects | Nona Config Admin</Title>
       <div class="space-y-10">
 
         {/* Page header */}

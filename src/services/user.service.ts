@@ -2,7 +2,7 @@ import { apiClient } from "./api-client";
 import type { User, CreateUserRequest } from "../types";
 
 export interface UpdateUserRequest {
-  username?: string;
+  name?: string;
   email?: string;
   password?: string;
   role?: string;
