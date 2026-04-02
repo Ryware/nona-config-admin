@@ -8,6 +8,7 @@ import { FormField } from "../../components/auth/FormField";
 import { Title } from "@solidjs/meta";
 
 const PROJECT_ICONS = ["hub", "database", "language", "storage", "cloud", "api"];
+const PROJECT_NAME_PATTERN = /^[a-zA-Z0-9-]+$/;
 
 export default function ProjectsPage() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function ProjectsPage() {
   const [showCreate, setShowCreate] = createSignal(false);
   const [name, setName] = createSignal("");
   const [description, setDescription] = createSignal("");
+  const [createError, setCreateError] = createSignal("");
   const [deleteTarget, setDeleteTarget] = createSignal<string | null>(null);
 
   const projectsQuery = useQuery(() => ({
@@ -32,6 +34,7 @@ export default function ProjectsPage() {
       setShowCreate(false);
       setName("");
       setDescription("");
+      setCreateError("");
       addToast("Project created", "success");
     },
     onError: () => addToast("Failed to create project", "error"),
@@ -49,8 +52,20 @@ export default function ProjectsPage() {
 
   const handleCreate = (e: Event) => {
     e.preventDefault();
-    if (!name().trim()) return;
-    createMutation.mutate({ name: name().trim(), description: description().trim() || undefined });
+
+    const trimmedName = name().trim();
+    if (!trimmedName) {
+      setCreateError("Project name is required.");
+      return;
+    }
+
+    if (!PROJECT_NAME_PATTERN.test(trimmedName)) {
+      setCreateError("Use only letters, numbers, and hyphens.");
+      return;
+    }
+
+    setCreateError("");
+    createMutation.mutate({ name: trimmedName, description: description().trim() || undefined });
   };
 
   return (
@@ -81,15 +96,24 @@ export default function ProjectsPage() {
           <div class="bg-[#161b2b] rounded p-6 border border-outline-variant/10">
             <h3 class="text-sm font-headline font-bold text-on-surface uppercase tracking-widest mb-6">New Project</h3>
             <form onSubmit={handleCreate} class="grid md:grid-cols-2 gap-6">
-              <FormField
-                id="project-name"
-                label="Project Name *"
-                type="text"
-                placeholder="My Project"
-                value={name()}
-                onInput={(e) => setName(e.currentTarget.value)}
-                required
-              />
+              <div>
+                <FormField
+                  id="project-name"
+                  label="Project Name *"
+                  type="text"
+                  placeholder="my-project"
+                  value={name()}
+                  onInput={(e) => {
+                    setName(e.currentTarget.value);
+                    if (createError()) setCreateError("");
+                  }}
+                  required
+                />
+                <p class="mt-2 text-[11px] text-outline">Use letters, numbers, and hyphens only.</p>
+                <Show when={createError()}>
+                  <p class="mt-2 text-[11px] font-bold text-error">{createError()}</p>
+                </Show>
+              </div>
               <FormField
                 id="project-description"
                 label="Description"
