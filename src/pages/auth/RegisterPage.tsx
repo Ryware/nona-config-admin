@@ -17,7 +17,7 @@ export default function RegisterPage() {
     onSuccess: (result) => {
       if (result.success && result.response?.token) {
         localStorage.setItem("auth_token", result.response.token);
-        navigate("/dashboard");
+        navigate("/projects");
       } else if (result.error) {
         setError(result.error);
       } else {

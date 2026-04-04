@@ -15,7 +15,7 @@ export function Select(props: SelectProps) {
           "focus:outline-none focus:border-b-primary focus:ring-0",
           "hover:border-b-outline",
           "disabled:cursor-not-allowed disabled:opacity-40",
-          "[&>option]:bg-[#1a1f2f] [&>option]:text-on-surface",
+          "[&>option]:bg-[#1a1f2f] [&>option]:text-on-surface ps-5 h-[51.48px]",
           local.class
         )}
         {...others}

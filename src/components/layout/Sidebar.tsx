@@ -48,7 +48,7 @@ export const Sidebar = () => {
 
             {/* Brand */}
             <div class="px-6 mb-10">
-                <A href="/dashboard" class="flex items-center gap-3">
+                <A href="/projects" class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded shrink-0 flex items-center justify-center"
                         style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%); box-shadow: 0 0 12px rgba(164,201,255,0.2);">
                         <span class="material-symbols-outlined text-on-primary text-[18px]"
@@ -124,7 +124,7 @@ export const Sidebar = () => {
 
 
             {/* Bottom: user card */}
-            <div class="px-4 mt-4 pt-4 border-t border-[#161b2b]">
+            <div class="px-4 mt-auto pt-4 border-t border-[#161b2b]">
                 <div class="p-3 rounded bg-[#161b2b] flex items-center gap-3 border border-white/5">
                     <div class="w-8 h-8 rounded shrink-0 flex items-center justify-center font-bold text-[12px]"
                         style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%); color: #00315d;">

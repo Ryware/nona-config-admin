@@ -68,7 +68,7 @@ export interface CreateEnvironmentRequest {
 export interface ConfigEntry {
   id: string;
   projectId: string;
-  environmentId?: string;
+  environmentName?: string;
   key: string;
   value: string;
   valueType: 'string' | 'number' | 'boolean' | 'json';
@@ -79,7 +79,7 @@ export interface ConfigEntry {
 
 export interface CreateConfigEntryRequest {
   projectSlug: string;
-  environmentId?: string;
+  environmentName?: string;
   key: string;
   value: string;
   valueType: 'string' | 'number' | 'boolean' | 'json';

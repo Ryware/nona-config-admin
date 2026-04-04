@@ -1,4 +1,4 @@
-import { createSignal, Show, For, createMemo, createEffect, onMount } from "solid-js";
+import { createSignal, createEffect, untrack, Show, For, createMemo } from "solid-js";
 import { useParams, A } from "@solidjs/router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
@@ -8,17 +8,19 @@ import { configEntryService } from "../../services/config-entry.service";
 import { useToast } from "../../components/ui/toast";
 import type { CreateEnvironmentRequest, CreateConfigEntryRequest, Environment } from "../../types";
 import { Title } from "@solidjs/meta";
+import { FormField } from "../../components/auth/FormField";
+import { Select } from "../../components/ui/select";
 
 const TYPE_STYLE: Record<string, string> = {
-  string:  "bg-[#161b2b] border border-primary/20 text-primary",
-  number:  "bg-[#162b1b] border border-[#10B981]/20 text-[#6ee7b7]",
+  string: "bg-[#161b2b] border border-primary/20 text-primary",
+  number: "bg-[#162b1b] border border-[#10B981]/20 text-[#6ee7b7]",
   boolean: "bg-[#2b2216] border border-[#F59E0B]/20 text-[#fcd34d]",
-  json:    "bg-[#211b2b] border border-secondary/20 text-secondary",
+  json: "bg-[#211b2b] border border-secondary/20 text-secondary",
 };
 
 const SCOPE_STYLE: Record<string, string> = {
-  global:       "bg-[#1a1f2f] border border-outline-variant/20 text-outline",
-  environment:  "bg-[#161b2b] border border-primary/20 text-primary",
+  global: "bg-[#1a1f2f] border border-outline-variant/20 text-outline",
+  environment: "bg-[#161b2b] border border-primary/20 text-primary",
 };
 
 export default function ProjectPage() {
@@ -41,12 +43,18 @@ export default function ProjectPage() {
     enabled: !!project(),
   }));
 
-  const [activeEnvId, setActiveEnvId] = createSignal<string>("");
+  const [activeEnvName, setActiveEnvName] = createSignal<string>("");
+
+  createEffect(() => {
+    if (!untrack(activeEnvName) && environmentsQuery.data && environmentsQuery.data.length > 0) {
+      setActiveEnvName(environmentsQuery.data[0].name);
+    }
+  });
 
   const configQuery = useQuery(() => ({
-    queryKey: ["config-entries", project()?.urlSlug, activeEnvId()],
-    queryFn: () => configEntryService.getAll(project()!.urlSlug, activeEnvId()),
-    enabled: !!project() && !!activeEnvId(),
+    queryKey: ["config-entries", project()?.urlSlug, activeEnvName()],
+    queryFn: () => configEntryService.getAll(project()!.urlSlug, activeEnvName()),
+    enabled: !!project() && !!activeEnvName(),
   }));
 
   // ── Create env ─────────────────────────────────────────────────────────────
@@ -78,12 +86,12 @@ export default function ProjectPage() {
   const [showConfigForm, setShowConfigForm] = createSignal(false);
   const [cfgKey, setCfgKey] = createSignal("");
   const [cfgValue, setCfgValue] = createSignal("");
-  const [cfgType, setCfgType] = createSignal<"string"|"number"|"boolean"|"json">("string");
-  const [cfgScope] = createSignal<"global"|"environment">("global");
+  const [cfgType, setCfgType] = createSignal<"string" | "number" | "boolean" | "json">("string");
+  const [cfgScope] = createSignal<"global" | "environment">("global");
 
   const createConfigMutation = useMutation(() => ({
     mutationFn: (req: CreateConfigEntryRequest) =>
-      configEntryService.create(req),
+      configEntryService.upsert(req.projectSlug, activeEnvName(), req.key, req),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["config-entries"] });
       setShowConfigForm(false);
@@ -95,13 +103,19 @@ export default function ProjectPage() {
 
   const deleteConfigMutation = useMutation(() => ({
     mutationFn: (id: string) =>
-      configEntryService.delete(project()!.urlSlug, activeEnvId(), id),
+      configEntryService.delete(project()!.urlSlug, activeEnvName(), id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["config-entries"] });
       addToast("Parameter deleted", "success");
     },
     onError: () => addToast("Failed to delete parameter", "error"),
   }));
+
+  const onKeyDownConfigKey = (e: KeyboardEvent) => {
+    if(e.key === " ") {
+      e.preventDefault();
+    }
+  }
 
   return (
     <AppLayout>
@@ -158,12 +172,11 @@ export default function ProjectPage() {
               <For each={environmentsQuery.data ?? []}>
                 {(env: Environment) => (
                   <div
-                    class={`group flex items-center gap-2 px-3 py-1.5 rounded text-[12px] font-mono cursor-pointer transition-all ${
-                      activeEnvId() === env.id
-                        ? "border-l-2 border-primary bg-[#161b2b] text-primary"
-                        : "bg-surface-container-high text-on-surface-variant hover:bg-[#161b2b] hover:text-on-surface"
-                    }`}
-                    onClick={() => setActiveEnvId(activeEnvId() === env.id ? "" : env.id)}
+                    class={`group flex items-center gap-2 px-3 py-1.5 rounded text-[12px] font-mono cursor-pointer transition-all ${activeEnvName() === env.name
+                      ? "border-l-2 border-primary bg-[#161b2b] text-primary"
+                      : "bg-surface-container-high text-on-surface-variant hover:bg-[#161b2b] hover:text-on-surface"
+                      }`}
+                    onClick={() => setActiveEnvName(activeEnvName() === env.name ? "" : env.name)}
                   >
                     <span>{env.name}</span>
                     <button
@@ -193,17 +206,14 @@ export default function ProjectPage() {
             class="bg-[#161b2b] rounded p-6 border border-outline-variant/10 flex flex-col sm:flex-row gap-4 items-start"
           >
             <div class="group flex-1">
-              <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2 group-focus-within:text-primary transition-colors">
-                Environment Name
-              </label>
-              <input
+              <FormField
+                id="project-name"
+                label="Environment Name *"
                 type="text"
                 placeholder="production"
                 value={envName()}
                 onInput={(e) => setEnvName(e.currentTarget.value)}
                 required
-                autofocus
-                class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface placeholder:text-outline/40 py-3 px-0 transition-all font-mono text-[13px] outline-none"
               />
             </div>
             <div class="flex gap-2 pt-6">
@@ -227,20 +237,20 @@ export default function ProjectPage() {
         <div>
           <p class="text-[10px] font-bold uppercase tracking-widest text-outline mb-3">
             Parameters
-            {activeEnvId() && (
+            {activeEnvName() && (
               <span class="ml-2 text-primary">
-                — {environmentsQuery.data?.find((e: Environment) => e.id === activeEnvId())?.name}
+                — {environmentsQuery.data?.find((e: Environment) => e.name === activeEnvName())?.name}
               </span>
             )}
           </p>
 
-          <Show when={!activeEnvId()}>
+          <Show when={!activeEnvName()}>
             <div class="bg-[#161b2b] rounded p-8 text-center text-on-surface-variant text-sm">
               Select an environment above to view its parameters
             </div>
           </Show>
 
-          <Show when={activeEnvId() && showConfigForm()}>
+          <Show when={activeEnvName() && showConfigForm()}>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -251,40 +261,45 @@ export default function ProjectPage() {
                   value: cfgValue().trim(),
                   valueType: cfgType(),
                   scope: cfgScope(),
-                  environmentId: cfgScope() === "environment" ? activeEnvId() : undefined,
+                  environmentName: cfgScope() === "environment" ? activeEnvName() : undefined,
                 });
               }}
               class="bg-[#161b2b] rounded p-6 border border-outline-variant/10 mb-4 grid md:grid-cols-4 gap-4"
             >
-              {[
-                { label: "Key", value: cfgKey, setter: setCfgKey, placeholder: "CONFIG_KEY", type: "text" },
-                { label: "Value", value: cfgValue, setter: setCfgValue, placeholder: "value", type: "text" },
-              ].map((field) => (
-                <div class="group">
-                  <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2 group-focus-within:text-primary transition-colors">
-                    {field.label}
-                  </label>
-                  <input
-                    type={field.type}
-                    placeholder={field.placeholder}
-                    value={field.value()}
-                    onInput={(e) => field.setter(e.currentTarget.value)}
-                    class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface placeholder:text-outline/40 py-3 px-0 transition-all font-mono text-[13px] outline-none"
-                  />
-                </div>
-              ))}
               <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Type</label>
-                <select
+                <FormField
+                  id="config-entry-key"
+                  label="Key"
+                  type="text"
+                  placeholder="CONFIG_KEY"
+                  value={cfgKey()}
+                  onKeyDown={onKeyDownConfigKey}
+                  onInput={(e) => setCfgKey(e.currentTarget.value)}
+                  required
+                />
+              </div>
+              <div class="group">
+                <FormField
+                  id="config-entry-value"
+                  label="Value"
+                  type="text"
+                  placeholder="VALUE"
+                  value={cfgValue()}
+                  onInput={(e) => setCfgValue(e.currentTarget.value)}
+                  required
+                />
+              </div>
+              <div class="group">
+                <label class="block text-[12px] font-medium text-start text-[#94A3B8] mb-1.5 tracking-wide">TYPE</label>
+                <Select
                   value={cfgType()}
                   onChange={(e) => setCfgType(e.currentTarget.value as any)}
-                  class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface py-3 px-0 transition-all font-mono text-[13px] outline-none appearance-none"
                 >
                   <option value="string">string</option>
                   <option value="number">number</option>
                   <option value="boolean">boolean</option>
                   <option value="json">json</option>
-                </select>
+                </Select>
               </div>
               <div class="flex gap-2 items-end">
                 <button
@@ -301,7 +316,7 @@ export default function ProjectPage() {
             </form>
           </Show>
 
-          <Show when={activeEnvId() && (configQuery.data?.length ?? 0) > 0}>
+          <Show when={activeEnvName() && (configQuery.data?.length ?? 0) > 0}>
             <div class="overflow-x-auto">
               <table class="w-full text-[12px]">
                 <thead>
@@ -349,7 +364,7 @@ export default function ProjectPage() {
             </div>
           </Show>
 
-          <Show when={activeEnvId() && !configQuery.isLoading && (configQuery.data?.length ?? 0) === 0}>
+          <Show when={activeEnvName() && !configQuery.isLoading && (configQuery.data?.length ?? 0) === 0}>
             <div class="bg-[#161b2b] rounded p-8 text-center text-on-surface-variant text-sm">No parameters yet for this environment</div>
           </Show>
         </div>

@@ -15,7 +15,6 @@ const ProjectPage = lazy(() => import("./pages/projects/ProjectPage"));
 const UsersPage = lazy(() => import("./pages/users/UsersPage"));
 const UserPage = lazy(() => import("./pages/users/UserPage"));
 const ConfigEntriesPage = lazy(() => import("./pages/config-entries/ConfigEntriesPage"));
-const EnvironmentsPage = lazy(() => import("./pages/environments/EnvironmentsPage"));
 const AuditLogsPage = lazy(() => import("./pages/audit-logs/AuditLogsPage"));
 
 // Create a client
@@ -39,7 +38,7 @@ const ProtectedRoute: Component<{ component: Component }> = (props) => {
 // Public Route Component (redirect to dashboard if already authenticated)
 const PublicRoute: Component<{ component: Component }> = (props) => {
   if (authService.isAuthenticated()) {
-    return <Navigate href="/dashboard" />;
+    return <Navigate href="/projects" />;
   }
   return <props.component />;
 };
@@ -51,7 +50,7 @@ const App: Component = () => {
       <QueryClientProvider client={queryClient}>
           <ToastProvider>
             <Router>
-              <Route path="/" component={() => <Navigate href="/dashboard" />} />
+              <Route path="/" component={() => <Navigate href="/projects" />} />
               <Route path="/login" component={() => <PublicRoute component={LoginPage} />} />
               <Route path="/register" component={() => <PublicRoute component={RegisterPage} />} />
               <Route path="/forgot-password" component={() => <PublicRoute component={ForgotPasswordPage} />} />
@@ -60,7 +59,6 @@ const App: Component = () => {
               <Route path="/users" component={() => <ProtectedRoute component={UsersPage} />} />
               <Route path="/user" component={() => <ProtectedRoute component={UserPage} />} />
               <Route path="/config-entries" component={() => <ProtectedRoute component={ConfigEntriesPage} />} />
-              <Route path="/environments" component={() => <ProtectedRoute component={EnvironmentsPage} />} />
               <Route path="/audit-logs" component={() => <ProtectedRoute component={AuditLogsPage} />} />
             </Router>
           </ToastProvider>

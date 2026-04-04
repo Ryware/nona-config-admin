@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
 import { useToast } from "../../components/ui/toast";
 import { projectService } from "../../services/project.service";
+import { FormField } from "../../components/auth/FormField";
 import { Title } from "@solidjs/meta";
 
 const PROJECT_ICONS = ["hub", "database", "language", "storage", "cloud", "api"];
@@ -67,7 +68,7 @@ export default function ProjectsPage() {
           </div>
           <button
             onClick={() => setShowCreate(!showCreate())}
-            class="flex items-center gap-2 px-6 py-3 rounded font-bold text-on-primary text-[13px] transition-all active:scale-[0.98] hover:opacity-90 w-fit"
+            class="flex items-center gap-2 px-6 py-3 rounded font-bold text-on-primary text-[13px] transition-all active:scale-[0.98] hover:opacity-90 w-fit cursor-pointer"
             style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
           >
             <span class="material-symbols-outlined text-[18px]">{showCreate() ? "close" : "add"}</span>
@@ -80,36 +81,28 @@ export default function ProjectsPage() {
           <div class="bg-[#161b2b] rounded p-6 border border-outline-variant/10">
             <h3 class="text-sm font-headline font-bold text-on-surface uppercase tracking-widest mb-6">New Project</h3>
             <form onSubmit={handleCreate} class="grid md:grid-cols-2 gap-6">
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2 group-focus-within:text-primary transition-colors">
-                  Project Name *
-                </label>
-                <input
-                  type="text"
-                  placeholder="My Project"
-                  value={name()}
-                  onInput={(e) => setName(e.currentTarget.value)}
-                  required
-                  class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface placeholder:text-outline/40 py-3 px-0 transition-all font-mono text-[13px] outline-none"
-                />
-              </div>
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2 group-focus-within:text-primary transition-colors">
-                  Description
-                </label>
-                <input
-                  type="text"
-                  placeholder="Optional description"
-                  value={description()}
-                  onInput={(e) => setDescription(e.currentTarget.value)}
-                  class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface placeholder:text-outline/40 py-3 px-0 transition-all font-mono text-[13px] outline-none"
-                />
-              </div>
+              <FormField
+                id="project-name"
+                label="Project Name *"
+                type="text"
+                placeholder="My Project"
+                value={name()}
+                onInput={(e) => setName(e.currentTarget.value)}
+                required
+              />
+              <FormField
+                id="project-description"
+                label="Description"
+                type="text"
+                placeholder="Optional description"
+                value={description()}
+                onInput={(e) => setDescription(e.currentTarget.value)}
+              />
               <div class="md:col-span-2 flex gap-3">
                 <button
                   type="submit"
                   disabled={createMutation.isPending}
-                  class="px-6 py-2.5 rounded font-bold text-on-primary text-[13px] transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                  class="px-6 py-2.5 rounded font-bold text-on-primary text-[13px] transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                   style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
                 >
                   <span class="material-symbols-outlined text-[16px]">add</span>
@@ -118,7 +111,7 @@ export default function ProjectsPage() {
                 <button
                   type="button"
                   onClick={() => setShowCreate(false)}
-                  class="px-6 py-2.5 rounded font-bold text-on-surface-variant text-[13px] bg-surface-container-high hover:bg-surface-bright transition-all"
+                  class="px-6 py-2.5 rounded font-bold text-on-surface-variant text-[13px] bg-surface-container-high hover:bg-surface-bright transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -129,21 +122,23 @@ export default function ProjectsPage() {
 
         {/* Project grid */}
         <Show
-          when={(projectsQuery.data?.length ?? 0) > 0}
+          when={projectsQuery.isSuccess && (projectsQuery.data?.length ?? 0) > 0}
           fallback={
-            <div class="bg-[#161b2b] rounded p-16 text-center">
-              <span class="material-symbols-outlined text-5xl text-outline mb-4 block">folder_open</span>
-              <p class="text-on-surface text-base font-headline font-bold mb-1">No projects yet</p>
-              <p class="text-on-surface-variant text-sm mb-6">Create your first project to start managing configuration.</p>
-              <button
-                onClick={() => setShowCreate(true)}
-                class="inline-flex items-center gap-2 px-6 py-3 rounded font-bold text-on-primary text-[13px] hover:opacity-90 transition-all"
-                style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
-              >
-                <span class="material-symbols-outlined text-[18px]">add</span>
-                Create Project
-              </button>
-            </div>
+            <Show when={projectsQuery.isSuccess}>
+              <div class="bg-[#161b2b] rounded p-16 text-center">
+                <span class="material-symbols-outlined text-5xl text-outline mb-4 block">folder_open</span>
+                <p class="text-on-surface text-base font-headline font-bold mb-1">No projects yet</p>
+                <p class="text-on-surface-variant text-sm mb-6">Create your first project to start managing configuration.</p>
+                <button
+                  onClick={() => setShowCreate(true)}
+                  class="inline-flex items-center gap-2 px-6 py-3 rounded font-bold text-on-primary text-[13px] hover:opacity-90 transition-all cursor-pointer"
+                  style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+                >
+                  <span class="material-symbols-outlined text-[18px]">add</span>
+                  Create Project
+                </button>
+              </div>
+            </Show>
           }
         >
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -164,13 +159,7 @@ export default function ProjectsPage() {
                   <div class="relative z-10 p-6 flex flex-col h-full">
                     <div class="flex items-start justify-between mb-4">
                       <h3 class="text-base font-headline font-bold text-on-surface leading-tight">{project.name}</h3>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(project.urlSlug); }}
-                        class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded text-outline hover:text-error hover:bg-error-container/20 bg-transparent border-0 cursor-pointer ml-2 shrink-0"
-                        title="Delete project"
-                      >
-                        <span class="material-symbols-outlined text-[18px]">delete_outline</span>
-                      </button>
+
                     </div>
 
                     <p class="text-on-surface-variant text-xs leading-relaxed flex-1 mb-4 line-clamp-3">
@@ -182,9 +171,18 @@ export default function ProjectsPage() {
                         <span class="material-symbols-outlined text-primary-container text-[14px]">settings_ethernet</span>
                         <span class="text-[11px] font-mono text-on-surface-variant">{project.urlSlug}</span>
                       </div>
-                      <div class="flex items-center gap-1.5 text-outline">
-                        <span class="material-symbols-outlined text-[13px]">schedule</span>
-                        <span class="text-[11px]">{new Date(project.updatedAt).toLocaleDateString()}</span>
+                      <div class="flex gap-3">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(project.urlSlug); }}
+                          class="p-1 rounded text-outline hover:text-error hover:bg-error-container/20 bg-transparent border-0 cursor-pointer ml-2 shrink-0"
+                          title={`Delete project ${project.name}`}
+                        >
+                          <span class="material-symbols-outlined text-[18px]">delete_outline</span>
+                        </button>
+                        <div class="flex items-center gap-1.5 text-outline">
+                          <span class="material-symbols-outlined text-[13px]">schedule</span>
+                          <span class="text-[11px]">{new Date(project.updatedAt).toLocaleDateString()}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -218,15 +216,16 @@ export default function ProjectsPage() {
                 <button
                   onClick={() => deleteMutation.mutate(deleteTarget()!)}
                   disabled={deleteMutation.isPending}
-                  class="flex-1 py-2.5 rounded font-bold text-on-error text-[13px] hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  style="background-color: #93000a;"
+                  class="flex-1 py-2.5 rounded font-bold bg-red-500 text-on-error text-[13px] hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span class="material-symbols-outlined text-[16px]">delete</span>
-                  {deleteMutation.isPending ? "Deleting…" : "Delete"}
+                  <span class="text-white">
+                    <span class="material-symbols-outlined text-[16px] text-white">delete</span>
+                    {deleteMutation.isPending ? "Deleting…" : "Delete"}
+                  </span>
                 </button>
                 <button
                   onClick={() => setDeleteTarget(null)}
-                  class="flex-1 py-2.5 rounded font-bold text-on-surface-variant text-[13px] bg-surface-container-high hover:bg-surface-bright transition-all"
+                  class="flex-1 py-2.5 rounded font-bold text-on-surface-variant text-[13px] bg-surface-container-high hover:bg-surface-bright transition-all cursor-pointer"
                 >
                   Cancel
                 </button>

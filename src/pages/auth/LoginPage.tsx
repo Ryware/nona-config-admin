@@ -17,7 +17,7 @@ export default function LoginPage() {
     mutationFn: (credentials: LoginRequest) => authService.login(credentials),
     onSuccess: (result) => {
       localStorage.setItem("auth_token", result.token);
-      navigate("/dashboard");
+      navigate("/projects");
     },
     onError: () => {
       setError("Invalid credentials. Please try again.");
