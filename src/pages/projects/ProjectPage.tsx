@@ -37,9 +37,11 @@ export default function ProjectPage() {
     projectsQuery.data?.find((p) => p.urlSlug === params.slug)
   );
 
+  const projectId = createMemo(() => project()?.name ?? "");
+
   const environmentsQuery = useQuery(() => ({
     queryKey: ["environments", project()?.urlSlug],
-    queryFn: () => environmentService.getAll(project()!.urlSlug),
+    queryFn: () => environmentService.getAll(projectId()),
     enabled: !!project(),
   }));
 
@@ -53,7 +55,7 @@ export default function ProjectPage() {
 
   const configQuery = useQuery(() => ({
     queryKey: ["config-entries", project()?.urlSlug, activeEnvName()],
-    queryFn: () => configEntryService.getAll(project()!.urlSlug, activeEnvName()),
+    queryFn: () => configEntryService.getAll(projectId(), activeEnvName()),
     enabled: !!project() && !!activeEnvName(),
   }));
 
@@ -73,8 +75,8 @@ export default function ProjectPage() {
   }));
 
   const deleteEnvMutation = useMutation(() => ({
-    mutationFn: ({ slug, envId }: { slug: string; envId: string }) =>
-      environmentService.delete(slug, envId),
+    mutationFn: (environmentName: string) =>
+      environmentService.delete(projectId(), environmentName),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["environments"] });
       addToast("Environment deleted", "success");
@@ -91,7 +93,7 @@ export default function ProjectPage() {
 
   const createConfigMutation = useMutation(() => ({
     mutationFn: (req: CreateConfigEntryRequest) =>
-      configEntryService.upsert(req.projectSlug, activeEnvName(), req.key, req),
+      configEntryService.upsert(req.projectId, activeEnvName(), req.key, req),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["config-entries"] });
       setShowConfigForm(false);
@@ -103,7 +105,7 @@ export default function ProjectPage() {
 
   const deleteConfigMutation = useMutation(() => ({
     mutationFn: (id: string) =>
-      configEntryService.delete(project()!.urlSlug, activeEnvName(), id),
+      configEntryService.delete(projectId(), activeEnvName(), id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["config-entries"] });
       addToast("Parameter deleted", "success");
@@ -181,7 +183,7 @@ export default function ProjectPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteEnvMutation.mutate({ slug: project()!.urlSlug, envId: env.id });
+                        deleteEnvMutation.mutate(env.name);
                       }}
                       class="opacity-0 group-hover:opacity-100 transition-opacity text-outline hover:text-error bg-transparent border-0 cursor-pointer p-0 ml-1"
                     >
@@ -200,7 +202,7 @@ export default function ProjectPage() {
             onSubmit={(e) => {
               e.preventDefault();
               if (!envName().trim() || !project()) return;
-              createEnvMutation.mutate({ projectSlug: project()!.urlSlug, name: envName().trim() });
+              createEnvMutation.mutate({ projectId: projectId(), name: envName().trim() });
             }}
             class="bg-[#161b2b] rounded p-6 border border-outline-variant/10 flex flex-col sm:flex-row gap-4 items-start"
           >
@@ -255,7 +257,7 @@ export default function ProjectPage() {
                 e.preventDefault();
                 if (!cfgKey().trim()) return;
                 createConfigMutation.mutate({
-                  projectSlug: project()!.urlSlug,
+                  projectId: projectId(),
                   key: cfgKey().trim(),
                   value: cfgValue().trim(),
                   contentType: cfgType(),

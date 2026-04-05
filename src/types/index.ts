@@ -52,15 +52,14 @@ export interface UpdateProjectRequest {
 
 // Environment Types
 export interface Environment {
-  id: string;
-  projectId: string;
+  project: string;
   name: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateEnvironmentRequest {
-  projectSlug: string;
+  projectId: string;
   name: string;
 }
 
@@ -77,7 +76,7 @@ export interface ConfigEntry {
 }
 
 export interface CreateConfigEntryRequest {
-  projectSlug: string;
+  projectId: string;
   key: string;
   value: string;
   contentType: 'string' | 'number' | 'boolean' | 'json';

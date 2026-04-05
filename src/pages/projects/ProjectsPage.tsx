@@ -6,6 +6,7 @@ import { useToast } from "../../components/ui/toast";
 import { projectService } from "../../services/project.service";
 import { FormField } from "../../components/auth/FormField";
 import { Title } from "@solidjs/meta";
+import type { Project } from "../../types";
 
 const PROJECT_ICONS = ["hub", "database", "language", "storage", "cloud", "api"];
 const PROJECT_NAME_PATTERN = /^[a-zA-Z0-9-]+$/;
@@ -19,7 +20,7 @@ export default function ProjectsPage() {
   const [name, setName] = createSignal("");
   const [description, setDescription] = createSignal("");
   const [createError, setCreateError] = createSignal("");
-  const [deleteTarget, setDeleteTarget] = createSignal<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = createSignal<Project | null>(null);
 
   const projectsQuery = useQuery(() => ({
     queryKey: ["projects"],
@@ -41,7 +42,7 @@ export default function ProjectsPage() {
   }));
 
   const deleteMutation = useMutation(() => ({
-    mutationFn: (slug: string) => projectService.delete(slug),
+    mutationFn: (projectName: string) => projectService.delete(projectName),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       setDeleteTarget(null);
@@ -197,7 +198,7 @@ export default function ProjectsPage() {
                       </div>
                       <div class="flex gap-3">
                         <button
-                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(project.urlSlug); }}
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(project); }}
                           class="p-1 rounded text-outline hover:text-error hover:bg-error-container/20 bg-transparent border-0 cursor-pointer ml-2 shrink-0"
                           title={`Delete project ${project.name}`}
                         >
@@ -234,11 +235,11 @@ export default function ProjectsPage() {
                 <h3 class="font-headline font-bold text-on-surface">Delete Project?</h3>
               </div>
               <p class="text-on-surface-variant text-sm mb-6">
-                This will permanently delete <span class="font-mono text-primary">{deleteTarget()}</span> and all its configuration data.
+                This will permanently delete <span class="font-mono text-primary">{deleteTarget()!.name}</span> and all its configuration data.
               </p>
               <div class="flex gap-3">
                 <button
-                  onClick={() => deleteMutation.mutate(deleteTarget()!)}
+                  onClick={() => deleteMutation.mutate(deleteTarget()!.name)}
                   disabled={deleteMutation.isPending}
                   class="flex-1 py-2.5 rounded font-bold bg-red-500 text-on-error text-[13px] hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                 >
