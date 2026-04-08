@@ -30,15 +30,18 @@ describe('AuditLogsPage', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders the Activity Feed heading', async () => {
+  it('renders the Audit Logs heading', async () => {
     renderAuditLogsPage();
-    expect(await screen.findByRole('heading', { name: /activity feed/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /audit logs/i })).toBeInTheDocument();
   });
 
   it('renders a "Created Project" entry for each project', async () => {
     renderAuditLogsPage();
+    const table = await screen.findByRole('table');
+    // Wait for the loading state to clear
+    await waitFor(() => expect(table).not.toHaveTextContent(/loading activity/i));
     for (const project of mockProjects) {
-      expect(await screen.findByText(project.name)).toBeInTheDocument();
+      expect(table).toHaveTextContent(project.name);
     }
   });
 
@@ -62,35 +65,35 @@ describe('AuditLogsPage', () => {
   it('filters entries by search text', async () => {
     renderAuditLogsPage();
 
-    // Wait for entries to load
-    await screen.findByText(mockProjects[0].name);
+    // Wait for the table to populate
+    const table = await screen.findByRole('table');
+    await waitFor(() => expect(table).toHaveTextContent(mockProjects[0].name));
 
     const searchInput = screen.getByPlaceholderText(/filter audit trail/i);
     fireEvent.input(searchInput, { target: { value: mockProjects[0].name } });
 
     await waitFor(() => {
-      // The searched project should still be visible
-      expect(screen.getByText(mockProjects[0].name)).toBeInTheDocument();
-      // The second project should be filtered out
-      expect(screen.queryByText(mockProjects[1].name)).not.toBeInTheDocument();
+      expect(table).toHaveTextContent(mockProjects[0].name);
+      expect(table).not.toHaveTextContent(mockProjects[1].name);
     });
   });
 
   it('shows all entries after clearing the search', async () => {
     renderAuditLogsPage();
-    await screen.findByText(mockProjects[0].name);
+    const table = await screen.findByRole('table');
+    await waitFor(() => expect(table).toHaveTextContent(mockProjects[0].name));
 
     const searchInput = screen.getByPlaceholderText(/filter audit trail/i);
     fireEvent.input(searchInput, { target: { value: mockProjects[0].name } });
 
     await waitFor(() => {
-      expect(screen.queryByText(mockProjects[1].name)).not.toBeInTheDocument();
+      expect(table).not.toHaveTextContent(mockProjects[1].name);
     });
 
     fireEvent.input(searchInput, { target: { value: '' } });
 
     await waitFor(() => {
-      expect(screen.getByText(mockProjects[1].name)).toBeInTheDocument();
+      expect(table).toHaveTextContent(mockProjects[1].name);
     });
   });
 
@@ -102,11 +105,7 @@ describe('AuditLogsPage', () => {
 
     renderAuditLogsPage();
 
-    // Wait for queries to settle — no project/user text should appear
-    await waitFor(() => {
-      for (const project of mockProjects) {
-        expect(screen.queryByText(project.name)).not.toBeInTheDocument();
-      }
-    });
+    // Table should show the empty state message
+    expect(await screen.findByText(/no activity recorded yet/i)).toBeInTheDocument();
   });
 });

@@ -75,11 +75,11 @@ export default function ProjectsPage() {
       <div class="space-y-10">
 
         {/* Page header */}
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div class="space-y-2">
             <h2 class="text-4xl text-start font-headline font-bold text-primary tracking-tight">Projects</h2>
             <p class="text-on-surface-variant text-start max-w-xl leading-relaxed text-sm">
-              Manage and organize your configuration projects. Centralize parameters and streamline deployments.
+              Manage and organize your configuration projects across environments and deployments.
             </p>
           </div>
           <button

@@ -1,5 +1,6 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { useQuery } from "@tanstack/solid-query";
+import { Title } from "@solidjs/meta";
 import { AppLayout } from "../../components/layout/AppLayout";
 import { projectService } from "../../services/project.service";
 import { userService } from "../../services/user.service";
@@ -69,7 +70,6 @@ export default function AuditLogsPage() {
   const [search, setSearch] = createSignal("");
   const [filterAction, setFilterAction] = createSignal("all");
   const [filterEnv, setFilterEnv] = createSignal("all");
-  const [viewMode, setViewMode] = createSignal<"list" | "grid">("list");
   const [page, setPage] = createSignal(0);
 
   const projectsQuery = useQuery(() => ({
@@ -181,39 +181,40 @@ export default function AuditLogsPage() {
 
   return (
     <AppLayout>
-      <div class="flex flex-col h-full -m-8 overflow-hidden">
+      <Title>Audit Logs | Nona Config Admin</Title>
+      <div class="space-y-8">
 
-        {/* Sub-header: breadcrumb + search + export (mirrors stitch TopAppBar) */}
-        <header class="h-16 border-b border-outline-variant/10 flex items-center justify-between px-8 bg-surface-container-low/50 backdrop-blur-md shrink-0">
-          <div class="flex items-center gap-2">
-            <span class="text-on-surface-variant text-sm font-medium">Logs</span>
-            <span class="material-symbols-outlined text-sm text-outline">chevron_right</span>
-            <h2 class="font-headline text-on-surface text-lg font-medium tracking-tight">Activity Feed</h2>
+        {/* Page header */}
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="space-y-2">
+            <h2 class="text-4xl text-start font-headline font-bold text-primary tracking-tight">Audit Logs</h2>
+            <p class="text-on-surface-variant text-start max-w-xl leading-relaxed text-sm">
+              Browse and export a complete record of all administrative actions across your organization.
+            </p>
           </div>
-          <div class="flex items-center gap-4">
-            <div class="relative">
-              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
-              <input
-                type="text"
-                placeholder="Filter audit trail..."
-                value={search()}
-                onInput={(e) => { setSearch(e.currentTarget.value); setPage(0); }}
-                class="bg-surface-container-highest border-none border-b-2 border-outline-variant text-sm pl-10 pr-4 py-2 w-64 focus:ring-0 focus:border-primary transition-all rounded-t-sm placeholder:text-outline/50 text-on-surface outline-none"
-              />
-            </div>
-            <button
-              class="flex items-center gap-2 px-5 py-2 text-on-primary font-bold text-xs uppercase tracking-widest rounded-sm hover:opacity-90 active:scale-95 transition-all border-0 cursor-pointer shadow-lg"
-              style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
-            >
-              <span class="material-symbols-outlined text-sm">download</span>
-              Export Logs
-            </button>
-          </div>
-        </header>
+          <button
+            class="flex items-center gap-2 px-6 py-3 rounded font-bold text-on-primary text-[13px] transition-all active:scale-[0.98] hover:opacity-90 w-fit cursor-pointer"
+            style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+          >
+            <span class="material-symbols-outlined text-[18px]">download</span>
+            Export Logs
+          </button>
+        </div>
 
-        {/* Filters Bar */}
-        <section class="px-8 py-3 flex items-center gap-4 bg-surface-container-low border-b border-outline-variant/10 shrink-0">
+        {/* Filters + Search bar */}
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
+            <input
+              type="text"
+              placeholder="Filter audit trail..."
+              value={search()}
+              onInput={(e) => { setSearch(e.currentTarget.value); setPage(0); }}
+              class="bg-surface-container-highest border border-outline-variant/30 rounded-sm text-sm pl-10 pr-4 py-1.5 w-56 focus:ring-0 focus:border-primary transition-all placeholder:text-outline/50 text-on-surface outline-none"
+            />
+          </div>
           <span class="text-[10px] font-mono text-outline uppercase tracking-wider shrink-0">Filters:</span>
+
           <div class="flex gap-2">
             {/* Action Type filter */}
             <div class="relative">
@@ -248,29 +249,10 @@ export default function AuditLogsPage() {
           >
             Clear
           </button>
-
-          {/* View toggle — right side */}
-          <div class="ml-auto flex items-center gap-3">
-            <span class="text-[10px] font-mono text-outline uppercase tracking-wider">View:</span>
-            <div class="flex rounded-sm overflow-hidden border border-outline-variant/30">
-              <button
-                onClick={() => setViewMode("list")}
-                class={`p-1.5 transition-colors border-0 cursor-pointer ${viewMode() === "list" ? "bg-surface-container-high text-primary" : "bg-surface-container-lowest text-outline"}`}
-              >
-                <span class="material-symbols-outlined text-sm">format_list_bulleted</span>
-              </button>
-              <button
-                onClick={() => setViewMode("grid")}
-                class={`p-1.5 transition-colors border-0 cursor-pointer ${viewMode() === "grid" ? "bg-surface-container-high text-primary" : "bg-surface-container-lowest text-outline"}`}
-              >
-                <span class="material-symbols-outlined text-sm">grid_view</span>
-              </button>
-            </div>
-          </div>
-        </section>
+        </div>
 
         {/* Ledger Table */}
-        <section class="flex-1 overflow-auto px-8 pb-8 pt-4">
+        <div>
           <div class="border border-outline-variant/10 rounded-sm overflow-hidden">
             <table class="w-full text-left border-collapse">
               <thead>
@@ -410,7 +392,7 @@ export default function AuditLogsPage() {
               </button>
             </div>
           </div>
-        </section>
+        </div>
       </div>
     </AppLayout>
   );

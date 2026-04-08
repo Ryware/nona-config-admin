@@ -114,7 +114,7 @@ export default function ProjectPage() {
   }));
 
   const onKeyDownConfigKey = (e: KeyboardEvent) => {
-    if(e.key === " ") {
+    if (e.key === " ") {
       e.preventDefault();
     }
   }
@@ -123,39 +123,36 @@ export default function ProjectPage() {
     <AppLayout>
       <div class="space-y-8">
 
-        {/* Breadcrumb */}
-        <div class="flex items-center gap-2 text-xs text-outline uppercase tracking-widest font-mono">
-          <A href="/projects" class="hover:text-primary transition-colors">Projects</A>
-          <span class="material-symbols-outlined text-[14px]">chevron_right</span>
-          <span class="text-on-surface">{params.slug.toUpperCase()}</span>
-        </div>
-
         {/* Header */}
         <Show when={project()} fallback={
-          <div class="text-center py-20 text-outline">
-            <span class="material-symbols-outlined text-5xl block mb-3">folder_open</span>
-            <p>Project not found</p>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-2">
+              <h2 class="text-4xl text-start font-headline font-bold text-primary tracking-tight">Projects</h2>
+              <p class="text-on-surface-variant text-start max-w-xl leading-relaxed text-sm">
+                Manage and organize your configuration projects across environments and deployments.
+              </p>
+            </div>
           </div>
         }>
-          <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h2 class="text-3xl font-headline font-bold text-primary tracking-tight">{project()!.name}</h2>
-              <p class="text-on-surface-variant text-sm mt-1">{project()!.description || "No description"}</p>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-2">
+              <h2 class="text-4xl text-start font-headline font-bold text-primary tracking-tight">{project()!.name}</h2>
+              <p class="text-on-surface-variant text-start max-w-xl leading-relaxed text-sm">{project()!.description || "No description"}</p>
             </div>
             <div class="flex gap-3">
               <button
                 onClick={() => setShowEnvForm(!showEnvForm())}
-                class="flex items-center gap-2 px-4 py-2 rounded text-[12px] font-bold bg-surface-container-high text-on-surface-variant hover:bg-surface-bright transition-all border-0 cursor-pointer"
+                class="flex items-center gap-2 px-6 py-3 rounded text-[13px] font-bold bg-surface-container-high text-on-surface-variant hover:bg-surface-bright transition-all active:scale-[0.98] border-0 cursor-pointer"
               >
-                <span class="material-symbols-outlined text-[16px]">add</span>
+                <span class="material-symbols-outlined text-[18px]">add</span>
                 Add Environment
               </button>
               <button
                 onClick={() => setShowConfigForm(!showConfigForm())}
-                class="flex items-center gap-2 px-4 py-2 rounded text-[13px] font-bold text-on-primary transition-all active:scale-[0.98] hover:opacity-90 border-0 cursor-pointer"
+                class="flex items-center gap-2 px-6 py-3 rounded text-[13px] font-bold text-on-primary transition-all active:scale-[0.98] hover:opacity-90 border-0 cursor-pointer"
                 style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
               >
-                <span class="material-symbols-outlined text-[16px]">add</span>
+                <span class="material-symbols-outlined text-[18px]">add</span>
                 Add Parameter
               </button>
             </div>

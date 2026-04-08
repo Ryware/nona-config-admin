@@ -54,21 +54,21 @@ export default function UsersPage() {
 
       <div class="space-y-8">
 
-        {/* Hero section */}
-        <section class="flex justify-between items-end">
-          <div class="space-y-1">
-            <h3 class="font-headline text-3xl font-bold text-start tracking-tight text-on-surface">Team Management</h3>
-            <p class="text-slate-400 text-sm">Manage administrative privileges and project-level scopes for your organization.</p>
+        {/* Page header */}
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="space-y-2">
+            <h2 class="text-4xl text-start font-headline font-bold text-primary tracking-tight">Team Management</h2>
+            <p class="text-on-surface-variant text-start max-w-xl leading-relaxed text-sm">Invite new team members and manage administrative privileges and project-level scopes for your organization.<br/></p>
           </div>
           <button
             onClick={() => navigate("/user")}
-            class="flex items-center gap-2 px-6 py-3 rounded-sm font-headline font-bold text-on-primary active:scale-95 transition-all shadow-lg shadow-primary/20 border-0 cursor-pointer"
+            class="flex items-center gap-2 px-6 py-3 rounded font-bold text-on-primary text-[13px] transition-all active:scale-[0.98] hover:opacity-90 w-fit cursor-pointer"
             style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
           >
-            <span class="material-symbols-outlined text-[20px]">person_add</span>
+            <span class="material-symbols-outlined text-[18px]">person_add</span>
             Invite Team Member
           </button>
-        </section>
+        </div>
 
         {/* Stats bar */}
         <div class="grid grid-cols-3 gap-6">

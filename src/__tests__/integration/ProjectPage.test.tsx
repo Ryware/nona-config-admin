@@ -98,11 +98,11 @@ describe('ProjectPage', () => {
     });
   });
 
-  it('shows "Project not found" when slug does not match any project', async () => {
+  it('shows the Projects fallback when slug does not match any project', async () => {
     renderProjectPage('nonexistent-project');
 
     await waitFor(() => {
-      expect(screen.getByText(/project not found/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /^projects$/i })).toBeInTheDocument();
     });
   });
 
