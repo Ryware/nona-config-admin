@@ -6,18 +6,18 @@ Admin panel for Nona Config management system.
 
 ## Setup
 
-\`\`\`bash
+```bash
 npm install
 npm run dev
-\`\`\`
+```
 
 ## Configuration
 
 Create a \`.env\` file:
 
-\`\`\`env
+```env
 VITE_API_URL=http://localhost:5027
-\`\`\`
+```
 
 ## Tech Stack
 
