@@ -13,7 +13,7 @@ npm run dev
 
 ## Configuration
 
-Create a \`.env\` file:
+Create a `.env` file:
 
 ```env
 VITE_API_URL=http://localhost:5027
