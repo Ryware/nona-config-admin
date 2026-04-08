@@ -1,5 +1,7 @@
 # Nona Config Admin
 
+[![CI](https://github.com/Ryware/nona-config-admin/actions/workflows/ci.yml/badge.svg)](https://github.com/Ryware/nona-config-admin/actions/workflows/ci.yml)
+
 Admin panel for Nona Config management system.
 
 ## Setup
