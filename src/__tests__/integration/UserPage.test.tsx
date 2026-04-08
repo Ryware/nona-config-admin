@@ -1,29 +1,33 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
-import { Router, Route } from '@solidjs/router';
+import { render, screen, fireEvent, waitFor, within } from '@solidjs/testing-library';
+import { Router, Route, useNavigate, useLocation } from '@solidjs/router';
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query';
 import { MetaProvider } from '@solidjs/meta';
+import { onMount } from 'solid-js';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import { ToastProvider } from '../../components/ui/toast';
 import UserPage from '../../pages/users/UserPage';
 import { mockUsers, mockProjects, mockToken } from '../mocks/data';
-import type { JSX } from 'solid-js';
 
-/**
- * Render in invite mode (no router state — userId === undefined).
- */
-function renderInviteMode() {
-  const queryClient = new QueryClient({
+const UsersStub = () => <div data-testid="users-page-stub">Users Page</div>;
+
+function makeQueryClient() {
+  return new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
+}
+
+/** Renders UserPage with no router state — invite mode. */
+function renderInviteMode() {
   window.history.pushState({}, '', '/user');
   return render(() => (
     <MetaProvider>
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={makeQueryClient()}>
         <ToastProvider>
           <Router>
-            <Route path="*" component={UserPage} />
+            <Route path="/user" component={UserPage} />
+            <Route path="/users" component={UsersStub} />
           </Router>
         </ToastProvider>
       </QueryClientProvider>
@@ -32,49 +36,41 @@ function renderInviteMode() {
 }
 
 /**
- * Render in edit mode by pushing router location state with a userId.
+ * Bridge component: navigates to /user with location state after mount,
+ * then lets UserPage read that state via useLocation().
  */
-function renderEditMode(userId: string) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+function EditModeBridge(props: { userId: string }) {
+  const navigate = useNavigate();
+  const location = useLocation<{ userId?: string }>();
+
+  onMount(() => {
+    if (!location.state?.userId) {
+      navigate('/user', { state: { userId: props.userId }, replace: true });
+    }
   });
+
+  return (
+    <>
+      {location.state?.userId ? <UserPage /> : null}
+    </>
+  );
+}
+
+/** Renders UserPage with a userId in router location state — edit mode. */
+function renderEditMode(userId: string) {
+  window.history.pushState({}, '', '/user');
   return render(() => (
     <MetaProvider>
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={makeQueryClient()}>
         <ToastProvider>
           <Router>
-            {/* Pass state the same way UsersPage does: navigate("/user", { state: { userId } }) */}
-            <Route
-              path="*"
-              component={() => {
-                // Simulate location state by providing it via the route
-                const page = UserPage as unknown as () => JSX.Element;
-                // We need to mount through a wrapper that sets location state
-                // Use a helper route that navigates to /user with state
-                return <UserPageWithState userId={userId} />;
-              }}
-            />
+            <Route path="/user" component={() => <EditModeBridge userId={userId} />} />
+            <Route path="/users" component={UsersStub} />
           </Router>
         </ToastProvider>
       </QueryClientProvider>
     </MetaProvider>
   ));
-}
-
-/**
- * A thin wrapper that uses useNavigate to push state before rendering UserPage.
- * This simulates the real app navigation flow.
- */
-function UserPageWithState(props: { userId: string }) {
-  const { useNavigate, useLocation } = require('@solidjs/router');
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  if (!location.state?.userId) {
-    navigate('/user', { state: { userId: props.userId }, replace: true });
-    return null;
-  }
-  return <UserPage />;
 }
 
 describe('UserPage — invite mode (no userId in state)', () => {
@@ -118,8 +114,11 @@ describe('UserPage — invite mode (no userId in state)', () => {
 
   it('displays the list of projects in the project scope section', async () => {
     renderInviteMode();
+    // Find the section heading first, then wait for async project data within it
+    const scopeHeading = await screen.findByRole('heading', { name: /project scope/i });
+    const section = scopeHeading.closest('section')!;
     for (const project of mockProjects) {
-      expect(await screen.findByText(project.urlSlug)).toBeInTheDocument();
+      expect(await within(section).findByText(project.urlSlug)).toBeInTheDocument();
     }
   });
 
@@ -133,8 +132,10 @@ describe('UserPage — invite mode (no userId in state)', () => {
 
   it('toggles project checkbox when a project row is clicked', async () => {
     renderInviteMode();
-    const projectRow = await screen.findByText(mockProjects[0].urlSlug);
-    const row = projectRow.closest('[class*="grid grid-cols-2"]')!;
+    const scopeHeading = await screen.findByRole('heading', { name: /project scope/i });
+    const section = scopeHeading.closest('section')!;
+    const projectText = await within(section).findByText(mockProjects[0].urlSlug);
+    const row = projectText.closest('[class*="grid grid-cols-2"]') as HTMLElement;
     const checkbox = row.querySelector('input[type="checkbox"]') as HTMLInputElement;
 
     expect(checkbox.checked).toBe(false);
@@ -154,17 +155,11 @@ describe('UserPage — invite mode (no userId in state)', () => {
 
   it('submits the form and navigates to /users on success', async () => {
     renderInviteMode();
-
     fireEvent.input(await screen.findByPlaceholderText(/alex@company\.com/i), {
       target: { value: 'newuser@example.com' },
     });
-
     fireEvent.click(screen.getByRole('button', { name: /generate magic link/i }));
-
-    await waitFor(() => {
-      // After success, the page navigates to /users — heading disappears
-      expect(screen.queryByRole('heading', { name: /invite team member/i })).not.toBeInTheDocument();
-    });
+    expect(await screen.findByTestId('users-page-stub')).toBeInTheDocument();
   });
 
   it('shows "Back to Team Overview" button that navigates back', async () => {
@@ -172,14 +167,10 @@ describe('UserPage — invite mode (no userId in state)', () => {
     expect(await screen.findByRole('button', { name: /back to team overview/i })).toBeInTheDocument();
   });
 
-  it('"Cancel Invitation" button navigates back to /users', async () => {
+  it('"Cancel Invitation" button navigates to /users', async () => {
     renderInviteMode();
-    const cancelBtn = await screen.findByRole('button', { name: /cancel invitation/i });
-    fireEvent.click(cancelBtn);
-    // After navigation the invite heading should be gone
-    await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: /invite team member/i })).not.toBeInTheDocument();
-    });
+    fireEvent.click(await screen.findByRole('button', { name: /cancel invitation/i }));
+    expect(await screen.findByTestId('users-page-stub')).toBeInTheDocument();
   });
 });
 
