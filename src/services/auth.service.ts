@@ -6,6 +6,7 @@ import type {
   ForgotPasswordRequest,
   ResetPasswordRequest,
   RegisterResult,
+  SsoConfig,
 } from "../types";
 
 export const authService = {
@@ -56,5 +57,17 @@ export const authService = {
 
   async firstTime(): Promise<boolean> {
     return apiClient.get("/auth/first-time");
+  },
+
+  async getSsoConfig(): Promise<SsoConfig> {
+    return apiClient.get("/auth/sso/config");
+  },
+
+  async loginWithGoogle(idToken: string): Promise<LoginResponse> {
+    return apiClient.post<LoginResponse>("/auth/sso/google", { idToken });
+  },
+
+  async loginWithMicrosoft(idToken: string): Promise<LoginResponse> {
+    return apiClient.post<LoginResponse>("/auth/sso/microsoft", { idToken });
   },
 };
