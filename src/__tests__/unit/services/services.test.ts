@@ -107,7 +107,7 @@ describe('userService', () => {
   it('getById returns the matching user', async () => {
     const result = await userService.getById('user-1');
     expect(result.id).toBe('user-1');
-    expect(result.role).toBe('admin');
+    expect(result.role).toBe('editor');
   });
 
   it('getById throws 404 for unknown id', async () => {
@@ -115,9 +115,14 @@ describe('userService', () => {
   });
 
   it('create returns new user', async () => {
-    const result = await userService.create({ email: 'charlie@example.com', role: 'viewer' });
-    expect(result.email).toBe('charlie@example.com');
-    expect(result.role).toBe('viewer');
+    const result = await userService.create({
+      name: 'Charlie Viewer',
+      email: 'charlie@example.com',
+      role: 'viewer',
+    });
+    expect(result.user.email).toBe('charlie@example.com');
+    expect(result.user.role).toBe('viewer');
+    expect(result.invitationToken).toBe('invite-token-123');
   });
 
   it('update returns updated user', async () => {
