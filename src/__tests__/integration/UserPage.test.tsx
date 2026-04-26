@@ -100,8 +100,7 @@ describe('UserPage — invite mode (no userId in state)', () => {
   it('Editor role is selected by default', async () => {
     renderInviteMode();
     await screen.findByText('Editor');
-    // The selected card has border-primary; easiest way is checking the submit button shows "Generate Magic Link"
-    expect(screen.getByRole('button', { name: /generate magic link/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /generate invitation link/i })).toBeInTheDocument();
   });
 
   it('selecting Viewer role updates the selection', async () => {
@@ -145,21 +144,26 @@ describe('UserPage — invite mode (no userId in state)', () => {
 
   it('shows error toast when submitting without an email', async () => {
     renderInviteMode();
-    const submitBtn = await screen.findByRole('button', { name: /generate magic link/i });
+    const submitBtn = await screen.findByRole('button', { name: /generate invitation link/i });
     fireEvent.click(submitBtn);
-    // Form has required on email input — browser prevents submit;
-    // but the JS handler also shows a toast: check the input's validity
+    const nameInput = screen.getByPlaceholderText(/john smith/i) as HTMLInputElement;
     const emailInput = screen.getByPlaceholderText(/alex@company\.com/i) as HTMLInputElement;
+    expect(nameInput.required).toBe(true);
     expect(emailInput.required).toBe(true);
   });
 
-  it('submits the form and navigates to /users on success', async () => {
+  it('submits the form and renders the generated invitation link', async () => {
     renderInviteMode();
+    fireEvent.input(await screen.findByPlaceholderText(/john smith/i), {
+      target: { value: 'New User' },
+    });
     fireEvent.input(await screen.findByPlaceholderText(/alex@company\.com/i), {
       target: { value: 'newuser@example.com' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /generate magic link/i }));
-    expect(await screen.findByTestId('users-page-stub')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /generate invitation link/i }));
+
+    expect(await screen.findByRole('heading', { name: /invitation link/i })).toBeInTheDocument();
+    expect(screen.getByDisplayValue(/\/invite\/invite-token-123$/i)).toBeInTheDocument();
   });
 
   it('shows "Back to Team Overview" button that navigates back', async () => {

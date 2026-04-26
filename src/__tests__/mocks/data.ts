@@ -73,8 +73,10 @@ export const mockUsers: User[] = [
     email: 'alice@example.com',
     name: 'Alice Admin',
     isAdmin: true,
-    role: 'admin',
+    role: 'editor',
+    scope: 'all',
     createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
   },
   {
     id: 'user-2',
@@ -82,7 +84,9 @@ export const mockUsers: User[] = [
     name: 'Bob Viewer',
     isAdmin: false,
     role: 'viewer',
+    scope: 'all',
     createdAt: '2024-01-02T00:00:00Z',
+    updatedAt: '2024-01-02T00:00:00Z',
   },
 ];
 

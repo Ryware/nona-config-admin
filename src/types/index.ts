@@ -43,6 +43,11 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
+export interface InvitationDetails {
+  email: string;
+  name: string;
+}
+
 // Project Types
 export interface Project {
   id: string;
@@ -109,13 +114,22 @@ export interface User {
   isAdmin: boolean;
   role: string;
   name: string;
-  resetPasswordToken?: string;
+  scope?: string;
+  projects?: Array<{ projectName: string; role: string }>;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateUserRequest {
+  name: string;
   email: string;
   role?: string;
+  scope?: string;
+}
+
+export interface CreateUserResponse {
+  user: User;
+  invitationToken: string;
 }
 
 // API Response Types

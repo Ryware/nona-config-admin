@@ -7,6 +7,7 @@ import type {
   ResetPasswordRequest,
   RegisterResult,
   SsoConfig,
+  InvitationDetails,
 } from "../types";
 
 export const authService = {
@@ -69,5 +70,21 @@ export const authService = {
 
   async loginWithMicrosoft(idToken: string): Promise<LoginResponse> {
     return apiClient.post<LoginResponse>("/auth/sso/microsoft", { idToken });
+  },
+
+  async getInvitation(token: string): Promise<InvitationDetails> {
+    return apiClient.get(`/auth/invitations/${token}`);
+  },
+
+  async completeInvitationWithPassword(token: string, newPassword: string): Promise<LoginResponse> {
+    return apiClient.post<LoginResponse>(`/auth/invitations/${token}/password`, { newPassword });
+  },
+
+  async completeInvitationWithGoogle(token: string, idToken: string): Promise<LoginResponse> {
+    return apiClient.post<LoginResponse>(`/auth/invitations/${token}/sso/google`, { idToken });
+  },
+
+  async completeInvitationWithMicrosoft(token: string, idToken: string): Promise<LoginResponse> {
+    return apiClient.post<LoginResponse>(`/auth/invitations/${token}/sso/microsoft`, { idToken });
   },
 };
