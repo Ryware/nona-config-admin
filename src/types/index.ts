@@ -6,8 +6,21 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  username?: string;
   role: string;
   expiresAt: string;
+}
+
+export interface SsoProviderConfig {
+  enabled: boolean;
+  clientId: string | null;
+  authority?: string | null;
+  tenantId?: string | null;
+}
+
+export interface SsoConfig {
+  google: SsoProviderConfig;
+  microsoft: SsoProviderConfig;
 }
 
 export interface RegisterResult {
@@ -109,6 +122,7 @@ export interface CreateUserRequest {
 export interface ApiError {
   error: string;
   message?: string;
+  errorCode?: string;
 }
 
 export interface PaginatedResponse<T> {

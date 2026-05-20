@@ -1,5 +1,5 @@
 import { createSignal, createEffect, untrack, Show, For, createMemo } from "solid-js";
-import { useParams, A } from "@solidjs/router";
+import { useParams } from "@solidjs/router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
 import { projectService } from "../../services/project.service";

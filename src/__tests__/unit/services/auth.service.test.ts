@@ -93,6 +93,24 @@ describe('authService', () => {
     });
   });
 
+  describe('SSO', () => {
+    it('returns SSO runtime config', async () => {
+      const result = await authService.getSsoConfig();
+      expect(result.google.enabled).toBe(false);
+      expect(result.microsoft.enabled).toBe(false);
+    });
+
+    it('logs in with Google token', async () => {
+      const result = await authService.loginWithGoogle('google-valid-token');
+      expect(result.token).toBe(mockToken);
+    });
+
+    it('logs in with Microsoft token', async () => {
+      const result = await authService.loginWithMicrosoft('microsoft-valid-token');
+      expect(result.token).toBe(mockToken);
+    });
+  });
+
   describe('requestPasswordReset / resetPassword', () => {
     it('throws not implemented error for requestPasswordReset', async () => {
       await expect(authService.requestPasswordReset({ email: 'x@x.com' })).rejects.toThrow(

@@ -1,6 +1,22 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5027";
 
-const ALLOW_401_ENDPOINTS = ["/auth/login", "/auth/first-time"];
+const ALLOW_401_ENDPOINTS = [
+  "/auth/login",
+  "/auth/first-time",
+  "/auth/sso/google",
+  "/auth/sso/microsoft",
+  "/auth/sso/config",
+];
+
+export class ApiRequestError extends Error {
+  code?: string;
+
+  constructor(message: string, code?: string) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.code = code;
+  }
+}
 
 export class ApiClient {
   private getAuthHeader(): HeadersInit {
@@ -30,7 +46,7 @@ export class ApiClient {
       const error = await response
         .json()
         .catch(() => ({ error: "An error occurred" }));
-      throw new Error(error.error || error.message || "Request failed");
+      throw new ApiRequestError(error.error || error.message || "Request failed", error.errorCode);
     }
 
     // Handle 204 No Content

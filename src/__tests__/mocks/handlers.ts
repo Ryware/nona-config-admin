@@ -19,8 +19,7 @@ export const handlers = [
     return HttpResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }),
 
-  http.post(`${BASE}/auth/register`, async ({ request }) => {
-    const body = await request.json() as { email: string; password: string };
+  http.post(`${BASE}/auth/register`, async () => {
     return HttpResponse.json({
       success: true,
       response: { token: mockToken, role: 'admin', expiresAt: '2099-01-01T00:00:00Z' },
@@ -30,6 +29,31 @@ export const handlers = [
 
   http.get(`${BASE}/auth/first-time`, () => {
     return HttpResponse.json(false);
+  }),
+
+  http.get(`${BASE}/auth/sso/config`, () => {
+    return HttpResponse.json({
+      google: { enabled: false, clientId: null },
+      microsoft: { enabled: false, clientId: null, authority: null, tenantId: null },
+    });
+  }),
+
+  http.post(`${BASE}/auth/sso/google`, async ({ request }) => {
+    const body = await request.json() as { idToken?: string };
+    if (body.idToken === 'google-valid-token') {
+      return HttpResponse.json({ token: mockToken, role: 'admin', expiresAt: '2099-01-01T00:00:00Z' });
+    }
+
+    return HttpResponse.json({ error: 'Authentication failed' }, { status: 401 });
+  }),
+
+  http.post(`${BASE}/auth/sso/microsoft`, async ({ request }) => {
+    const body = await request.json() as { idToken?: string };
+    if (body.idToken === 'microsoft-valid-token') {
+      return HttpResponse.json({ token: mockToken, role: 'admin', expiresAt: '2099-01-01T00:00:00Z' });
+    }
+
+    return HttpResponse.json({ error: 'Authentication failed' }, { status: 401 });
   }),
 
   // ── Projects ─────────────────────────────────────────────────────────────────

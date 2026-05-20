@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../mocks/server';
-import { ApiClient } from '../../../services/api-client';
+import { ApiClient, ApiRequestError } from '../../../services/api-client';
 
 const BASE = 'http://localhost:5027';
 
@@ -77,6 +77,20 @@ describe('ApiClient', () => {
 
       await expect(client.get('/test-generic')).rejects.toThrow('Request failed');
     });
+
+    it('preserves backend errorCode on thrown API errors', async () => {
+      server.use(
+        http.get(`${BASE}/test-error-code`, () =>
+          HttpResponse.json({ error: 'Authentication failed', errorCode: 'sso_user_not_registered' }, { status: 401 }),
+        ),
+      );
+
+      await expect(client.get('/test-error-code')).rejects.toMatchObject({
+        name: 'ApiRequestError',
+        message: 'Authentication failed',
+        code: 'sso_user_not_registered',
+      } satisfies Partial<ApiRequestError>);
+    });
   });
 
   describe('204 No Content', () => {
@@ -121,6 +135,20 @@ describe('ApiClient', () => {
       );
 
       await expect(client.post('/auth/login', { email: 'x', password: 'y' })).rejects.toThrow();
+      expect(mockLocation.href).toBe('');
+    });
+
+    it('does NOT redirect for allowlisted SSO endpoint on 401', async () => {
+      const mockLocation = { href: '' } as Location;
+      vi.spyOn(window, 'location', 'get').mockReturnValue(mockLocation);
+
+      server.use(
+        http.post(`${BASE}/auth/sso/google`, () =>
+          HttpResponse.json({ error: 'Authentication failed' }, { status: 401 }),
+        ),
+      );
+
+      await expect(client.post('/auth/sso/google', { idToken: 'bad-token' })).rejects.toThrow();
       expect(mockLocation.href).toBe('');
     });
   });
