@@ -56,6 +56,75 @@ export const handlers = [
     return HttpResponse.json({ error: 'Authentication failed' }, { status: 401 });
   }),
 
+  http.get(`${BASE}/auth/invitations/:token`, ({ params }) => {
+    if (params.token === 'invalid-token') {
+      return HttpResponse.json(
+        { error: 'Invitation is invalid or has already been used.', errorCode: 'invitation_invalid_or_used' },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json({
+      email: 'invitee@example.com',
+      name: 'Invited Teammate',
+    });
+  }),
+
+  http.post(`${BASE}/auth/invitations/:token/password`, async ({ params, request }) => {
+    if (params.token === 'invalid-token') {
+      return HttpResponse.json(
+        { error: 'Invitation is invalid or has already been used.', errorCode: 'invitation_invalid_or_used' },
+        { status: 404 },
+      );
+    }
+
+    const body = await request.json() as { newPassword?: string };
+    if (!body.newPassword) {
+      return HttpResponse.json({ error: 'Password is required' }, { status: 400 });
+    }
+
+    return HttpResponse.json({ token: mockToken, role: 'viewer', expiresAt: '2099-01-01T00:00:00Z' });
+  }),
+
+  http.post(`${BASE}/auth/invitations/:token/sso/google`, async ({ params, request }) => {
+    if (params.token === 'invalid-token') {
+      return HttpResponse.json(
+        { error: 'Invitation is invalid or has already been used.', errorCode: 'invitation_invalid_or_used' },
+        { status: 404 },
+      );
+    }
+
+    const body = await request.json() as { idToken?: string };
+    if (body.idToken === 'google-valid-token') {
+      return HttpResponse.json({ token: mockToken, role: 'viewer', expiresAt: '2099-01-01T00:00:00Z' });
+    }
+
+    if (body.idToken === 'google-mismatch-token') {
+      return HttpResponse.json(
+        { error: 'Authentication failed', errorCode: 'invitation_sso_email_mismatch' },
+        { status: 401 },
+      );
+    }
+
+    return HttpResponse.json({ error: 'Authentication failed' }, { status: 401 });
+  }),
+
+  http.post(`${BASE}/auth/invitations/:token/sso/microsoft`, async ({ params, request }) => {
+    if (params.token === 'invalid-token') {
+      return HttpResponse.json(
+        { error: 'Invitation is invalid or has already been used.', errorCode: 'invitation_invalid_or_used' },
+        { status: 404 },
+      );
+    }
+
+    const body = await request.json() as { idToken?: string };
+    if (body.idToken === 'microsoft-valid-token') {
+      return HttpResponse.json({ token: mockToken, role: 'viewer', expiresAt: '2099-01-01T00:00:00Z' });
+    }
+
+    return HttpResponse.json({ error: 'Authentication failed' }, { status: 401 });
+  }),
+
   // ── Projects ─────────────────────────────────────────────────────────────────
   http.get(`${BASE}/admin/projects`, () => {
     return HttpResponse.json(mockProjects);
@@ -163,14 +232,24 @@ export const handlers = [
   }),
 
   http.post(`${BASE}/admin/users`, async ({ request }) => {
-    const body = await request.json() as { email: string; role?: string };
+    const body = await request.json() as { name?: string; email: string; role?: string };
+    if (!body.name) {
+      return HttpResponse.json({ error: 'Name is required' }, { status: 400 });
+    }
+
     return HttpResponse.json({
-      id: 'user-new',
-      email: body.email,
-      name: body.email.split('@')[0],
-      isAdmin: body.role === 'admin',
-      role: body.role ?? 'viewer',
-      createdAt: new Date().toISOString(),
+      user: {
+        id: 'user-new',
+        email: body.email,
+        name: body.name,
+        isAdmin: false,
+        role: body.role ?? 'viewer',
+        scope: 'all',
+        projects: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      invitationToken: 'invite-token-123',
     }, { status: 201 });
   }),
 

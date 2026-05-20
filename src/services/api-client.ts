@@ -8,6 +8,10 @@ const ALLOW_401_ENDPOINTS = [
   "/auth/sso/config",
 ];
 
+function isAllowlisted401Endpoint(endpoint: string) {
+  return ALLOW_401_ENDPOINTS.includes(endpoint) || endpoint.startsWith("/auth/invitations/");
+}
+
 export class ApiRequestError extends Error {
   code?: string;
 
@@ -37,7 +41,7 @@ export class ApiClient {
     });
 
     if (!response.ok) {
-      if (response.status === 401 && !ALLOW_401_ENDPOINTS.includes(endpoint)) {
+      if (response.status === 401 && !isAllowlisted401Endpoint(endpoint)) {
         // Unauthorized - clear token and redirect to login
         localStorage.removeItem("auth_token");
         window.location.href = "/login";

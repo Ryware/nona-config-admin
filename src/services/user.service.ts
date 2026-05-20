@@ -1,5 +1,5 @@
 import { apiClient } from "./api-client";
-import type { User, CreateUserRequest } from "../types";
+import type { User, CreateUserRequest, CreateUserResponse } from "../types";
 
 export interface UpdateUserRequest {
   name?: string;
@@ -17,8 +17,8 @@ export const userService = {
     return apiClient.get<User>(`/admin/users/${id}`);
   },
 
-  async create(data: CreateUserRequest): Promise<User> {
-    return apiClient.post<User>("/admin/users", data);
+  async create(data: CreateUserRequest): Promise<CreateUserResponse> {
+    return apiClient.post<CreateUserResponse>("/admin/users", data);
   },
 
   async update(id: string, data: UpdateUserRequest): Promise<User> {

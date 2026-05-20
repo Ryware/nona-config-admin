@@ -6,7 +6,7 @@ import { AppLayout } from "../../components/layout/AppLayout";
 import { useToast } from "../../components/ui/toast";
 import { userService, type UpdateUserRequest } from "../../services/user.service";
 import { projectService } from "../../services/project.service";
-import type { CreateUserRequest } from "../../types";
+import type { CreateUserRequest, CreateUserResponse } from "../../types";
 
 export default function UserPage() {
   const navigate = useNavigate();
@@ -18,6 +18,8 @@ export default function UserPage() {
   const [email, setEmail] = createSignal("");
   const [role, setRole] = createSignal<"editor" | "viewer">("editor");
   const [selectedProjects, setSelectedProjects] = createSignal<Set<string>>(new Set());
+  const [createdInvite, setCreatedInvite] = createSignal<CreateUserResponse | null>(null);
+  const [copyFeedback, setCopyFeedback] = createSignal("");
 
   const userId = () => location.state?.userId;
   const isEditMode = () => !!userId();
@@ -43,10 +45,11 @@ export default function UserPage() {
 
   const createMutation = useMutation(() => ({
     mutationFn: (data: CreateUserRequest) => userService.create(data),
-    onSuccess: () => {
+    onSuccess: (response: CreateUserResponse) => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      addToast("Magic link generated — team member invited", "success");
-      navigate("/users");
+      setCreatedInvite(response);
+      setCopyFeedback("");
+      addToast("Invitation link generated", "success");
     },
     onError: (error: Error) => addToast(error.message || "Failed to invite member", "error"),
   }));
@@ -66,12 +69,12 @@ export default function UserPage() {
   const handleSubmit = (e: Event) => {
     e.preventDefault();
     if (isEditMode()) {
-      const updates: UpdateUserRequest = { email: email(), role: role() };
-      if (name()) updates.name = name();
+      const updates: UpdateUserRequest = { name: name(), role: role() };
       updateMutation.mutate({ id: userId()!, updates });
     } else {
+      if (!name()) { addToast("Name is required", "error"); return; }
       if (!email()) { addToast("Email is required", "error"); return; }
-      createMutation.mutate({ email: email(), role: role() });
+      createMutation.mutate({ name: name(), email: email(), role: role() });
     }
   };
 
@@ -84,6 +87,22 @@ export default function UserPage() {
   };
 
   const isPending = () => createMutation.isPending || updateMutation.isPending;
+  const invitationUrl = () => {
+    const invite = createdInvite();
+    if (!invite) return "";
+    return new URL(`/invite/${invite.invitationToken}`, window.location.origin).toString();
+  };
+
+  const copyInvitationUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(invitationUrl());
+      setCopyFeedback("Invitation link copied");
+      addToast("Invitation link copied", "success");
+    } catch {
+      setCopyFeedback("Copy failed. You can still copy the URL manually.");
+      addToast("Failed to copy invitation link", "error");
+    }
+  };
 
   const ROLE_CARDS = [
     {
@@ -143,6 +162,48 @@ export default function UserPage() {
           <form onSubmit={handleSubmit}>
             <div class="grid grid-cols-1 gap-10">
 
+              <Show when={createdInvite()}>
+                {(invite) => (
+                  <section class="bg-[#0c1b33] p-8 rounded-xl border border-primary/20 shadow-sm space-y-6">
+                    <div class="flex items-center gap-3">
+                      <span class="text-xs font-mono bg-primary/10 px-2 py-0.5 rounded text-primary border border-primary/20">READY</span>
+                      <h3 class="font-headline font-bold text-lg text-on-surface">Invitation Link</h3>
+                    </div>
+                    <p class="text-sm text-on-surface-variant">
+                      Send this link to <span class="text-on-surface font-medium">{invite().user.email}</span>. It can be used once to create a password or finish sign-in with SSO.
+                    </p>
+                    <div class="flex flex-col gap-3 md:flex-row">
+                      <input
+                        type="text"
+                        readOnly
+                        value={invitationUrl()}
+                        class="flex-1 bg-surface-container-highest border border-outline-variant/20 text-on-surface px-4 py-3 rounded outline-none font-mono text-[13px]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void copyInvitationUrl()}
+                        class="px-5 py-3 rounded text-sm font-bold text-on-primary border-0 cursor-pointer"
+                        style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+                      >
+                        Copy Link
+                      </button>
+                    </div>
+                    <Show when={copyFeedback()}>
+                      <p class="text-xs text-primary">{copyFeedback()}</p>
+                    </Show>
+                    <div class="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => navigate("/users")}
+                        class="px-5 py-3 rounded text-sm font-bold border border-outline-variant/20 bg-surface-container-low text-on-surface cursor-pointer"
+                      >
+                        Back to Team Overview
+                      </button>
+                    </div>
+                  </section>
+                )}
+              </Show>
+
               {/* Step 01 — Invitee Identity */}
               <section class="bg-surface-container-low p-8 rounded-xl border border-outline-variant/10 shadow-sm space-y-8">
                 <div class="flex items-center gap-3">
@@ -159,6 +220,7 @@ export default function UserPage() {
                       placeholder="e.g. John Smith"
                       value={name()}
                       onInput={(e) => setName(e.currentTarget.value)}
+                      required={!isEditMode()}
                       class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:border-b-primary focus:ring-0 text-on-surface px-4 py-3 transition-all placeholder:text-outline/40 outline-none"
                     />
                   </div>
@@ -292,7 +354,7 @@ export default function UserPage() {
                   class="flex items-center gap-3 px-10 py-3.5 text-on-primary font-bold text-sm rounded-sm active:scale-95 transition-all shadow-lg disabled:opacity-50 border-0 cursor-pointer"
                   style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%); box-shadow: 0 4px 24px rgba(164,201,255,0.2);"
                 >
-                  <span>{isPending() ? "Processing…" : isEditMode() ? "Save Changes" : "Generate Magic Link"}</span>
+                  <span>{isPending() ? "Processing…" : isEditMode() ? "Save Changes" : "Generate Invitation Link"}</span>
                   <span class="material-symbols-outlined text-lg">
                     {isEditMode() ? "save" : "auto_awesome"}
                   </span>
