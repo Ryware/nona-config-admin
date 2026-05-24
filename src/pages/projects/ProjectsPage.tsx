@@ -87,16 +87,13 @@ export default function ProjectsPage() {
 
         {/* Search bar */}
         <Show when={projectsQuery.isSuccess && allProjects().length > 0}>
-          <div class="relative max-w-sm">
-            <MIcon
-              name="search"
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none"
-            />
+          <div class="max-w-sm">
             <Input
               type="text"
               placeholder="Search projects…"
               value={search()}
               onInput={(e) => setSearch(e.currentTarget.value)}
+              leftIcon="search"
             />
           </div>
         </Show>

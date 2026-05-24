@@ -54,8 +54,15 @@ export interface Project {
   urlSlug: string;
   name: string;
   description?: string;
+  serverApiKey: string | null;
+  clientApiKey: string | null;
+  environments: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface RerollApiKeysRequest {
+  keyType: 'Server' | 'Client';
 }
 
 export interface CreateProjectRequest {
@@ -108,6 +115,11 @@ export interface UpdateConfigEntryRequest {
 }
 
 // User Types
+export interface ProjectAccess {
+  projectName: string;
+  role: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -115,7 +127,7 @@ export interface User {
   role: string;
   name: string;
   scope?: string;
-  projects?: Array<{ projectName: string; role: string }>;
+  projects?: ProjectAccess[];
   createdAt: string;
   updatedAt?: string;
 }
@@ -150,4 +162,16 @@ export interface DashboardCounts {
   projects: number;
   configEntries: number;
   users: number;
+}
+
+// Audit Log Types
+export interface AuditLog {
+  id: string;
+  actor: string;
+  actorIsSystem: boolean;
+  action: string;
+  target: string;
+  project: string | null;
+  environment: string | null;
+  createdAt: string;
 }

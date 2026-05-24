@@ -171,7 +171,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
               </div>
 
               {/* Scrollable content */}
-              <div class="flex-1 overflow-y-auto pr-1">
+              <div class="flex-1 overflow-y-auto pr-1 pl-1">
 
                 {/* ── Settings tab ─────────────────────────────── */}
                 <Show when={activeDrawerTab() === "settings"}>
@@ -197,6 +197,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                         value={editDisplayName()}
                         onInput={(e) => setEditDisplayName(e.currentTarget.value)}
                         placeholder="Friendly name"
+                        leftIcon="label"
                       />
                     </div>
 
@@ -245,6 +246,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                           type="number"
                           value={editVal()}
                           onInput={(e) => setEditVal(e.currentTarget.value)}
+                          leftIcon="pin"
                         />
                       </Show>
                       <Show when={entry.contentType === "json"}>
@@ -259,6 +261,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                           type="text"
                           value={editVal()}
                           onInput={(e) => setEditVal(e.currentTarget.value)}
+                          leftIcon="text_fields"
                         />
                       </Show>
                     </div>

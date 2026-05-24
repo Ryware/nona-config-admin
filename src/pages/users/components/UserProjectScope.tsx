@@ -25,17 +25,17 @@ export function UserProjectScope(props: UserProjectScopeProps) {
         <div class="divide-y divide-outline-variant/10">
           <For each={props.projects}>
             {(project) => {
-              const isGiven = () => props.selectedProjects.has(project.id);
+              const isGiven = () => props.selectedProjects.has(project.urlSlug);
               return (
                 <div
                   class="grid grid-cols-2 px-6 py-4 items-center hover:bg-surface-container-high/40 transition-colors cursor-pointer border-b border-outline-variant/10 last:border-b-0"
-                  onClick={() => props.onToggleProject(project.id)}
+                  onClick={() => props.onToggleProject(project.urlSlug)}
                 >
                   <div class="flex items-center gap-3">
                     <input
                       type="checkbox"
                       checked={isGiven()}
-                      onChange={() => props.onToggleProject(project.id)}
+                      onChange={() => props.onToggleProject(project.urlSlug)}
                       onClick={(e) => e.stopPropagation()}
                       aria-label={`Toggle access for project ${project.name || project.urlSlug}`}
                       class="w-4 h-4 bg-surface-container-low border border-outline-variant/20 rounded focus:ring-1 focus:ring-primary/30 text-primary cursor-pointer accent-primary"

@@ -114,6 +114,7 @@ export default function InvitePage() {
               onInput={(e) => setPassword(e.currentTarget.value)}
               required
               autofocus
+              leftIcon="key"
             />
             <FormField
               id="confirm-password"
@@ -123,6 +124,7 @@ export default function InvitePage() {
               value={confirmPassword()}
               onInput={(e) => setConfirmPassword(e.currentTarget.value)}
               required
+              leftIcon="shield_lock"
             />
             <div class="pt-2">
               <button

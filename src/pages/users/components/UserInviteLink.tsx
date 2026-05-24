@@ -31,6 +31,7 @@ export function UserInviteLink(props: UserInviteLinkProps) {
           readOnly
           value={props.invitationUrl}
           class="flex-1 font-mono"
+          leftIcon="link"
         />
         <button
           type="button"

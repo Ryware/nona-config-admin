@@ -2,17 +2,74 @@ import { Title } from "@solidjs/meta";
 import { useQuery } from "@tanstack/solid-query";
 import { createMemo, createSignal } from "solid-js";
 import { AppLayout } from "../../components/layout/AppLayout";
-import { projectService } from "../../services/project.service";
-import { userService } from "../../services/user.service";
+import { auditLogService } from "../../services/audit-log.service";
+import type { AuditLog } from "../../types";
 
 import { AuditLogDrawer } from "./components/AuditLogDrawer";
 import { AuditLogsFilters } from "./components/AuditLogsFilters";
 import { AuditLogsHeader } from "./components/AuditLogsHeader";
 import { AuditLogsTable } from "./components/AuditLogsTable";
-import type { AuditEntry, AuditLogEntry } from "./types";
+import type { AuditEntry } from "./types";
 import { ACTION_STYLE, actorStyle, ENV_STYLE } from "./utils";
 
 const PAGE_SIZE = 25;
+
+/** Maps a backend action string to a display label present in ACTION_STYLE. */
+function resolveActionLabel(action: string): string {
+  if (ACTION_STYLE[action]) return action;
+  const normalized = action.toLowerCase().replace(/[\s-]+/g, "_");
+  const MAP: Record<string, string> = {
+    create_project: "Created Project",
+    created_project: "Created Project",
+    update_project: "Updated Project",
+    updated_project: "Updated Project",
+    invite_user: "Invited User",
+    invited_user: "Invited User",
+    delete_key: "Deleted Key",
+    deleted_key: "Deleted Key",
+    auto_scaling: "Auto-Scaling",
+    create_config_entry: "Created Parameter",
+    created_config_entry: "Created Parameter",
+    create_entry: "Created Parameter",
+    created_entry: "Created Parameter",
+    update_config_entry: "Updated Parameter",
+    updated_config_entry: "Updated Parameter",
+    update_entry: "Updated Parameter",
+    updated_entry: "Updated Parameter",
+    delete_config_entry: "Deleted Parameter",
+    deleted_config_entry: "Deleted Parameter",
+    delete_entry: "Deleted Parameter",
+    deleted_entry: "Deleted Parameter",
+  };
+  return MAP[normalized] || action;
+}
+
+function mapAuditLog(log: AuditLog): AuditEntry {
+  const action = resolveActionLabel(log.action);
+  const actorName = log.actorIsSystem ? "System" : log.actor;
+  const s = log.actorIsSystem
+    ? { bg: "bg-surface-bright", text: "text-outline" }
+    : actorStyle(actorName);
+  const envRaw = log.environment ?? "Global Scope";
+  const env = envRaw.charAt(0).toUpperCase() + envRaw.slice(1);
+  return {
+    id: String(log.id),
+    time: new Date(log.createdAt),
+    actor: actorName,
+    actorIconColor: s.bg,
+    actorTextColor: s.text,
+    actorIsSystem: log.actorIsSystem,
+    action,
+    actionStyle: ACTION_STYLE[action] ?? ACTION_STYLE["Updated Parameter"],
+    target: log.target,
+    targetMono: false,
+    targetDeleted: false,
+    env,
+    envStyle: ENV_STYLE[env] ?? ENV_STYLE["Global Scope"],
+    sysId: String(log.id).replace(/-/g, "").slice(0, 8).toUpperCase(),
+    project: log.project ?? undefined,
+  };
+}
 
 export default function AuditLogsPage() {
   const [search, setSearch] = createSignal("");
@@ -21,144 +78,18 @@ export default function AuditLogsPage() {
   const [dateFrom, setDateFrom] = createSignal("");
   const [dateTo, setDateTo] = createSignal("");
   const [page, setPage] = createSignal(0);
-  const [selectedEntry, setSelectedEntry] = createSignal<AuditEntry | null>(
-    null,
+  const [selectedEntry, setSelectedEntry] = createSignal<AuditEntry | null>(null);
+
+  const auditQuery = useQuery(() => ({
+    queryKey: ["audit-logs"],
+    queryFn: () => auditLogService.getAll(),
+  }));
+
+  const allEntries = createMemo<AuditEntry[]>(() =>
+    (auditQuery.data ?? [])
+      .map(mapAuditLog)
+      .sort((a, b) => b.time.getTime() - a.time.getTime()),
   );
-
-  const projectsQuery = useQuery(() => ({
-    queryKey: ["projects"],
-    queryFn: () => projectService.getAll(),
-  }));
-
-  const usersQuery = useQuery(() => ({
-    queryKey: ["users"],
-    queryFn: () => userService.getAll(),
-  }));
-
-  const allEntries = createMemo<AuditEntry[]>(() => {
-    const list: AuditEntry[] = [];
-
-    // Process Project actions
-    for (const p of projectsQuery.data ?? []) {
-      const created = new Date(p.createdAt);
-      const updated = new Date(p.updatedAt);
-      const s = actorStyle("Admin");
-
-      list.push({
-        id: "p-c-" + p.id,
-        time: created,
-        actor: "Admin",
-        actorIconColor: s.bg,
-        actorTextColor: s.text,
-        actorIsSystem: false,
-        action: "Created Project",
-        actionStyle: ACTION_STYLE["Created Project"],
-        target: p.name,
-        targetMono: false,
-        targetDeleted: false,
-        env: "Global Scope",
-        envStyle: ENV_STYLE["Global Scope"],
-        sysId: "SYS-" + String(p.id ?? "").slice(0, 4).toUpperCase(),
-        actionCode: "CREATE_PROJECT",
-      });
-
-      if (updated.getTime() - created.getTime() > 5000) {
-        list.push({
-          id: "p-u-" + p.id,
-          time: updated,
-          actor: "Admin",
-          actorIconColor: s.bg,
-          actorTextColor: s.text,
-          actorIsSystem: false,
-          action: "Updated Project",
-          actionStyle: ACTION_STYLE["Updated Project"],
-          target: p.name,
-          targetMono: false,
-          targetDeleted: false,
-          env: "Global Scope",
-          envStyle: ENV_STYLE["Global Scope"],
-          sysId: "SYS-" + String(p.id ?? "").slice(0, 4).toUpperCase(),
-          actionCode: "UPDATE_PROJECT",
-        });
-      }
-    }
-
-    // Process User Invitation actions
-    for (const u of usersQuery.data ?? []) {
-      const s = actorStyle("Admin");
-      list.push({
-        id: "u-i-" + u.id,
-        time: new Date(u.createdAt),
-        actor: "Admin",
-        actorIconColor: s.bg,
-        actorTextColor: s.text,
-        actorIsSystem: false,
-        action: "Invited User",
-        actionStyle: ACTION_STYLE["Invited User"],
-        target: u.email,
-        targetMono: false,
-        targetDeleted: false,
-        env: "Global Scope",
-        envStyle: ENV_STYLE["Global Scope"],
-        sysId: "USR-" + String(u.id ?? "").slice(0, 4).toUpperCase(),
-        actionCode: "INVITE_USER",
-      });
-    }
-
-    // Process stored parameter changes from LocalStorage
-    try {
-      const raw = localStorage.getItem("nonaconfig_audit_logs");
-      if (raw) {
-        const storedLogs: AuditLogEntry[] = JSON.parse(raw);
-        for (const item of storedLogs) {
-          const s = actorStyle(item.actor);
-          let actionLabel = "Updated Parameter";
-          if (item.actionCode === "CREATE_ENTRY")
-            actionLabel = "Created Parameter";
-          else if (item.actionCode === "DELETE_ENTRY")
-            actionLabel = "Deleted Parameter";
-
-          const capEnv =
-            item.environment.charAt(0).toUpperCase() +
-            item.environment.slice(1);
-
-          list.push({
-            id: item.id,
-            time: new Date(item.time),
-            actor: item.actor,
-            actorIconColor: s.bg,
-            actorTextColor: s.text,
-            actorIsSystem: false,
-            action: actionLabel,
-            actionStyle:
-              ACTION_STYLE[actionLabel] || ACTION_STYLE["Updated Parameter"],
-            target: item.key,
-            targetMono: true,
-            targetDeleted: item.actionCode === "DELETE_ENTRY",
-            env: capEnv,
-            envStyle: ENV_STYLE[capEnv] || ENV_STYLE["Global Scope"],
-            sysId: item.sysId,
-            actionCode: item.actionCode,
-            ipAddress: item.ipAddress,
-            oldValue: item.oldValue,
-            newValue: item.newValue,
-            contentType: item.contentType,
-            scope: item.scope,
-            key: item.key,
-            project: item.project,
-            displayName: item.displayName,
-            description: item.description,
-            oldDisplayName: item.oldDisplayName,
-            oldDescription: item.oldDescription,
-          });
-        }
-      }
-    } catch (e) {
-      console.error("Failed to parse stored audit logs", e);
-    }
-
-    return list.sort((a, b) => b.time.getTime() - a.time.getTime());
-  });
 
   const filtered = createMemo(() => {
     let entries = allEntries();
@@ -169,15 +100,11 @@ export default function AuditLogsPage() {
 
     if (dateFrom()) {
       const from = new Date(dateFrom()).getTime();
-      if (!isNaN(from)) {
-        entries = entries.filter((e) => e.time.getTime() >= from);
-      }
+      if (!isNaN(from)) entries = entries.filter((e) => e.time.getTime() >= from);
     }
     if (dateTo()) {
-      const to = new Date(dateTo()).getTime() + 86_400_000; // inclusive end of day
-      if (!isNaN(to)) {
-        entries = entries.filter((e) => e.time.getTime() <= to);
-      }
+      const to = new Date(dateTo()).getTime() + 86_400_000;
+      if (!isNaN(to)) entries = entries.filter((e) => e.time.getTime() <= to);
     }
     if (search().trim()) {
       const q = search().toLowerCase();
@@ -185,27 +112,19 @@ export default function AuditLogsPage() {
         (e) =>
           e.actor.toLowerCase().includes(q) ||
           e.target.toLowerCase().includes(q) ||
-          (e.displayName ?? "").toLowerCase().includes(q) ||
-          (e.description ?? "").toLowerCase().includes(q) ||
           (e.project ?? "").toLowerCase().includes(q),
       );
     }
     return entries;
   });
 
-  const totalPages = createMemo(() =>
-    Math.max(1, Math.ceil(filtered().length / PAGE_SIZE)),
-  );
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(filtered().length / PAGE_SIZE)));
   const pageEntries = createMemo(() =>
     filtered().slice(page() * PAGE_SIZE, (page() + 1) * PAGE_SIZE),
   );
-  const uniqueActions = createMemo(() => [
-    ...new Set(allEntries().map((e) => e.action)),
-  ]);
-  const uniqueEnvs = createMemo(() => [
-    ...new Set(allEntries().map((e) => e.env)),
-  ]);
-  const isLoading = () => projectsQuery.isLoading || usersQuery.isLoading;
+  const uniqueActions = createMemo(() => [...new Set(allEntries().map((e) => e.action))]);
+  const uniqueEnvs = createMemo(() => [...new Set(allEntries().map((e) => e.env))]);
+  const isLoading = () => auditQuery.isLoading;
 
   const changePage = (n: number) => {
     if (n >= 0 && n < totalPages()) setPage(n);
@@ -232,9 +151,7 @@ export default function AuditLogsPage() {
           target: e.target,
           environment: e.env,
           sysId: e.sysId,
-          ipAddress: e.ipAddress,
-          oldValue: e.oldValue,
-          newValue: e.newValue,
+          project: e.project,
         })),
         null,
         2,
@@ -247,10 +164,10 @@ export default function AuditLogsPage() {
       a.click();
       URL.revokeObjectURL(url);
     } else {
-      const header = "Time,Actor,Action,Target,Environment,SysID,IP\n";
+      const header = "Time,Actor,Action,Target,Environment,SysID,Project\n";
       const rows = entries.map(
         (e) =>
-          `"${e.time.toISOString()}","${e.actor}","${e.action}","${e.target}","${e.env}","${e.sysId}","${e.ipAddress ?? ""}"`,
+          `"${e.time.toISOString()}","${e.actor}","${e.action}","${e.target}","${e.env}","${e.sysId}","${e.project ?? ""}"`,
       );
       const blob = new Blob([header + rows.join("\n")], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
@@ -270,30 +187,15 @@ export default function AuditLogsPage() {
 
         <AuditLogsFilters
           search={search()}
-          setSearch={(v) => {
-            setSearch(v);
-            setPage(0);
-          }}
+          setSearch={(v) => { setSearch(v); setPage(0); }}
           filterAction={filterAction()}
-          setFilterAction={(v) => {
-            setFilterAction(v);
-            setPage(0);
-          }}
+          setFilterAction={(v) => { setFilterAction(v); setPage(0); }}
           filterEnv={filterEnv()}
-          setFilterEnv={(v) => {
-            setFilterEnv(v);
-            setPage(0);
-          }}
+          setFilterEnv={(v) => { setFilterEnv(v); setPage(0); }}
           dateFrom={dateFrom()}
-          setDateFrom={(v) => {
-            setDateFrom(v);
-            setPage(0);
-          }}
+          setDateFrom={(v) => { setDateFrom(v); setPage(0); }}
           dateTo={dateTo()}
-          setDateTo={(v) => {
-            setDateTo(v);
-            setPage(0);
-          }}
+          setDateTo={(v) => { setDateTo(v); setPage(0); }}
           uniqueActions={uniqueActions()}
           uniqueEnvs={uniqueEnvs()}
           clearAllFilters={clearFilters}

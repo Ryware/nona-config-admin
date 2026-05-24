@@ -27,12 +27,8 @@ export const authService = {
     return response;
   },
 
-  async requestPasswordReset(_data: ForgotPasswordRequest): Promise<void> {
-    // TODO: Implement when backend endpoint is ready
-    // await apiClient.post('/auth/forgot-password', data);
-    throw new Error(
-      "Password reset functionality is not yet implemented on the backend"
-    );
+  async requestPasswordReset(data: ForgotPasswordRequest): Promise<void> {
+    await apiClient.post('/auth/forgot-password', data);
   },
 
   async resetPassword(_data: ResetPasswordRequest): Promise<void> {

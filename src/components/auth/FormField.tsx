@@ -27,11 +27,6 @@ export const FormField: Component<FormFieldProps> = (props) => {
         {props.label}
       </label>
       <div class="relative flex items-center">
-        <Show when={props.leftIcon}>
-          <span class="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">
-            {props.leftIcon}
-          </span>
-        </Show>
         <Input
           id={props.id}
           type={props.type === "password" ? (showPassword() ? "text" : "password") : (props.type || "text")}
@@ -41,11 +36,8 @@ export const FormField: Component<FormFieldProps> = (props) => {
           required={props.required}
           autofocus={props.autofocus}
           onkeydown={props.onKeyDown}
-          class={`py-3.5 ${
-            props.leftIcon
-              ? (props.type === "password" ? "pl-10 pr-11" : "pl-10 pr-4")
-              : (props.type === "password" ? "pl-4 pr-11" : "")
-          }`}
+          leftIcon={props.leftIcon}
+          class={`py-3.5${props.type === "password" ? " pr-11" : ""}`}
         />
         <Show when={props.type === "password"}>
           <button

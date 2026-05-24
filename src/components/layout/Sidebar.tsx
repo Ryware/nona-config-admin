@@ -51,9 +51,10 @@ interface NavItemDef {
   icon: string;
 }
 
-const topNavItems: NavItemDef[] = [
+const mgmtNavItems: NavItemDef[] = [
+  { path: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { path: "/users", label: "Team", icon: "group" },
-  { path: "/audit-logs", label: "Audit Logs", icon: "history" },
+  { path: "/audit-logs", label: "Audit Logs", icon: "manage_history" },
 ];
 
 export const Sidebar = (props: {
@@ -64,7 +65,7 @@ export const Sidebar = (props: {
 }) => {
   const location = useLocation();
   const user = getUser();
-  const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "A";
+  const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "NA";
 
   const projectsQuery = useQuery(() => ({
     queryKey: ["projects"],
@@ -75,11 +76,20 @@ export const Sidebar = (props: {
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");
 
+  const navItem = (active: boolean, collapsed: boolean) =>
+    `flex items-center gap-3 rounded-lg text-[13px] font-medium transition-all cursor-pointer ${
+      collapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"
+    } ${
+      active
+        ? "bg-primary/10 text-primary"
+        : "text-on-surface-variant hover:bg-white/4 hover:text-on-surface"
+    }`;
+
   const w = () => (props.collapsed ? "w-16" : "w-64");
 
   return (
     <>
-      {/* Mobile Drawer Overlay Backdrop */}
+      {/* Mobile overlay */}
       <Show when={props.isOpen}>
         <div
           class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
@@ -88,31 +98,31 @@ export const Sidebar = (props: {
       </Show>
 
       <aside
-        class={`h-screen ${w()} fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant/15 flex flex-col py-5 z-50 sidebar-transition lg:translate-x-0 ${
+        class={`h-screen ${w()} fixed left-0 top-0 bg-[#030303] border-r border-white/6 flex flex-col z-50 sidebar-transition lg:translate-x-0 ${
           props.isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Brand */}
-        <div class={`mb-6 ${props.collapsed ? "px-3" : "px-5"}`}>
+        <div class={`pt-5 pb-4 ${props.collapsed ? "px-3" : "px-4"}`}>
           <A
             href="/projects"
             onClick={() => props.onClose()}
-            class="flex items-center gap-3"
+            class="flex items-center gap-3 group"
           >
-            <div class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center bg-gradient-to-br from-primary to-primary-container shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+            <div class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center bg-primary/15 border border-primary/20 shadow-[0_0_12px_rgba(99,102,241,0.15)]">
               <span
-                class="material-symbols-outlined text-on-primary text-[18px]"
-                style="font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24"
+                class="material-symbols-outlined text-primary text-[18px]"
+                style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"
               >
                 settings_input_component
               </span>
             </div>
             <Show when={!props.collapsed}>
-              <div>
-                <h1 class="text-[15px] font-bold text-on-surface leading-none font-headline tracking-tight">
+              <div class="min-w-0">
+                <p class="text-[14px] font-headline font-bold text-on-surface tracking-tight leading-none">
                   Nona Config
-                </h1>
-                <p class="text-[9px] text-outline uppercase tracking-[0.2em] font-medium mt-0.5">
+                </p>
+                <p class="text-[9px] font-medium text-outline/50 tracking-[0.18em] uppercase mt-1">
                   Admin Console
                 </p>
               </div>
@@ -120,90 +130,104 @@ export const Sidebar = (props: {
           </A>
         </div>
 
-        {/* Projects section */}
-        <div class={`space-y-0.5 ${props.collapsed ? "px-2" : "px-3"}`}>
-          <Show when={!props.collapsed}>
-            <div class="px-3 py-1 text-[10px] font-medium text-outline/60 tracking-[0.05em]">
-              Navigation
-            </div>
-          </Show>
+        <div class="mx-3 h-px bg-white/6" />
+
+        {/* Projects */}
+        <div class={`pt-3 space-y-0.5 ${props.collapsed ? "px-2" : "px-2"}`}>
           <A
             href="/projects"
             onClick={() => props.onClose()}
             title={props.collapsed ? "Projects" : undefined}
-            class={`flex items-center gap-3 rounded-lg text-[13px] transition-all ${
-              props.collapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"
-            } ${
-              isActive("/projects")
-                ? "text-primary-container bg-surface-container-high font-semibold"
-                : "text-on-surface-variant font-medium hover:bg-surface-container-high/40 hover:text-on-surface"
-            }`}
+            class={navItem(isActive("/projects"), props.collapsed)}
           >
             <span
               class="material-symbols-outlined text-[20px] shrink-0"
-              style={isActive("/projects") ? "font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24" : ""}
+              style={
+                isActive("/projects")
+                  ? "font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"
+                  : ""
+              }
             >
               folder
             </span>
-            <Show when={!props.collapsed}>Projects</Show>
+            <Show when={!props.collapsed}>
+              <span class="flex-1">Projects</span>
+              <Show when={projectsQuery.isSuccess}>
+                <span class="text-[10px] font-mono text-outline/70 bg-white/6 px-1.5 py-0.5 rounded-md leading-none">
+                  {projectsQuery.data!.length}
+                </span>
+              </Show>
+            </Show>
           </A>
 
+          {/* Project sub-list */}
           <Show when={!props.collapsed}>
+            <Show when={projectsQuery.isLoading}>
+              <div class="pl-9 py-1 space-y-1">
+                <div class="h-5 w-24 rounded-md bg-surface-container-high/40 animate-pulse" />
+                <div class="h-5 w-16 rounded-md bg-surface-container-high/30 animate-pulse" />
+              </div>
+            </Show>
             <Show
-              when={!projectsQuery.isLoading}
-              fallback={
-                <p class="px-3 py-2 text-[12px] text-outline/50 animate-pulse">
-                  Loading…
-                </p>
+              when={
+                !projectsQuery.isLoading &&
+                (projectsQuery.data?.length ?? 0) > 0
               }
             >
-              <Show when={(projectsQuery.data ?? []).length > 0}>
-                <nav class="space-y-0.5 pl-3 border-l border-outline-variant/10 ml-5 mt-1">
-                  <For each={projectsQuery.data}>
-                    {(project) => (
-                      <A
-                        href={`/projects/${project.urlSlug}`}
-                        onClick={() => props.onClose()}
-                        class={`flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[12.5px] font-medium transition-all truncate ${
+              <div class="pl-9 space-y-0.5 py-0.5">
+                <For each={projectsQuery.data}>
+                  {(project) => (
+                    <A
+                      href={`/projects/${project.urlSlug}`}
+                      onClick={() => props.onClose()}
+                      class={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] font-medium truncate transition-all ${
+                        isActive(`/projects/${project.urlSlug}`)
+                          ? "text-primary bg-primary/8"
+                          : "text-outline/80 hover:text-on-surface hover:bg-white/4"
+                      }`}
+                    >
+                      <span
+                        class={`w-1 h-1 rounded-full shrink-0 ${
                           isActive(`/projects/${project.urlSlug}`)
-                            ? "text-primary-container font-semibold bg-surface-container-high/60"
-                            : "text-outline hover:text-on-surface hover:bg-surface-container-high/20"
+                            ? "bg-primary"
+                            : "bg-outline/40"
                         }`}
-                      >
-                        <span class="truncate">{project.name}</span>
-                      </A>
-                    )}
-                  </For>
-                </nav>
-              </Show>
+                      />
+                      <span class="truncate">{project.name}</span>
+                    </A>
+                  )}
+                </For>
+              </div>
             </Show>
           </Show>
         </div>
 
-        {/* Top nav items */}
-        <nav class={`space-y-0.5 mt-4 ${props.collapsed ? "px-2" : "px-3"}`}>
+        <div class="mx-3 h-px bg-white/6 mt-3" />
+
+        {/* Management */}
+        <nav
+          class={`pt-3 space-y-0.5 flex-1 ${props.collapsed ? "px-2" : "px-2"}`}
+        >
           <Show when={!props.collapsed}>
-            <div class="px-3 py-1 text-[10px] font-medium text-outline/60 tracking-[0.05em]">
+            <p class="px-3 pb-1 text-[10px] font-semibold text-outline/50 tracking-[0.08em] uppercase">
               Management
-            </div>
+            </p>
           </Show>
-          <For each={topNavItems}>
+          <For each={mgmtNavItems}>
             {(item) => (
               <A
                 href={item.path}
                 onClick={() => props.onClose()}
                 title={props.collapsed ? item.label : undefined}
-                class={`flex items-center gap-3 rounded-lg text-[13px] transition-all ${
-                  props.collapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"
-                } ${
-                  isActive(item.path)
-                    ? "text-primary-container bg-surface-container-high font-semibold"
-                    : "text-on-surface-variant font-medium hover:bg-surface-container-high/40 hover:text-on-surface"
-                }`}
+                class={navItem(isActive(item.path), props.collapsed)}
               >
                 <span
                   class="material-symbols-outlined text-[20px] shrink-0"
-                  style={isActive(item.path) ? "font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24" : ""}
+                  style={
+                    isActive(item.path)
+                      ? "font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"
+                      : ""
+                  }
                 >
                   {item.icon}
                 </span>
@@ -213,27 +237,15 @@ export const Sidebar = (props: {
           </For>
         </nav>
 
-        {/* Bottom: collapse toggle + user card */}
+        {/* Bottom */}
         <div
-          class={`mt-auto pt-4 border-t border-outline-variant/15 space-y-2 ${props.collapsed ? "px-2" : "px-3"}`}
+          class={`mt-auto pb-4 space-y-2 ${props.collapsed ? "px-2" : "px-3"}`}
         >
-          {/* Logout button — visible when collapsed (no user card to hold it) */}
-          <Show when={props.collapsed}>
-            <button
-              onClick={() => authService.logout()}
-              title="Sign out"
-              aria-label="Sign out"
-              class="flex w-full items-center justify-center rounded-lg p-2.5 text-outline hover:text-error hover:bg-error/8 transition-all bg-transparent border-0 cursor-pointer"
-            >
-              <span class="material-symbols-outlined text-[20px]">logout</span>
-            </button>
-          </Show>
-
           {/* Collapse toggle (desktop only) */}
           <button
             onClick={props.onToggleCollapse}
             title={props.collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            class={`hidden lg:flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-outline hover:text-on-surface hover:bg-surface-container-high/40 transition-all bg-transparent border-0 cursor-pointer ${
+            class={`hidden lg:flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-outline/60 hover:text-on-surface hover:bg-white/4 transition-all bg-transparent border-0 cursor-pointer ${
               props.collapsed ? "justify-center" : ""
             }`}
           >
@@ -248,36 +260,53 @@ export const Sidebar = (props: {
             </Show>
           </button>
 
-          {/* User card */}
-          <Show when={authService.isAuthenticated()}>
-            <div
-              class={`rounded-xl bg-surface-container-low border border-outline-variant/15 flex items-center gap-3 shadow-sm hover:border-outline-variant/35 transition-all ${
-                props.collapsed ? "p-2 justify-center" : "p-3"
-              }`}
-            >
-              <div class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center font-bold text-[12px] bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-sm">
-                {initials}
+          {/* User card — expanded */}
+          <Show when={authService.isAuthenticated() && !props.collapsed}>
+            <div class="rounded-xl border border-white/6 bg-white/3 flex items-center gap-3 p-3 hover:border-white/10 transition-all">
+              <div class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center bg-primary/20 border border-primary/20">
+                <span class="text-[11px] font-headline font-bold text-primary">
+                  {initials}
+                </span>
               </div>
-              <Show when={!props.collapsed}>
-                <div class="flex-1 min-w-0">
-                  <p class="text-[12px] font-bold text-on-surface truncate leading-tight">
-                    {user.email || "Console User"}
-                  </p>
-                  <p class="text-[10px] text-outline tracking-[0.05em] mt-0.5">
-                    {user.role || "admin"}
-                  </p>
-                </div>
-                <button
-                  onClick={() => authService.logout()}
-                  title="Sign out"
-                  aria-label="Sign out"
-                  class="shrink-0 text-outline hover:text-error transition-colors bg-transparent border-0 cursor-pointer p-1"
-                >
-                  <span class="material-symbols-outlined text-[18px]">
-                    logout
-                  </span>
-                </button>
-              </Show>
+              <div class="flex-1 min-w-0">
+                <p class="text-[12px] font-semibold text-on-surface truncate leading-tight">
+                  {user.email || "Console User"}
+                </p>
+                <p class="text-[10px] text-outline/60 mt-0.5 capitalize tracking-wide">
+                  {user.role || "editor"}
+                </p>
+              </div>
+              <button
+                onClick={() => authService.logout()}
+                title="Sign out"
+                aria-label="Sign out"
+                class="shrink-0 p-1.5 rounded-lg text-outline/50 hover:text-error hover:bg-error/8 transition-all bg-transparent border-0 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-[17px]">
+                  logout
+                </span>
+              </button>
+            </div>
+          </Show>
+
+          {/* User card — collapsed */}
+          <Show when={authService.isAuthenticated() && props.collapsed}>
+            <div class="flex flex-col items-center gap-1.5">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary/20 border border-primary/20">
+                <span class="text-[11px] font-headline font-bold text-primary">
+                  {initials}
+                </span>
+              </div>
+              <button
+                onClick={() => authService.logout()}
+                title="Sign out"
+                aria-label="Sign out"
+                class="p-2 rounded-lg text-outline/50 hover:text-error hover:bg-error/8 transition-all bg-transparent border-0 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-[18px]">
+                  logout
+                </span>
+              </button>
             </div>
           </Show>
         </div>

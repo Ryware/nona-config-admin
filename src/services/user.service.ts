@@ -1,5 +1,5 @@
 import { apiClient } from "./api-client";
-import type { User, CreateUserRequest, CreateUserResponse } from "../types";
+import type { User, CreateUserRequest, CreateUserResponse, ProjectAccess } from "../types";
 
 export interface UpdateUserRequest {
   name?: string;
@@ -27,5 +27,16 @@ export const userService = {
 
   async delete(id: string): Promise<void> {
     return apiClient.delete(`/admin/users/${id}`);
+  },
+
+  async addProject(userId: string, projectName: string, role: string): Promise<ProjectAccess> {
+    return apiClient.put<ProjectAccess>(
+      `/admin/users/${userId}/projects/${projectName}`,
+      { role },
+    );
+  },
+
+  async removeProject(userId: string, projectName: string): Promise<void> {
+    return apiClient.delete(`/admin/users/${userId}/projects/${projectName}`);
   },
 };

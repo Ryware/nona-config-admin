@@ -3,6 +3,7 @@ import type {
   Project,
   CreateProjectRequest,
   UpdateProjectRequest,
+  RerollApiKeysRequest,
 } from "../types";
 
 export const projectService = {
@@ -24,5 +25,9 @@ export const projectService = {
 
   async delete(slug: string): Promise<void> {
     return apiClient.delete(`/admin/projects/${slug}`);
+  },
+
+  async rerollKeys(projectId: string, keyType: RerollApiKeysRequest['keyType']): Promise<Project> {
+    return apiClient.post<Project>(`/admin/projects/${projectId}/reroll-keys`, { keyType });
   },
 };

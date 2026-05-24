@@ -77,6 +77,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
               onKeyDown={onKeyDownConfigKey}
               onInput={(e) => setCfgKey(e.currentTarget.value)}
               required
+              leftIcon="code"
             />
           </div>
           <div>

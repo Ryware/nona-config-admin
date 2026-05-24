@@ -34,32 +34,6 @@ import type {
   Environment,
 } from "../../types";
 
-interface AuditLogEntry {
-  id: string;
-  time: string;
-  actor: string;
-  actionCode:
-    | "CREATE_ENTRY"
-    | "UPDATE_ENTRY"
-    | "DELETE_ENTRY"
-    | "CREATE_PROJECT"
-    | "UPDATE_PROJECT"
-    | "INVITE_USER";
-  ipAddress: string;
-  sysId: string;
-  project: string;
-  environment: string;
-  key: string;
-  oldValue?: string;
-  newValue?: string;
-  contentType?: string;
-  scope?: string;
-  displayName?: string;
-  description?: string;
-  oldDisplayName?: string;
-  oldDescription?: string;
-}
-
 interface ParamMeta {
   displayName?: string;
   description?: string;
@@ -178,55 +152,20 @@ function addParamRevision(
 }
 
 function addAuditLog(
-  project: string,
-  environment: string,
-  key: string,
-  actionCode: "CREATE_ENTRY" | "UPDATE_ENTRY" | "DELETE_ENTRY",
-  oldValue?: string,
-  newValue?: string,
-  contentType?: string,
-  scope?: string,
-  displayName?: string,
-  description?: string,
-  oldDisplayName?: string,
-  oldDescription?: string,
+  _project: string,
+  _environment: string,
+  _key: string,
+  _actionCode: string,
+  _oldValue?: string,
+  _newValue?: string,
+  _contentType?: string,
+  _scope?: string,
+  _displayName?: string,
+  _description?: string,
+  _oldDisplayName?: string,
+  _oldDescription?: string,
 ) {
-  try {
-    const raw = localStorage.getItem("nonaconfig_audit_logs") || "[]";
-    const logs: AuditLogEntry[] = JSON.parse(raw);
-    const ipAddress = `192.168.1.${Math.floor(Math.random() * 254) + 1}`;
-    const sysId = `TXN-${Math.floor(1000 + Math.random() * 9000)
-      .toString(16)
-      .toUpperCase()}`;
-
-    const newLog: AuditLogEntry = {
-      id:
-        "param-log-" +
-        Date.now() +
-        "-" +
-        Math.random().toString(36).substr(2, 9),
-      time: new Date().toISOString(),
-      actor: getCurrentUser(),
-      actionCode,
-      ipAddress,
-      sysId,
-      project,
-      environment,
-      key,
-      oldValue,
-      newValue,
-      contentType,
-      scope,
-      displayName,
-      description,
-      oldDisplayName,
-      oldDescription,
-    };
-    logs.push(newLog);
-    localStorage.setItem("nonaconfig_audit_logs", JSON.stringify(logs));
-  } catch (e) {
-    console.error("Failed to write audit log", e);
-  }
+  // Audit logging is handled by the backend — no localStorage write needed
 }
 
 function getParamHistory(
@@ -633,6 +572,30 @@ export default function ProjectPage() {
     }
   };
 
+  // API key reroll mutation
+  const rerollKeysMutation = useMutation(() => ({
+    mutationFn: (keyType: 'Server' | 'Client') =>
+      projectService.rerollKeys(projectId(), keyType),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project", projectId()] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      addToast("API key regenerated", "success");
+    },
+    onError: () => addToast("Failed to regenerate API key", "error"),
+  }));
+
+  const [revealServerKey, setRevealServerKey] = createSignal(false);
+  const [revealClientKey, setRevealClientKey] = createSignal(false);
+
+  const copyKey = async (key: string) => {
+    try {
+      await navigator.clipboard.writeText(key);
+      addToast("Copied to clipboard", "success");
+    } catch {
+      addToast("Failed to copy", "error");
+    }
+  };
+
   return (
     <AppLayout>
       <Title>
@@ -695,6 +658,86 @@ export default function ProjectPage() {
           </div>
         </Show>
 
+        {/* API Keys */}
+        <Show when={project() && (project()!.serverApiKey || project()!.clientApiKey)}>
+          <div class="bg-surface-container-low border border-outline-variant/15 rounded-2xl p-5 space-y-3">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-outline font-headline flex items-center gap-1.5">
+              <MIcon name="key" class="text-[15px]" />
+              API Keys
+            </p>
+            <div class="space-y-2">
+              <Show when={project()!.serverApiKey}>
+                <div class="flex items-center gap-3 bg-surface-container rounded-xl px-4 py-2.5">
+                  <span class="text-[11px] font-medium tracking-[0.05em] text-on-surface-variant w-20 shrink-0">Server Key</span>
+                  <code class="flex-1 text-[12px] font-mono text-on-surface truncate">
+                    {revealServerKey()
+                      ? project()!.serverApiKey
+                      : "•".repeat(32)}
+                  </code>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => setRevealServerKey((v) => !v)}
+                      class="p-1.5 rounded-lg text-outline hover:text-on-surface hover:bg-surface-bright transition-all border-0 cursor-pointer"
+                      title={revealServerKey() ? "Hide" : "Show"}
+                    >
+                      <MIcon name={revealServerKey() ? "visibility_off" : "visibility"} class="text-[16px]" />
+                    </button>
+                    <button
+                      onClick={() => copyKey(project()!.serverApiKey!)}
+                      class="p-1.5 rounded-lg text-outline hover:text-on-surface hover:bg-surface-bright transition-all border-0 cursor-pointer"
+                      title="Copy"
+                    >
+                      <MIcon name="content_copy" class="text-[16px]" />
+                    </button>
+                    <button
+                      onClick={() => rerollKeysMutation.mutate('Server')}
+                      disabled={rerollKeysMutation.isPending}
+                      class="p-1.5 rounded-lg text-outline hover:text-error hover:bg-error/10 transition-all border-0 cursor-pointer disabled:opacity-40"
+                      title="Regenerate server key"
+                    >
+                      <MIcon name="refresh" class="text-[16px]" />
+                    </button>
+                  </div>
+                </div>
+              </Show>
+              <Show when={project()!.clientApiKey}>
+                <div class="flex items-center gap-3 bg-surface-container rounded-xl px-4 py-2.5">
+                  <span class="text-[11px] font-medium tracking-[0.05em] text-on-surface-variant w-20 shrink-0">Client Key</span>
+                  <code class="flex-1 text-[12px] font-mono text-on-surface truncate">
+                    {revealClientKey()
+                      ? project()!.clientApiKey
+                      : "•".repeat(32)}
+                  </code>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => setRevealClientKey((v) => !v)}
+                      class="p-1.5 rounded-lg text-outline hover:text-on-surface hover:bg-surface-bright transition-all border-0 cursor-pointer"
+                      title={revealClientKey() ? "Hide" : "Show"}
+                    >
+                      <MIcon name={revealClientKey() ? "visibility_off" : "visibility"} class="text-[16px]" />
+                    </button>
+                    <button
+                      onClick={() => copyKey(project()!.clientApiKey!)}
+                      class="p-1.5 rounded-lg text-outline hover:text-on-surface hover:bg-surface-bright transition-all border-0 cursor-pointer"
+                      title="Copy"
+                    >
+                      <MIcon name="content_copy" class="text-[16px]" />
+                    </button>
+                    <button
+                      onClick={() => rerollKeysMutation.mutate('Client')}
+                      disabled={rerollKeysMutation.isPending}
+                      class="p-1.5 rounded-lg text-outline hover:text-error hover:bg-error/10 transition-all border-0 cursor-pointer disabled:opacity-40"
+                      title="Regenerate client key"
+                    >
+                      <MIcon name="refresh" class="text-[16px]" />
+                    </button>
+                  </div>
+                </div>
+              </Show>
+            </div>
+          </div>
+        </Show>
+
         {/* Bulk Import section */}
         <Show when={showBulkImport()}>
           <ProjectBulkImport
@@ -734,19 +777,15 @@ export default function ProjectPage() {
               </Show>
             </p>
             <Show when={activeEnvName() && (configQuery.data?.length ?? 0) > 0}>
-              <div class="relative">
-                <MIcon
-                  name="search"
-                  class="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[16px] pointer-events-none"
-                />
-                <Input
-                  type="text"
-                  placeholder="Search parameters…"
-                  value={paramSearch()}
-                  onInput={(e) => setParamSearch(e.currentTarget.value)}
-                  class="h-9 w-52"
-                />
-              </div>
+              <Input
+                type="text"
+                placeholder="Search parameters…"
+                value={paramSearch()}
+                onInput={(e) => setParamSearch(e.currentTarget.value)}
+                class="h-9 w-52"
+                leftIcon="search"
+                wrapperStyle="w-auto"
+              />
             </Show>
           </div>
 

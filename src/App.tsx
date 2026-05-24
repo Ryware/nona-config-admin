@@ -8,6 +8,7 @@ import "./App.css";
 import { MetaProvider, Title } from "@solidjs/meta";
 
 // Lazy load pages
+const DashboardPage = lazy(() => import("./pages/dashboard/DashboardPage"));
 const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
 const InvitePage = lazy(() => import("./pages/auth/InvitePage"));
@@ -55,6 +56,7 @@ const App: Component = () => {
               <Route path="/login" component={() => <PublicRoute component={LoginPage} />} />
               <Route path="/register" component={() => <PublicRoute component={RegisterPage} />} />
               <Route path="/invite/:token" component={InvitePage} />
+              <Route path="/dashboard" component={() => <ProtectedRoute component={DashboardPage} />} />
               <Route path="/projects" component={() => <ProtectedRoute component={ProjectsPage} />} />
               <Route path="/projects/:slug" component={() => <ProtectedRoute component={ProjectPage} />} />
               <Route path="/users" component={() => <ProtectedRoute component={UsersPage} />} />

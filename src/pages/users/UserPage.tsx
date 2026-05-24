@@ -47,12 +47,24 @@ export default function UserPage() {
       setEmail(userQuery.data.email);
       setRole(userQuery.data.role as "editor" | "viewer");
       setName(userQuery.data.name);
+      setSelectedProjects(
+        new Set((userQuery.data.projects ?? []).map((p) => p.projectName)),
+      );
     }
   });
 
   const createMutation = useMutation(() => ({
     mutationFn: (data: CreateUserRequest) => userService.create(data),
-    onSuccess: (response: CreateUserResponse) => {
+    onSuccess: async (response: CreateUserResponse) => {
+      // Assign selected projects to the newly created user
+      const newUserId = String(response.user.id);
+      const defaultRole = role();
+      const projectsToAdd = [...selectedProjects()];
+      if (projectsToAdd.length > 0) {
+        await Promise.allSettled(
+          projectsToAdd.map((slug) => userService.addProject(newUserId, slug, defaultRole)),
+        );
+      }
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setCreatedInvite(response);
       setCopyFeedback("");
@@ -64,7 +76,19 @@ export default function UserPage() {
   const updateMutation = useMutation(() => ({
     mutationFn: (data: { id: string; updates: UpdateUserRequest }) =>
       userService.update(data.id, data.updates),
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Sync project scope changes
+      const originalProjects = new Set(
+        (userQuery.data?.projects ?? []).map((p) => p.projectName),
+      );
+      const current = selectedProjects();
+      const defaultRole = userQuery.data?.scope ?? "viewer";
+      const toAdd = [...current].filter((s) => !originalProjects.has(s));
+      const toRemove = [...originalProjects].filter((s) => !current.has(s));
+      await Promise.allSettled([
+        ...toAdd.map((slug) => userService.addProject(userId()!, slug, defaultRole)),
+        ...toRemove.map((slug) => userService.removeProject(userId()!, slug)),
+      ]);
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["user", userId()] });
       addToast("Member updated successfully", "success");

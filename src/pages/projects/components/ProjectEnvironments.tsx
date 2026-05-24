@@ -86,6 +86,7 @@ export function ProjectEnvironments(props: ProjectEnvironmentsProps) {
               value={envName()}
               onInput={(e) => setEnvName(e.currentTarget.value)}
               required
+              leftIcon="dns"
             />
           </div>
           <div class="flex gap-2 w-full sm:w-auto">

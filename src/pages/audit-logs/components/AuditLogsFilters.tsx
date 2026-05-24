@@ -102,44 +102,37 @@ export function AuditLogsFilters(props: AuditLogsFiltersProps) {
     <div class="space-y-4">
       {/* Search and drop-down filters */}
       <div class="flex items-center gap-4 flex-wrap">
-        <div class="relative">
-          <MIcon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none" />
-          <Input
-            type="text"
-            placeholder="Filter audit trail..."
-            value={props.search}
-            onInput={(e) => props.setSearch(e.currentTarget.value)}
-            class="pl-10 w-56 h-10"
-          />
-        </div>
+        <Input
+          type="text"
+          placeholder="Filter audit trail..."
+          value={props.search}
+          onInput={(e) => props.setSearch(e.currentTarget.value)}
+          class="w-56 h-10"
+          leftIcon="search"
+          wrapperStyle="w-auto"
+        />
         <span class="text-[11px] font-medium text-outline/70 shrink-0">Filters:</span>
 
         <div class="flex gap-2">
           {/* Action Type filter */}
           <div class="w-44">
             <Select
-              value={props.filterAction}
+              value={props.filterAction === "all" ? "" : props.filterAction}
               onChange={(val) => props.setFilterAction(val)}
               placeholder="Action Type"
               class="h-10"
-              options={[
-                { value: "all", label: "Action Type" },
-                ...props.uniqueActions.map((action) => ({ value: action, label: action })),
-              ]}
+              options={props.uniqueActions.map((action) => ({ value: action, label: action }))}
             />
           </div>
 
           {/* Environment filter */}
           <div class="w-44">
             <Select
-              value={props.filterEnv}
+              value={props.filterEnv === "all" ? "" : props.filterEnv}
               onChange={(val) => props.setFilterEnv(val)}
               placeholder="Environment"
               class="h-10"
-              options={[
-                { value: "all", label: "Environment" },
-                ...props.uniqueEnvs.map((env) => ({ value: env, label: env })),
-              ]}
+              options={props.uniqueEnvs.map((env) => ({ value: env, label: env }))}
             />
           </div>
         </div>

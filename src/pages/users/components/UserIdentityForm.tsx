@@ -27,6 +27,7 @@ export function UserIdentityForm(props: UserIdentityFormProps) {
             value={props.name}
             onInput={(e) => props.onNameChange(e.currentTarget.value)}
             required={!props.isEditMode}
+            leftIcon="person"
           />
         </div>
         <div class="space-y-2">
@@ -41,6 +42,7 @@ export function UserIdentityForm(props: UserIdentityFormProps) {
             onInput={(e) => props.onEmailChange(e.currentTarget.value)}
             required
             autofocus={!props.isEditMode}
+            leftIcon="alternate_email"
           />
         </div>
       </div>

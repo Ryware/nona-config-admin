@@ -49,6 +49,7 @@ export function ProjectCreateForm(props: ProjectCreateFormProps) {
               if (createError()) setCreateError("");
             }}
             required
+            leftIcon="folder"
           />
           <p class="mt-2 text-[10px] text-outline font-medium uppercase tracking-wider">Use letters, numbers, and hyphens only.</p>
           <Show when={createError()}>
@@ -62,6 +63,7 @@ export function ProjectCreateForm(props: ProjectCreateFormProps) {
           placeholder="Optional description"
           value={description()}
           onInput={(e) => setDescription(e.currentTarget.value)}
+          leftIcon="notes"
         />
         <div class="md:col-span-2 flex gap-3">
           <button
