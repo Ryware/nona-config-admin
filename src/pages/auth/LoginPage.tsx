@@ -1,28 +1,24 @@
-import { createEffect, createSignal, onCleanup, Show } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { A, useNavigate } from "@solidjs/router";
 import { useMutation, useQuery } from "@tanstack/solid-query";
-import { authService } from "../../services/auth.service";
-import { ApiRequestError } from "../../services/api-client";
-import { renderGoogleSsoButton } from "../../services/google-sso";
-import { signInWithMicrosoftPopup } from "../../services/microsoft-sso";
-import { AuthLayout } from "../../components/auth/AuthLayout";
+import { createEffect, createSignal, Show } from "solid-js";
 import { AuthCard } from "../../components/auth/AuthCard";
+import { AuthLayout } from "../../components/auth/AuthLayout";
 import { FormField } from "../../components/auth/FormField";
-import { Button } from "../../components/ui/button";
+import { SsoSection } from "../../components/auth/SsoSection";
+import { ApiRequestError } from "../../services/api-client";
+import { authService } from "../../services/auth.service";
 import type { LoginRequest, LoginResponse } from "../../types";
-
-type SsoProvider = "google" | "microsoft";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [error, setError] = createSignal("");
-  const [activeSsoProvider, setActiveSsoProvider] = createSignal<SsoProvider | null>(null);
-  let googleButtonHost: HTMLDivElement | undefined;
+  const [rememberMe, setRememberMe] = createSignal(true);
 
   const completeLogin = (result: LoginResponse) => {
-    localStorage.setItem("auth_token", result.token);
+    const storage = rememberMe() ? localStorage : sessionStorage;
+    storage.setItem("auth_token", result.token);
     navigate("/projects");
   };
 
@@ -51,88 +47,39 @@ export default function LoginPage() {
     }
   });
 
-  createEffect(() => {
-    const googleConfig = ssoConfigQuery.data?.google;
-    if (!googleConfig?.enabled || !googleConfig.clientId || !googleButtonHost) {
-      return;
-    }
-
-    let disposed = false;
-    let cleanup: (() => void) | undefined;
-
-    void renderGoogleSsoButton(
-      googleButtonHost,
-      googleConfig.clientId,
-      async (idToken) => {
-        setActiveSsoProvider("google");
-        setError("");
-
-        try {
-          const result = await authService.loginWithGoogle(idToken);
-          completeLogin(result);
-        } catch (caught) {
-          setError(getErrorMessage(caught, "Google sign-in failed. Please try again."));
-        } finally {
-          setActiveSsoProvider(null);
-        }
-      },
-      (message) => {
-        setError(message);
-        setActiveSsoProvider(null);
-      },
-    )
-      .then((nextCleanup) => {
-        if (disposed) {
-          nextCleanup();
-          return;
-        }
-
-        cleanup = nextCleanup;
-      })
-      .catch(() => {
-        setError("Google sign-in is unavailable right now. Please try again.");
-      });
-
-    onCleanup(() => {
-      disposed = true;
-      cleanup?.();
-    });
-  });
-
   const handleSubmit = (e: Event) => {
     e.preventDefault();
     setError("");
     loginMutation.mutate({ email: email(), password: password() });
   };
 
-  const handleMicrosoftLogin = async () => {
-    const microsoftConfig = ssoConfigQuery.data?.microsoft;
-    if (!microsoftConfig?.enabled || !microsoftConfig.clientId || !microsoftConfig.authority) {
-      setError("Microsoft sign-in is not configured.");
-      return;
-    }
-
-    setActiveSsoProvider("microsoft");
-    setError("");
-
+  const handleSsoSuccess = async (
+    provider: "google" | "microsoft",
+    idToken: string,
+  ) => {
     try {
-      const idToken = await signInWithMicrosoftPopup(microsoftConfig.clientId, microsoftConfig.authority);
-      const result = await authService.loginWithMicrosoft(idToken);
+      const result =
+        provider === "google"
+          ? await authService.loginWithGoogle(idToken)
+          : await authService.loginWithMicrosoft(idToken);
       completeLogin(result);
     } catch (caught) {
-      setError(getErrorMessage(caught, "Microsoft sign-in failed. Please try again."));
-    } finally {
-      setActiveSsoProvider(null);
+      setError(
+        getErrorMessage(
+          caught,
+          `${provider === "google" ? "Google" : "Microsoft"} sign-in failed. Please try again.`,
+        ),
+      );
+      throw caught;
     }
   };
 
-  const isBusy = () => loginMutation.isPending || activeSsoProvider() !== null;
-  const hasSsoOptions = () => !!(ssoConfigQuery.data?.google.enabled || ssoConfigQuery.data?.microsoft.enabled);
+  const isBusy = () => loginMutation.isPending;
 
   return (
     <AuthLayout>
       <AuthCard title="Welcome Back" error={error()}>
-        <form onSubmit={handleSubmit} class="space-y-6">
+        <form onSubmit={handleSubmit} class="space-y-5">
           <FormField
             id="email"
             label="Email"
@@ -142,6 +89,7 @@ export default function LoginPage() {
             onInput={(e) => setEmail(e.currentTarget.value)}
             required
             autofocus
+            leftIcon="alternate_email"
           />
           <FormField
             id="password"
@@ -151,59 +99,80 @@ export default function LoginPage() {
             value={password()}
             onInput={(e) => setPassword(e.currentTarget.value)}
             required
+            leftIcon="key"
           />
-          <div class="pt-4">
+          <div class="pt-2">
+            {/* Remember me */}
+            <label class="flex items-center gap-2.5 mb-4 cursor-pointer group w-fit">
+              <div
+                class={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all shrink-0 ${
+                  rememberMe()
+                    ? "bg-primary border-primary"
+                    : "border-outline-variant/50 group-hover:border-outline"
+                }`}
+                onClick={() => setRememberMe((v) => !v)}
+              >
+                <Show when={rememberMe()}>
+                  <span class="material-symbols-outlined text-on-primary text-[11px]">
+                    check
+                  </span>
+                </Show>
+              </div>
+              <span
+                class="text-[12px] text-on-surface-variant select-none"
+                onClick={() => setRememberMe((v) => !v)}
+              >
+                Remember me on this device
+              </span>
+            </label>
             <button
               type="submit"
               disabled={isBusy()}
-              class="w-full py-4 rounded font-bold text-on-primary flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-              style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+              class="w-full py-3.5 rounded-lg font-bold bg-primary text-on-primary text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:brightness-105 cursor-pointer border-0"
             >
-              <span>{loginMutation.isPending ? "Signing in…" : "Login to Console"}</span>
+              <span>
+                {loginMutation.isPending ? "Signing in…" : "Login to Console"}
+              </span>
               <span class="material-symbols-outlined text-[18px]">login</span>
             </button>
           </div>
         </form>
 
-        <Show when={hasSsoOptions()}>
-          <div class="my-8 flex items-center gap-4 text-outline text-[11px] uppercase tracking-[0.2em]">
-            <div class="h-px flex-1 bg-outline/20" />
-            <span>Or continue with SSO</span>
-            <div class="h-px flex-1 bg-outline/20" />
-          </div>
+        <div class="mt-5 text-center text-[12px] text-on-surface-variant">
+          Don't have an admin account?{" "}
+          <A
+            href="/register"
+            class="text-primary hover:text-primary/80 hover:underline font-bold transition-colors"
+          >
+            Register
+          </A>
+        </div>
 
-          <div class="space-y-3">
-            <Show when={ssoConfigQuery.data?.google.enabled}>
-              <div class="flex flex-col gap-2">
-                <div ref={(element) => { googleButtonHost = element; }} class="w-full flex justify-center" />
-                <Show when={activeSsoProvider() === "google"}>
-                  <p class="text-center text-xs text-outline">Verifying Google sign-in…</p>
-                </Show>
-              </div>
-            </Show>
-
-            <Show when={ssoConfigQuery.data?.microsoft.enabled}>
-              <Button
-                variant="outline"
-                class="w-full h-12 text-on-surface"
-                disabled={isBusy()}
-                onClick={handleMicrosoftLogin}
-              >
-                <span class="material-symbols-outlined text-[18px]">domain_verification</span>
-                {activeSsoProvider() === "microsoft" ? "Connecting to Microsoft…" : "Continue with Microsoft"}
-              </Button>
-            </Show>
-          </div>
-        </Show>
+        <SsoSection
+          ssoConfig={ssoConfigQuery.data}
+          isBusy={isBusy()}
+          onSsoSuccess={handleSsoSuccess}
+          onSsoError={(msg) => setError(msg)}
+        />
       </AuthCard>
 
-      <div class="mt-8 flex items-center gap-6 text-outline text-xs uppercase tracking-widest">
-        <a class="hover:text-on-surface transition-colors flex items-center gap-1" href="https://www.nonaconfig.com/support" target="_blank">
-          <span class="material-symbols-outlined text-[14px]">contact_support</span>
+      <div class="mt-8 flex items-center gap-6 text-outline text-[10px] font-bold uppercase tracking-widest">
+        <a
+          class="hover:text-primary transition-colors flex items-center gap-1.5"
+          href="https://www.nonaconfig.com/support"
+          target="_blank"
+        >
+          <span class="material-symbols-outlined text-[15px]">
+            contact_support
+          </span>
           Support
         </a>
-        <a class="hover:text-on-surface transition-colors flex items-center gap-1" href="https://www.nonaconfig.com/docs" target="_blank">
-          <span class="material-symbols-outlined text-[14px]">terminal</span>
+        <a
+          class="hover:text-primary transition-colors flex items-center gap-1.5"
+          href="https://www.nonaconfig.com/docs"
+          target="_blank"
+        >
+          <span class="material-symbols-outlined text-[15px]">terminal</span>
           API Docs
         </a>
       </div>
@@ -212,7 +181,10 @@ export default function LoginPage() {
 }
 
 function getErrorMessage(caught: unknown, fallback: string) {
-  if (caught instanceof ApiRequestError && caught.code === "sso_user_not_registered") {
+  if (
+    caught instanceof ApiRequestError &&
+    caught.code === "sso_user_not_registered"
+  ) {
     return "This account is not registered in the app. Ask an administrator to create your account before using SSO.";
   }
 

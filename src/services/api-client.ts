@@ -24,7 +24,7 @@ export class ApiRequestError extends Error {
 
 export class ApiClient {
   private getAuthHeader(): HeadersInit {
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
@@ -44,6 +44,7 @@ export class ApiClient {
       if (response.status === 401 && !isAllowlisted401Endpoint(endpoint)) {
         // Unauthorized - clear token and redirect to login
         localStorage.removeItem("auth_token");
+        sessionStorage.removeItem("auth_token");
         window.location.href = "/login";
       }
 

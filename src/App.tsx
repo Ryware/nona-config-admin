@@ -1,5 +1,6 @@
-import { type Component, lazy } from "solid-js";
+import { type Component, lazy, Suspense } from "solid-js";
 import { Router, Route, Navigate } from "@solidjs/router";
+import { Dynamic } from "solid-js/web";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import { authService } from "./services/auth.service";
 import { ToastProvider } from "./components/ui/toast";
@@ -31,7 +32,7 @@ const ProtectedRoute: Component<{ component: Component }> = (props) => {
   if (!authService.isAuthenticated()) {
     return <Navigate href="/login" />;
   }
-  return <props.component />;
+  return <Dynamic component={props.component} />;
 };
 
 // Public Route Component (redirect to dashboard if already authenticated)
@@ -39,7 +40,7 @@ const PublicRoute: Component<{ component: Component }> = (props) => {
   if (authService.isAuthenticated()) {
     return <Navigate href="/projects" />;
   }
-  return <props.component />;
+  return <Dynamic component={props.component} />;
 };
 
 const App: Component = () => {
@@ -48,6 +49,7 @@ const App: Component = () => {
     <Title>Nona Config Admin</Title>
       <QueryClientProvider client={queryClient}>
           <ToastProvider>
+            <Suspense fallback={<div class="min-h-screen bg-[#030303]" />}>
             <Router>
               <Route path="/" component={() => <Navigate href="/projects" />} />
               <Route path="/login" component={() => <PublicRoute component={LoginPage} />} />
@@ -59,6 +61,7 @@ const App: Component = () => {
               <Route path="/user" component={() => <ProtectedRoute component={UserPage} />} />
               <Route path="/audit-logs" component={() => <ProtectedRoute component={AuditLogsPage} />} />
             </Router>
+            </Suspense>
           </ToastProvider>
       </QueryClientProvider>
     </MetaProvider>

@@ -37,7 +37,7 @@ describe('LoginPage', () => {
     renderWithProviders(LoginPage);
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /login to console/i })).toBeInTheDocument();
   });
 
@@ -45,7 +45,7 @@ describe('LoginPage', () => {
     renderWithProviders(LoginPage);
 
     fireEvent.input(screen.getByLabelText(/email/i), { target: { value: 'wrong@example.com' } });
-    fireEvent.input(screen.getByLabelText(/password/i), { target: { value: 'wrongpassword' } });
+    fireEvent.input(screen.getByLabelText(/^password$/i), { target: { value: 'wrongpassword' } });
     fireEvent.click(screen.getByRole('button', { name: /login to console/i }));
 
     await waitFor(() => {
@@ -57,7 +57,7 @@ describe('LoginPage', () => {
     renderWithProviders(LoginPage);
 
     fireEvent.input(screen.getByLabelText(/email/i), { target: { value: 'admin@example.com' } });
-    fireEvent.input(screen.getByLabelText(/password/i), { target: { value: 'password' } });
+    fireEvent.input(screen.getByLabelText(/^password$/i), { target: { value: 'password' } });
     fireEvent.click(screen.getByRole('button', { name: /login to console/i }));
 
     await waitFor(() => {
@@ -77,7 +77,7 @@ describe('LoginPage', () => {
     renderWithProviders(LoginPage);
 
     fireEvent.input(screen.getByLabelText(/email/i), { target: { value: 'admin@example.com' } });
-    fireEvent.input(screen.getByLabelText(/password/i), { target: { value: 'password' } });
+    fireEvent.input(screen.getByLabelText(/^password$/i), { target: { value: 'password' } });
     fireEvent.click(screen.getByRole('button', { name: /login to console/i }));
 
     await waitFor(() => {

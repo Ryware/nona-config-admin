@@ -1,4 +1,10 @@
-import { type ParentComponent, createContext, useContext, createSignal, Show } from "solid-js";
+import {
+  type ParentComponent,
+  createContext,
+  createSignal,
+  Show,
+  useContext,
+} from "solid-js";
 
 interface TabsContextValue {
   activeTab: () => string;
@@ -17,9 +23,7 @@ export const Tabs: ParentComponent<TabsProps> = (props) => {
 
   return (
     <TabsContext.Provider value={{ activeTab, setActiveTab }}>
-      <div class={props.class}>
-        {props.children}
-      </div>
+      <div class={props.class}>{props.children}</div>
     </TabsContext.Provider>
   );
 };
@@ -30,7 +34,10 @@ interface TabsListProps {
 
 export const TabsList: ParentComponent<TabsListProps> = (props) => {
   return (
-    <div class={`flex gap-1 ${props.class || ""}`}>
+    <div
+      role="tablist"
+      class={`flex gap-1 border-b border-outline-variant/10 ${props.class || ""}`}
+    >
       {props.children}
     </div>
   );
@@ -49,10 +56,12 @@ export const TabsTrigger: ParentComponent<TabsTriggerProps> = (props) => {
 
   return (
     <button
-      class={`px-4 py-2.5 text-[13px] font-medium transition-colors border-b-2 -mb-px ${
+      role="tab"
+      aria-selected={isActive()}
+      class={`px-4 py-2.5 text-[13px] font-medium transition-all border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
         isActive()
-          ? "text-[#818CF8] border-[#6366F1]"
-          : "text-[#64748B] border-transparent hover:text-[#94A3B8] hover:border-white/20"
+          ? "text-primary border-primary font-bold"
+          : "text-outline border-transparent hover:text-on-surface-variant hover:border-outline-variant/30"
       } ${props.class || ""}`}
       onClick={() => context.setActiveTab(props.value)}
     >
@@ -72,7 +81,7 @@ export const TabsContent: ParentComponent<TabsContentProps> = (props) => {
 
   return (
     <Show when={context.activeTab() === props.value}>
-      <div class={props.class}>
+      <div role="tabpanel" class={props.class}>
         {props.children}
       </div>
     </Show>

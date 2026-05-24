@@ -8,17 +8,16 @@ export function Input(props: InputProps) {
   return (
     <input
       class={cn(
-        "flex w-full h-11 px-3.5 rounded-xl text-[13.5px] text-white",
-        "bg-[#0D1117] border border-white/10",
-        "placeholder:text-[#3D4E68]",
+        "flex w-full h-11 pl-10 pr-3.5 rounded-xl text-[13px] text-on-surface",
+        "bg-surface-container-lowest border border-outline-variant/20",
+        "placeholder:text-outline/60",
         "transition-all duration-200",
-        "focus:outline-none focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20",
-        "hover:border-white/20",
+        "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",
+        "hover:border-outline-variant/30",
         "disabled:cursor-not-allowed disabled:opacity-40",
-        local.class
+        local.class,
       )}
       {...others}
     />
   );
 }
-

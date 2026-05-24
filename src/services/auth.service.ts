@@ -45,15 +45,18 @@ export const authService = {
 
   logout() {
     localStorage.removeItem("auth_token");
+    sessionStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_session");
+    sessionStorage.removeItem("auth_session");
     window.location.href = "/login";
   },
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem("auth_token");
+    return !!(localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token"));
   },
 
   getToken(): string | null {
-    return localStorage.getItem("auth_token");
+    return localStorage.getItem("auth_token") ?? sessionStorage.getItem("auth_token");
   },
 
   async firstTime(): Promise<boolean> {

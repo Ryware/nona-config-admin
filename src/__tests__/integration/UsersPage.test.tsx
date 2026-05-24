@@ -72,7 +72,7 @@ describe('UsersPage', () => {
     await screen.findByText(mockUsers[0].email);
 
     // The action buttons contain the material icon text "more_vert" as their accessible name
-    const menuButtons = await screen.findAllByRole('button', { name: 'more_vert' });
+    const menuButtons = await screen.findAllByRole('button', { name: 'More options' });
     fireEvent.click(menuButtons[0]);
 
     await waitFor(() => {
@@ -87,7 +87,7 @@ describe('UsersPage', () => {
     await screen.findByText(mockUsers[0].email);
 
     // Open the action menu for the first user
-    const menuButtons = await screen.findAllByRole('button', { name: 'more_vert' });
+    const menuButtons = await screen.findAllByRole('button', { name: 'More options' });
     fireEvent.click(menuButtons[0]);
 
     await waitFor(() => screen.getByRole('button', { name: /remove/i }));
@@ -104,7 +104,7 @@ describe('UsersPage', () => {
 
     await screen.findByText(mockUsers[0].email);
 
-    const menuButtons = await screen.findAllByRole('button', { name: 'more_vert' });
+    const menuButtons = await screen.findAllByRole('button', { name: 'More options' });
     fireEvent.click(menuButtons[0]);
 
     await waitFor(() => screen.getByRole('button', { name: /edit member/i }));

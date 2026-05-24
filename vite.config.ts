@@ -23,6 +23,9 @@ export default defineConfig(({ mode }) => {
       environment: 'happy-dom',
       globals: true,
       setupFiles: ['./src/__tests__/setup.ts'],
+      env: {
+        VITE_API_URL: 'http://localhost:5027',
+      },
       transformMode: { web: [/\.[jt]sx$/] },
       coverage: {
         provider: 'v8',

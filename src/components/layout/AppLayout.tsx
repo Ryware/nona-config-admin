@@ -1,37 +1,78 @@
-import { type ParentComponent } from "solid-js";
+import { useLocation } from "@solidjs/router";
+import { type ParentComponent, createEffect, createSignal, Show } from "solid-js";
+import { useKeyboardShortcut } from "../../hooks/useKeyboardShortcut";
+import { CommandPalette } from "./CommandPalette";
+import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 
+const getInitialCollapsed = (): boolean => {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      return localStorage.getItem("sidebar_collapsed") === "true";
+    }
+  } catch {}
+  return false;
+};
+
 export const AppLayout: ParentComponent = (props) => {
+  const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = createSignal(false);
+  const [collapsed, setCollapsed] = createSignal(getInitialCollapsed());
+  const [showPalette, setShowPalette] = createSignal(false);
+
+  const sidebarWidth = () => (collapsed() ? "lg:ml-16" : "lg:ml-64");
+
+  const toggleCollapse = () => {
+    const next = !collapsed();
+    setCollapsed(next);
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        localStorage.setItem("sidebar_collapsed", String(next));
+      }
+    } catch {}
+  };
+
+  // Close mobile sidebar on navigation
+  createEffect(() => {
+    location.pathname;
+    setIsSidebarOpen(false);
+  });
+
+  // Setup Keyboard Shortcuts
+  useKeyboardShortcut("k", () => setShowPalette((v) => !v), { metaOrCtrl: true });
+  useKeyboardShortcut("Escape", () => {
+    if (showPalette()) {
+      setShowPalette(false);
+    }
+  }, { metaOrCtrl: false });
+
   return (
     <div class="flex min-h-screen bg-background overflow-hidden">
-      <Sidebar />
+      <Sidebar
+        isOpen={isSidebarOpen()}
+        onClose={() => setIsSidebarOpen(false)}
+        collapsed={collapsed()}
+        onToggleCollapse={toggleCollapse}
+      />
 
-      {/* ── Main Area ── */}
-      <div class="flex-1 flex flex-col min-w-0 ml-64">
-
-        {/* Top bar */}
-        <header class="sticky top-0 z-40 w-full bg-[#0e1323]/90 backdrop-blur-xl border-b border-white/5 flex justify-between items-center h-16 px-8 shrink-0">
-          <div></div>
-
-          <div class="flex items-center gap-6">
-
-            {/* Bell */}
-            <a class="hover:text-on-surface transition-colors flex items-center gap-1" href="https://www.nonaconfig.com/support" target="_blank">
-              <span class="material-symbols-outlined text-[14px]">contact_support</span>
-              Support
-            </a>
-            <a class="hover:text-on-surface transition-colors flex items-center gap-1" href="https://www.nonaconfig.com/docs" target="_blank">
-              <span class="material-symbols-outlined text-[14px]">terminal</span>
-              API Docs
-            </a>
-          </div>
-        </header>
+      {/* Main Area */}
+      <div
+        class={`flex-1 flex flex-col min-w-0 ml-0 ${sidebarWidth()} transition-[margin-left] duration-300`}
+      >
+        <Header
+          isSidebarOpen={isSidebarOpen()}
+          onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen())}
+          onSearchClick={() => setShowPalette(true)}
+        />
 
         {/* Page content */}
-        <main class="flex-1 overflow-auto p-8">
-          {props.children}
-        </main>
+        <main class="flex-1 overflow-auto p-6 md:p-8">{props.children}</main>
       </div>
+
+      {/* Command Palette */}
+      <Show when={showPalette()}>
+        <CommandPalette onClose={() => setShowPalette(false)} />
+      </Show>
     </div>
   );
 };

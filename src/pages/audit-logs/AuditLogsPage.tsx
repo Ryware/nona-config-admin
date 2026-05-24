@@ -1,68 +1,16 @@
-import { createMemo, createSignal, For, Show } from "solid-js";
-import { useQuery } from "@tanstack/solid-query";
 import { Title } from "@solidjs/meta";
+import { useQuery } from "@tanstack/solid-query";
+import { createMemo, createSignal } from "solid-js";
 import { AppLayout } from "../../components/layout/AppLayout";
 import { projectService } from "../../services/project.service";
 import { userService } from "../../services/user.service";
 
-interface AuditEntry {
-  id: string;
-  time: Date;
-  actor: string;
-  actorIconColor: string;
-  actorTextColor: string;
-  actorIsSystem: boolean;
-  action: string;
-  actionStyle: string;
-  target: string;
-  targetMono: boolean;
-  targetDeleted: boolean;
-  env: string;
-  envStyle: string;
-  sysId: string;
-}
-
-function timeAgo(date: Date): string {
-  const diff = Date.now() - date.getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  if (hrs < 48) return "Yesterday";
-  return `${Math.floor(hrs / 24)}d ago`;
-}
-
-function formatTimestamp(date: Date): string {
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
-    ", " + date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-const ACTION_STYLE: Record<string, string> = {
-  "Created Project": "bg-surface-container-highest text-on-surface-variant border border-outline-variant/30",
-  "Updated Project": "bg-secondary-container/30 text-secondary border border-secondary/20",
-  "Invited User":    "bg-surface-container-highest text-on-surface-variant border border-outline-variant/30",
-  "Deleted Key":     "bg-error-container/20 text-error border border-error/20",
-  "Auto-Scaling":    "bg-primary-container/20 text-primary border border-primary/20",
-};
-
-const ENV_STYLE: Record<string, string> = {
-  "Production":   "text-on-primary bg-primary",
-  "Staging":      "text-on-secondary-container bg-secondary-container",
-  "Global Scope": "text-outline-variant border border-outline-variant",
-};
-
-const ACTOR_ICON_COLORS = [
-  { bg: "bg-primary/10",   text: "text-primary"   },
-  { bg: "bg-secondary/10", text: "text-secondary" },
-  { bg: "bg-error/10",     text: "text-error"     },
-  { bg: "bg-surface-bright", text: "text-primary" },
-];
-function actorStyle(str: string) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
-  return ACTOR_ICON_COLORS[Math.abs(h) % ACTOR_ICON_COLORS.length];
-}
+import { AuditLogDrawer } from "./components/AuditLogDrawer";
+import { AuditLogsFilters } from "./components/AuditLogsFilters";
+import { AuditLogsHeader } from "./components/AuditLogsHeader";
+import { AuditLogsTable } from "./components/AuditLogsTable";
+import type { AuditEntry, AuditLogEntry } from "./types";
+import { ACTION_STYLE, actorStyle, ENV_STYLE } from "./utils";
 
 const PAGE_SIZE = 25;
 
@@ -70,7 +18,12 @@ export default function AuditLogsPage() {
   const [search, setSearch] = createSignal("");
   const [filterAction, setFilterAction] = createSignal("all");
   const [filterEnv, setFilterEnv] = createSignal("all");
+  const [dateFrom, setDateFrom] = createSignal("");
+  const [dateTo, setDateTo] = createSignal("");
   const [page, setPage] = createSignal(0);
+  const [selectedEntry, setSelectedEntry] = createSignal<AuditEntry | null>(
+    null,
+  );
 
   const projectsQuery = useQuery(() => ({
     queryKey: ["projects"],
@@ -85,10 +38,12 @@ export default function AuditLogsPage() {
   const allEntries = createMemo<AuditEntry[]>(() => {
     const list: AuditEntry[] = [];
 
+    // Process Project actions
     for (const p of projectsQuery.data ?? []) {
       const created = new Date(p.createdAt);
       const updated = new Date(p.updatedAt);
       const s = actorStyle("Admin");
+
       list.push({
         id: "p-c-" + p.id,
         time: created,
@@ -103,8 +58,10 @@ export default function AuditLogsPage() {
         targetDeleted: false,
         env: "Global Scope",
         envStyle: ENV_STYLE["Global Scope"],
-        sysId: "SYS-" //+ p.id.slice(0, 4).toUpperCase(),
+        sysId: "SYS-" + String(p.id ?? "").slice(0, 4).toUpperCase(),
+        actionCode: "CREATE_PROJECT",
       });
+
       if (updated.getTime() - created.getTime() > 5000) {
         list.push({
           id: "p-u-" + p.id,
@@ -120,11 +77,13 @@ export default function AuditLogsPage() {
           targetDeleted: false,
           env: "Global Scope",
           envStyle: ENV_STYLE["Global Scope"],
-          sysId: "SYS-" + p.id.slice(0, 4).toUpperCase(),
+          sysId: "SYS-" + String(p.id ?? "").slice(0, 4).toUpperCase(),
+          actionCode: "UPDATE_PROJECT",
         });
       }
     }
 
+    // Process User Invitation actions
     for (const u of usersQuery.data ?? []) {
       const s = actorStyle("Admin");
       list.push({
@@ -141,8 +100,61 @@ export default function AuditLogsPage() {
         targetDeleted: false,
         env: "Global Scope",
         envStyle: ENV_STYLE["Global Scope"],
-        sysId: "USR-" //+ u.id.slice(0, 4).toUpperCase(),
+        sysId: "USR-" + String(u.id ?? "").slice(0, 4).toUpperCase(),
+        actionCode: "INVITE_USER",
       });
+    }
+
+    // Process stored parameter changes from LocalStorage
+    try {
+      const raw = localStorage.getItem("nonaconfig_audit_logs");
+      if (raw) {
+        const storedLogs: AuditLogEntry[] = JSON.parse(raw);
+        for (const item of storedLogs) {
+          const s = actorStyle(item.actor);
+          let actionLabel = "Updated Parameter";
+          if (item.actionCode === "CREATE_ENTRY")
+            actionLabel = "Created Parameter";
+          else if (item.actionCode === "DELETE_ENTRY")
+            actionLabel = "Deleted Parameter";
+
+          const capEnv =
+            item.environment.charAt(0).toUpperCase() +
+            item.environment.slice(1);
+
+          list.push({
+            id: item.id,
+            time: new Date(item.time),
+            actor: item.actor,
+            actorIconColor: s.bg,
+            actorTextColor: s.text,
+            actorIsSystem: false,
+            action: actionLabel,
+            actionStyle:
+              ACTION_STYLE[actionLabel] || ACTION_STYLE["Updated Parameter"],
+            target: item.key,
+            targetMono: true,
+            targetDeleted: item.actionCode === "DELETE_ENTRY",
+            env: capEnv,
+            envStyle: ENV_STYLE[capEnv] || ENV_STYLE["Global Scope"],
+            sysId: item.sysId,
+            actionCode: item.actionCode,
+            ipAddress: item.ipAddress,
+            oldValue: item.oldValue,
+            newValue: item.newValue,
+            contentType: item.contentType,
+            scope: item.scope,
+            key: item.key,
+            project: item.project,
+            displayName: item.displayName,
+            description: item.description,
+            oldDisplayName: item.oldDisplayName,
+            oldDescription: item.oldDescription,
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse stored audit logs", e);
     }
 
     return list.sort((a, b) => b.time.getTime() - a.time.getTime());
@@ -150,22 +162,49 @@ export default function AuditLogsPage() {
 
   const filtered = createMemo(() => {
     let entries = allEntries();
-    if (filterAction() !== "all") entries = entries.filter((e) => e.action === filterAction());
-    if (filterEnv() !== "all")    entries = entries.filter((e) => e.env === filterEnv());
+    if (filterAction() !== "all")
+      entries = entries.filter((e) => e.action === filterAction());
+    if (filterEnv() !== "all")
+      entries = entries.filter((e) => e.env === filterEnv());
+
+    if (dateFrom()) {
+      const from = new Date(dateFrom()).getTime();
+      if (!isNaN(from)) {
+        entries = entries.filter((e) => e.time.getTime() >= from);
+      }
+    }
+    if (dateTo()) {
+      const to = new Date(dateTo()).getTime() + 86_400_000; // inclusive end of day
+      if (!isNaN(to)) {
+        entries = entries.filter((e) => e.time.getTime() <= to);
+      }
+    }
     if (search().trim()) {
       const q = search().toLowerCase();
       entries = entries.filter(
-        (e) => e.actor.toLowerCase().includes(q) || e.target.toLowerCase().includes(q)
+        (e) =>
+          e.actor.toLowerCase().includes(q) ||
+          e.target.toLowerCase().includes(q) ||
+          (e.displayName ?? "").toLowerCase().includes(q) ||
+          (e.description ?? "").toLowerCase().includes(q) ||
+          (e.project ?? "").toLowerCase().includes(q),
       );
     }
     return entries;
   });
 
-  const totalPages = createMemo(() => Math.max(1, Math.ceil(filtered().length / PAGE_SIZE)));
-  const pageEntries = createMemo(() =>
-    filtered().slice(page() * PAGE_SIZE, (page() + 1) * PAGE_SIZE)
+  const totalPages = createMemo(() =>
+    Math.max(1, Math.ceil(filtered().length / PAGE_SIZE)),
   );
-  const uniqueActions = createMemo(() => [...new Set(allEntries().map((e) => e.action))]);
+  const pageEntries = createMemo(() =>
+    filtered().slice(page() * PAGE_SIZE, (page() + 1) * PAGE_SIZE),
+  );
+  const uniqueActions = createMemo(() => [
+    ...new Set(allEntries().map((e) => e.action)),
+  ]);
+  const uniqueEnvs = createMemo(() => [
+    ...new Set(allEntries().map((e) => e.env)),
+  ]);
   const isLoading = () => projectsQuery.isLoading || usersQuery.isLoading;
 
   const changePage = (n: number) => {
@@ -176,223 +215,105 @@ export default function AuditLogsPage() {
     setFilterAction("all");
     setFilterEnv("all");
     setSearch("");
+    setDateFrom("");
+    setDateTo("");
     setPage(0);
+  };
+
+  const exportLogs = (format: "csv" | "json") => {
+    const entries = filtered();
+    if (format === "json") {
+      const json = JSON.stringify(
+        entries.map((e) => ({
+          id: e.id,
+          time: e.time.toISOString(),
+          actor: e.actor,
+          action: e.action,
+          target: e.target,
+          environment: e.env,
+          sysId: e.sysId,
+          ipAddress: e.ipAddress,
+          oldValue: e.oldValue,
+          newValue: e.newValue,
+        })),
+        null,
+        2,
+      );
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const header = "Time,Actor,Action,Target,Environment,SysID,IP\n";
+      const rows = entries.map(
+        (e) =>
+          `"${e.time.toISOString()}","${e.actor}","${e.action}","${e.target}","${e.env}","${e.sysId}","${e.ipAddress ?? ""}"`,
+      );
+      const blob = new Blob([header + rows.join("\n")], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (
     <AppLayout>
       <Title>Audit Logs | Nona Config Admin</Title>
       <div class="space-y-8">
+        <AuditLogsHeader onExport={exportLogs} />
 
-        {/* Page header */}
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="space-y-2">
-            <h2 class="text-4xl text-start font-headline font-bold text-primary tracking-tight">Audit Logs</h2>
-            <p class="text-on-surface-variant text-start max-w-xl leading-relaxed text-sm">
-              Browse and export a complete record of all administrative actions across your organization.
-            </p>
-          </div>
-          <button
-            class="flex items-center gap-2 px-6 py-3 rounded font-bold text-on-primary text-[13px] transition-all active:scale-[0.98] hover:opacity-90 w-fit cursor-pointer"
-            style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
-          >
-            <span class="material-symbols-outlined text-[18px]">download</span>
-            Export Logs
-          </button>
-        </div>
+        <AuditLogsFilters
+          search={search()}
+          setSearch={(v) => {
+            setSearch(v);
+            setPage(0);
+          }}
+          filterAction={filterAction()}
+          setFilterAction={(v) => {
+            setFilterAction(v);
+            setPage(0);
+          }}
+          filterEnv={filterEnv()}
+          setFilterEnv={(v) => {
+            setFilterEnv(v);
+            setPage(0);
+          }}
+          dateFrom={dateFrom()}
+          setDateFrom={(v) => {
+            setDateFrom(v);
+            setPage(0);
+          }}
+          dateTo={dateTo()}
+          setDateTo={(v) => {
+            setDateTo(v);
+            setPage(0);
+          }}
+          uniqueActions={uniqueActions()}
+          uniqueEnvs={uniqueEnvs()}
+          clearAllFilters={clearFilters}
+        />
 
-        {/* Filters + Search bar */}
-        <div class="flex items-center gap-4 flex-wrap">
-          <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
-            <input
-              type="text"
-              placeholder="Filter audit trail..."
-              value={search()}
-              onInput={(e) => { setSearch(e.currentTarget.value); setPage(0); }}
-              class="bg-surface-container-highest border border-outline-variant/30 rounded-sm text-sm pl-10 pr-4 py-1.5 w-56 focus:ring-0 focus:border-primary transition-all placeholder:text-outline/50 text-on-surface outline-none"
-            />
-          </div>
-          <span class="text-[10px] font-mono text-outline uppercase tracking-wider shrink-0">Filters:</span>
+        <AuditLogsTable
+          isLoading={isLoading()}
+          filteredEntries={filtered()}
+          pageEntries={pageEntries()}
+          page={page()}
+          totalPages={totalPages()}
+          pageSize={PAGE_SIZE}
+          onSelectEntry={setSelectedEntry}
+          onChangePage={changePage}
+        />
 
-          <div class="flex gap-2">
-            {/* Action Type filter */}
-            <div class="relative">
-              <select
-                value={filterAction()}
-                onChange={(e) => { setFilterAction(e.currentTarget.value); setPage(0); }}
-                class="appearance-none pl-3 pr-7 py-1.5 bg-surface-container-highest rounded-sm border border-outline-variant/30 text-xs text-on-surface-variant hover:text-primary transition-colors outline-none cursor-pointer"
-              >
-                <option value="all">Action Type</option>
-                <For each={uniqueActions()}>{(a) => <option value={a}>{a}</option>}</For>
-              </select>
-              <span class="material-symbols-outlined text-xs text-outline absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">keyboard_arrow_down</span>
-            </div>
-            {/* Environment filter */}
-            <div class="relative">
-              <select
-                value={filterEnv()}
-                onChange={(e) => { setFilterEnv(e.currentTarget.value); setPage(0); }}
-                class="appearance-none pl-3 pr-7 py-1.5 bg-surface-container-highest rounded-sm border border-outline-variant/30 text-xs text-on-surface-variant hover:text-primary transition-colors outline-none cursor-pointer"
-              >
-                <option value="all">Environment</option>
-                <option value="Production">Production</option>
-                <option value="Staging">Staging</option>
-                <option value="Global Scope">Global Scope</option>
-              </select>
-              <span class="material-symbols-outlined text-xs text-outline absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">keyboard_arrow_down</span>
-            </div>
-          </div>
-          <button
-            onClick={clearFilters}
-            class="text-xs text-primary font-medium px-2 py-1 hover:bg-primary/10 rounded-sm transition-colors bg-transparent border-0 cursor-pointer"
-          >
-            Clear
-          </button>
-        </div>
-
-        {/* Ledger Table */}
-        <div>
-          <div class="border border-outline-variant/10 rounded-sm overflow-hidden">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-surface-container-lowest border-b border-outline-variant/20">
-                  <th class="px-6 py-4 text-[10px] font-mono font-bold text-outline uppercase tracking-widest">Actor</th>
-                  <th class="px-6 py-4 text-[10px] font-mono font-bold text-outline uppercase tracking-widest">Action Type</th>
-                  <th class="px-6 py-4 text-[10px] font-mono font-bold text-outline uppercase tracking-widest">Target</th>
-                  <th class="px-6 py-4 text-[10px] font-mono font-bold text-outline uppercase tracking-widest text-center">Environment</th>
-                  <th class="px-6 py-4 text-[10px] font-mono font-bold text-outline uppercase tracking-widest">Timestamp</th>
-                  <th class="px-6 py-4 text-[10px] font-mono font-bold text-outline uppercase tracking-widest">Audit ID / IP</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-outline-variant/5">
-                <Show when={isLoading()}>
-                  <tr>
-                    <td colspan="6" class="px-6 py-16 text-center text-slate-500 text-sm">
-                      Loading activity…
-                    </td>
-                  </tr>
-                </Show>
-                <Show when={!isLoading() && filtered().length === 0}>
-                  <tr>
-                    <td colspan="6" class="px-6 py-16 text-center text-slate-500 text-sm">
-                      No activity recorded yet.
-                    </td>
-                  </tr>
-                </Show>
-                <For each={pageEntries()}>
-                  {(entry, i) => (
-                    <tr
-                      class="transition-colors group"
-                      style={{ "background-color": i() % 2 === 1 ? "#080d1d" : "transparent" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#34394a")}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = i() % 2 === 1 ? "#080d1d" : "transparent")}
-                    >
-                      {/* Actor */}
-                      <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                          <div class={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${entry.actorIconColor}`}>
-                            <span class={`material-symbols-outlined text-xs ${entry.actorTextColor}`}>
-                              {entry.actorIsSystem ? "bolt" : "person"}
-                            </span>
-                          </div>
-                          <span class={`text-sm font-medium ${entry.actorIsSystem ? "text-primary" : "text-on-surface"}`}>
-                            {entry.actor}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Action */}
-                      <td class="px-6 py-4">
-                        <span class={`text-xs px-2 py-1 rounded-sm font-medium ${entry.actionStyle}`}>
-                          {entry.action}
-                        </span>
-                      </td>
-
-                      {/* Target */}
-                      <td class="px-6 py-4">
-                        <Show
-                          when={entry.targetMono}
-                          fallback={
-                            <span class={`text-sm ${entry.targetDeleted ? "text-on-surface-variant italic opacity-60" : "text-on-surface"}`}>
-                              {entry.target}
-                            </span>
-                          }
-                        >
-                          <code class={`font-mono text-xs px-1.5 py-0.5 rounded ${entry.targetDeleted ? "text-error bg-error/5 line-through opacity-50" : "text-primary bg-primary/5"}`}>
-                            {entry.target}
-                          </code>
-                        </Show>
-                      </td>
-
-                      {/* Environment */}
-                      <td class="px-6 py-4 text-center">
-                        <span class={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${entry.envStyle}`}>
-                          {entry.env === "Global Scope" ? "N/A" : entry.env}
-                        </span>
-                      </td>
-
-                      {/* Timestamp */}
-                      <td class="px-6 py-4">
-                        <div class="text-xs text-on-surface-variant font-mono">{timeAgo(entry.time)}</div>
-                        <div class="text-[10px] text-slate-500 font-mono">{formatTimestamp(entry.time)}</div>
-                      </td>
-
-                      {/* Audit ID */}
-                      <td class="px-6 py-4 text-xs font-mono text-outline group-hover:text-primary transition-colors">
-                        {entry.sysId}
-                      </td>
-                    </tr>
-                  )}
-                </For>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div class="mt-6 flex items-center justify-between">
-            <p class="text-[10px] font-mono text-outline uppercase tracking-wider">
-              Showing{" "}
-              <span class="text-on-surface font-bold">
-                {filtered().length === 0 ? 0 : page() * PAGE_SIZE + 1}–{Math.min((page() + 1) * PAGE_SIZE, filtered().length)}
-              </span>{" "}
-              of {filtered().length} entries
-            </p>
-            <div class="flex items-center gap-2">
-              <button
-                onClick={() => changePage(page() - 1)}
-                disabled={page() === 0}
-                class="w-8 h-8 flex items-center justify-center rounded-sm bg-surface-container-high border border-outline-variant/30 text-outline hover:text-primary disabled:opacity-30 transition-colors bg-transparent border-0 cursor-pointer"
-              >
-                <span class="material-symbols-outlined text-sm">chevron_left</span>
-              </button>
-              <For each={Array.from({ length: Math.min(totalPages(), 3) }, (_, i) => i)}>
-                {(i) => (
-                  <button
-                    onClick={() => changePage(i)}
-                    class={`h-8 px-3 flex items-center justify-center rounded-sm text-xs font-bold border transition-colors cursor-pointer ${
-                      page() === i
-                        ? "bg-primary/20 border-primary/40 text-primary"
-                        : "bg-surface-container-high border-outline-variant/30 text-outline hover:text-primary"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                )}
-              </For>
-              <Show when={totalPages() > 3}>
-                <span class="text-outline mx-1">…</span>
-              </Show>
-              <button
-                onClick={() => changePage(page() + 1)}
-                disabled={page() >= totalPages() - 1}
-                class="w-8 h-8 flex items-center justify-center rounded-sm bg-surface-container-high border border-outline-variant/30 text-outline hover:text-primary disabled:opacity-30 transition-colors bg-transparent border-0 cursor-pointer"
-              >
-                <span class="material-symbols-outlined text-sm">chevron_right</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <AuditLogDrawer
+          entry={selectedEntry()}
+          onClose={() => setSelectedEntry(null)}
+        />
       </div>
     </AppLayout>
   );

@@ -7,7 +7,23 @@ import {
   mockToken,
 } from './data';
 
-const BASE = 'http://localhost:5027';
+const getBaseUrl = () => {
+  try {
+    const url = import.meta.env.VITE_API_URL;
+    if (url && url !== "undefined") {
+      if (url.startsWith("http")) {
+        return url.replace(/\/$/, "");
+      }
+      if (typeof window !== "undefined") {
+        return new URL(url, window.location.origin).toString().replace(/\/$/, "");
+      }
+      return url.replace(/\/$/, "");
+    }
+  } catch {}
+  return "http://localhost:5027";
+};
+
+const BASE = getBaseUrl();
 
 export const handlers = [
   // ── Auth ────────────────────────────────────────────────────────────────────

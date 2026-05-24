@@ -1,31 +1,100 @@
-import { type JSX, splitProps } from "solid-js";
+import {
+  Content,
+  Icon,
+  Item,
+  ItemIndicator,
+  ItemLabel,
+  Listbox,
+  Portal,
+  Root,
+  Trigger,
+  Value,
+} from "@kobalte/core/select";
 import { cn } from "../../lib/utils";
 
-export interface SelectProps extends JSX.SelectHTMLAttributes<HTMLSelectElement> {}
-
-export function Select(props: SelectProps) {
-  const [local, others] = splitProps(props, ["class", "children"]);
-  return (
-    <div class="relative w-full">
-      <select
-        class={cn(
-          "w-full px-0 py-3 pr-8 text-[13px] font-mono text-on-surface appearance-none",
-          "bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30",
-          "transition-all duration-200",
-          "focus:outline-none focus:border-b-primary focus:ring-0",
-          "hover:border-b-outline",
-          "disabled:cursor-not-allowed disabled:opacity-40",
-          "[&>option]:bg-[#1a1f2f] [&>option]:text-on-surface ps-5 h-[51.48px]",
-          local.class
-        )}
-        {...others}
-      >
-        {local.children}
-      </select>
-      <div class="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-outline">
-        <span class="material-symbols-outlined text-[16px]">expand_more</span>
-      </div>
-    </div>
-  );
+export interface SelectOption {
+  value: string;
+  label: string;
 }
 
+interface SelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: (string | SelectOption)[];
+  placeholder?: string;
+  id?: string;
+  disabled?: boolean;
+  class?: string;
+}
+
+export function Select(props: SelectProps) {
+  const normalizedOptions = () =>
+    props.options.map((opt) =>
+      typeof opt === "string" ? { value: opt, label: opt } : opt,
+    );
+
+  const selectedOption = () =>
+    normalizedOptions().find((opt) => opt.value === props.value);
+
+  const handleValueChange = (newOpt: SelectOption | null) => {
+    if (newOpt) {
+      props.onChange(newOpt.value);
+    }
+  };
+
+  return (
+    <Root
+      options={normalizedOptions()}
+      value={props.value ? selectedOption() : undefined}
+      onChange={handleValueChange}
+      optionValue="value"
+      optionTextValue="label"
+      disabled={props.disabled}
+      placeholder={props.placeholder}
+      itemComponent={(itemProps: any) => (
+        <Item
+          item={itemProps.item}
+          class="flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-colors cursor-pointer outline-none select-none relative data-[selected]:bg-surface-container-high/60"
+        >
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 flex items-center justify-center shrink-0">
+              <ItemIndicator class="text-primary">
+                <span class="material-symbols-outlined text-[16px]">check</span>
+              </ItemIndicator>
+            </span>
+            <ItemLabel class="text-left font-sans">
+              {itemProps.item.rawValue.label}
+            </ItemLabel>
+          </div>
+        </Item>
+      )}
+    >
+      <Trigger
+        id={props.id}
+        class={cn(
+          "flex items-center justify-between w-full pl-4 pr-3 py-2 text-[13px] text-on-surface bg-surface-container-lowest border border-outline-variant/20 rounded-lg hover:border-outline-variant/30 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 h-11 cursor-pointer outline-none",
+          props.class,
+        )}
+      >
+        <Value class="text-left font-sans">
+          {(state) => {
+            const label = (state.selectedOption() as SelectOption | null)?.label;
+            return (
+              <span class={label ? "text-on-surface" : "text-outline/50"}>
+                {label ?? props.placeholder}
+              </span>
+            );
+          }}
+        </Value>
+        <Icon class="text-outline/70 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[18px]">expand_more</span>
+        </Icon>
+      </Trigger>
+      <Portal>
+        <Content class="bg-surface-container-low border border-outline-variant/20 rounded-xl shadow-2xl p-1 z-[100] min-w-[160px] animate-fade-in outline-none">
+          <Listbox class="outline-none" />
+        </Content>
+      </Portal>
+    </Root>
+  );
+}

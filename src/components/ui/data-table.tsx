@@ -1,20 +1,20 @@
-import { For, Show, createSignal } from "solid-js";
 import {
   createSolidTable,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
   type ColumnDef,
-  type SortingState,
   type RowSelectionState,
+  type SortingState,
 } from "@tanstack/solid-table";
+import { For, Show, createSignal } from "solid-js";
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableRow,
-  TableHead,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "./table";
 
 interface DataTableProps<TData> {
@@ -49,7 +49,7 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
   });
 
   return (
-    <div class="bg-[#111827] border rounded-xl overflow-hidden" style="border-color: rgba(255,255,255,0.07);">
+    <div class="bg-surface-container-lowest border border-outline-variant/15 rounded-xl overflow-hidden">
       <Table>
         <TableHeader>
           <For each={table.getHeaderGroups()}>
@@ -69,10 +69,10 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
                         >
                           {flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                           <Show when={header.column.getCanSort()}>
-                            <span class="text-text-secondary">
+                            <span class="text-on-surface-variant">
                               {{
                                 asc: "↑",
                                 desc: "↓",
@@ -101,17 +101,17 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
                 </TableCell>
               </TableRow>
             }
-          >            <For each={table.getRowModel().rows}>
+          >
+            {" "}
+            <For each={table.getRowModel().rows}>
               {(row) => (
-                <TableRow
-                  onClick={() => props.onRowClick?.(row.original)}
-                >
+                <TableRow onClick={() => props.onRowClick?.(row.original)}>
                   <For each={row.getVisibleCells()}>
                     {(cell) => (
                       <TableCell>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     )}
