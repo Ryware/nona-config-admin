@@ -51,6 +51,7 @@ const App: Component = () => {
             <Router>
               <Route path="/" component={() => <Navigate href="/projects" />} />
               <Route path="/login" component={() => <PublicRoute component={LoginPage} />} />
+              <Route path="/cli-login" component={LoginPage} />
               <Route path="/register" component={() => <PublicRoute component={RegisterPage} />} />
               <Route path="/invite/:token" component={InvitePage} />
               <Route path="/projects" component={() => <ProtectedRoute component={ProjectsPage} />} />

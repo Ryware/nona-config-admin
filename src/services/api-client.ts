@@ -1,6 +1,9 @@
+import createClient, { type Middleware } from "openapi-fetch";
+import type { paths } from "../generated/api";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5027";
 
-const ALLOW_401_ENDPOINTS = [
+const ALLOW_401_PATHS = [
   "/auth/login",
   "/auth/first-time",
   "/auth/sso/google",
@@ -8,8 +11,8 @@ const ALLOW_401_ENDPOINTS = [
   "/auth/sso/config",
 ];
 
-function isAllowlisted401Endpoint(endpoint: string) {
-  return ALLOW_401_ENDPOINTS.includes(endpoint) || endpoint.startsWith("/auth/invitations/");
+function isAllowlisted(pathname: string) {
+  return ALLOW_401_PATHS.includes(pathname) || pathname.startsWith("/auth/invitations/");
 }
 
 export class ApiRequestError extends Error {
@@ -22,66 +25,32 @@ export class ApiRequestError extends Error {
   }
 }
 
-export class ApiClient {
-  private getAuthHeader(): HeadersInit {
+const authMiddleware: Middleware = {
+  async onRequest({ request }) {
     const token = localStorage.getItem("auth_token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-
-  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...this.getAuthHeader(),
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 401 && !isAllowlisted401Endpoint(endpoint)) {
-        // Unauthorized - clear token and redirect to login
-        localStorage.removeItem("auth_token");
-        window.location.href = "/login";
-      }
-
-      const error = await response
-        .json()
-        .catch(() => ({ error: "An error occurred" }));
-      throw new ApiRequestError(error.error || error.message || "Request failed", error.errorCode);
+    if (token) request.headers.set("Authorization", `Bearer ${token}`);
+    return request;
+  },
+  async onResponse({ request, response }) {
+    if (response.status === 401 && !isAllowlisted(new URL(request.url).pathname)) {
+      localStorage.removeItem("auth_token");
+      window.location.href = "/login";
     }
+    return response;
+  },
+};
 
-    // Handle 204 No Content
-    if (response.status === 204) {
-      return {} as T;
-    }
+export const api = createClient<paths>({ baseUrl: API_BASE_URL });
+api.use(authMiddleware);
 
-    return response.json();
+/** Unwrap an openapi-fetch result, throwing ApiRequestError on error. */
+export async function call<T>(
+  request: Promise<{ data?: T; error?: unknown; response: Response }>
+): Promise<T> {
+  const { data, error } = await request;
+  if (error !== undefined) {
+    const e = error as { error?: string; message?: string; errorCode?: string };
+    throw new ApiRequestError(e.error ?? e.message ?? "Request failed", e.errorCode);
   }
-
-  async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: "GET" });
-  }
-
-  async post<T>(endpoint: string, data?: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: "POST",
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
-
-  async put<T>(endpoint: string, data?: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: "PUT",
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
-
-  async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: "DELETE" });
-  }
+  return data as T;
 }
-
-export const apiClient = new ApiClient();

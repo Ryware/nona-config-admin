@@ -1,5 +1,5 @@
 import { createEffect, createSignal, onCleanup, Show } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate, useSearchParams } from "@solidjs/router";
 import { useMutation, useQuery } from "@tanstack/solid-query";
 import { authService } from "../../services/auth.service";
 import { ApiRequestError } from "../../services/api-client";
@@ -15,6 +15,7 @@ type SsoProvider = "google" | "microsoft";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [error, setError] = createSignal("");
@@ -23,6 +24,21 @@ export default function LoginPage() {
 
   const completeLogin = (result: LoginResponse) => {
     localStorage.setItem("auth_token", result.token);
+
+    const cliState = asString(searchParams.cli_state);
+    const cliRedirect = asString(searchParams.cli_redirect);
+    if (cliState && cliRedirect) {
+      const params = new URLSearchParams({
+        token: result.token,
+        username: result.username ?? "",
+        role: result.role,
+        expires_at: result.expiresAt,
+        state: cliState,
+      });
+      window.location.href = `${cliRedirect}?${params}`;
+      return;
+    }
+
     navigate("/projects");
   };
 
@@ -209,6 +225,10 @@ export default function LoginPage() {
       </div>
     </AuthLayout>
   );
+}
+
+function asString(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 function getErrorMessage(caught: unknown, fallback: string) {
