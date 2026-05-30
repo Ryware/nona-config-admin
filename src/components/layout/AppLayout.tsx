@@ -16,11 +16,11 @@ export const AppLayout: ParentComponent = (props) => {
           <div class="flex items-center gap-6">
 
             {/* Bell */}
-            <a class="hover:text-on-surface transition-colors flex items-center gap-1" href="https://www.nonaconfig.com/support" target="_blank">
+            <a class="hover:text-on-surface transition-colors flex items-center gap-1" href="https://nonaconfig.com/support" target="_blank">
               <span class="material-symbols-outlined text-[14px]">contact_support</span>
               Support
             </a>
-            <a class="hover:text-on-surface transition-colors flex items-center gap-1" href="https://www.nonaconfig.com/docs" target="_blank">
+            <a class="hover:text-on-surface transition-colors flex items-center gap-1" href="https://nonaconfig.com/docs" target="_blank">
               <span class="material-symbols-outlined text-[14px]">terminal</span>
               API Docs
             </a>
