@@ -15,6 +15,6 @@ export const configEntryService = {
   },
 
   async delete(projectId: string, environmentName: string, id: string): Promise<void> {
-    return apiClient.delete(`/admin/projects/${projectId}/environments/${environmentName}/config-entries/${id}`);
+    return apiClient.delete<void>(`/admin/projects/${projectId}/environments/${environmentName}/config-entries/${id}`);
   },
 };
