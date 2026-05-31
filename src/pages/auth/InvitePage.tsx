@@ -1,14 +1,15 @@
 import { createSignal, Show } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 import { useMutation, useQuery } from "@tanstack/solid-query";
-import { authService } from "../../services/auth.service";
-import { ApiRequestError } from "../../services/api-client";
-import { AuthLayout } from "../../components/auth/AuthLayout";
-import { AuthCard } from "../../components/auth/AuthCard";
-import { FormField } from "../../components/auth/FormField";
-import { SsoSection } from "../../components/auth/SsoSection";
+import { authService } from "../../entities/auth/api/auth.service";
+import { authStore } from "../../entities/auth/model/store";
+import { ApiRequestError } from "../../shared/api/client";
+import { AuthLayout } from "../../widgets/auth-shell/AuthLayout";
+import { AuthCard } from "../../widgets/auth-shell/AuthCard";
+import { FormField } from "../../widgets/auth-shell/FormField";
+import { SsoSection } from "../../widgets/auth-shell/SsoSection";
 import type { LoginResponse } from "../../types";
-import { MIcon } from "../../components/ui/icons";
+import { MIcon } from "../../shared/ui/icons";
 
 export default function InvitePage() {
   const navigate = useNavigate();
@@ -18,7 +19,10 @@ export default function InvitePage() {
   const [error, setError] = createSignal("");
 
   const completeLogin = (result: LoginResponse) => {
-    localStorage.setItem("auth_token", result.token);
+    authStore.saveSession(
+      result.token,
+      { email: result.username ?? "", role: result.role },
+    );
     navigate("/projects");
   };
 

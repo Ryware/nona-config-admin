@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { projectService } from '../../../services/project.service';
-import { environmentService } from '../../../services/environment.service';
-import { configEntryService } from '../../../services/config-entry.service';
-import { userService } from '../../../services/user.service';
+import { projectService } from '../../../entities/project/api/project.service';
+import { environmentService } from '../../../entities/project/api/environment.service';
+import { configEntryService } from '../../../entities/project/api/config-entry.service';
+import { userService } from '../../../entities/user/api/user.service';
 import { mockProjects, mockEnvironments, mockConfigEntries, mockUsers, mockToken } from '../../mocks/data';
 
 beforeEach(() => {

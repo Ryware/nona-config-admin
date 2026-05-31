@@ -1,5 +1,5 @@
-import { Input } from "../../../components/ui/input";
-import { Select } from "../../../components/ui/select";
+import { Input } from "../../../shared/ui/input";
+import { Select } from "../../../shared/ui/select";
 
 interface UsersFiltersProps {
   search: string;
@@ -16,7 +16,7 @@ export function UsersFilters(props: UsersFiltersProps) {
           type="text"
           placeholder="Search by name or email…"
           value={props.search}
-          onInput={(e) => props.onSearchChange(e.currentTarget.value)}
+          onInput={(e: any) => props.onSearchChange(e.currentTarget.value)}
           class="h-10"
           leftIcon="search"
         />
@@ -24,7 +24,7 @@ export function UsersFilters(props: UsersFiltersProps) {
       <div class="w-full sm:w-48">
         <Select
           value={props.roleFilter}
-          onChange={(val) => props.onRoleFilterChange(val)}
+          onChange={(val: string) => props.onRoleFilterChange(val)}
           class="h-10"
           options={[
             { value: "all", label: "All Roles" },

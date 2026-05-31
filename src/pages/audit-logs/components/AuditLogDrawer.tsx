@@ -1,7 +1,7 @@
 import { Show } from "solid-js";
 import type { AuditEntry } from "../types";
 import { formatTimestamp, timeAgo } from "../utils";
-import { MIcon } from "../../../components/ui/icons";
+import { MIcon } from "../../../shared/ui/icons";
 
 interface AuditLogDrawerProps {
   entry: AuditEntry | null;

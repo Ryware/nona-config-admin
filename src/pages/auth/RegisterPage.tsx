@@ -1,11 +1,12 @@
 import { createSignal } from "solid-js";
 import { useNavigate, A } from "@solidjs/router";
 import { useMutation } from "@tanstack/solid-query";
-import { authService } from "../../services/auth.service";
-import { AuthLayout } from "../../components/auth/AuthLayout";
-import { AuthCard } from "../../components/auth/AuthCard";
-import { FormField } from "../../components/auth/FormField";
-import { PasswordStrengthMeter } from "../../components/auth/PasswordStrengthMeter";
+import { authService } from "../../entities/auth/api/auth.service";
+import { authStore } from "../../entities/auth/model/store";
+import { AuthLayout } from "../../widgets/auth-shell/AuthLayout";
+import { AuthCard } from "../../widgets/auth-shell/AuthCard";
+import { FormField } from "../../widgets/auth-shell/FormField";
+import { PasswordStrengthMeter } from "../../widgets/auth-shell/PasswordStrengthMeter";
 import type { RegisterRequest } from "../../types";
 
 export default function RegisterPage() {
@@ -19,7 +20,10 @@ export default function RegisterPage() {
     mutationFn: (data: RegisterRequest) => authService.register(data),
     onSuccess: (result) => {
       if (result.success && result.response?.token) {
-        localStorage.setItem("auth_token", result.response.token);
+        authStore.saveSession(
+          result.response.token,
+          { email: email(), role: result.response.role },
+        );
         navigate("/projects");
       } else if (result.error) {
         setError(result.error);

@@ -2,11 +2,13 @@ import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { createMemo, createSignal } from "solid-js";
-import { AppLayout } from "../../components/layout/AppLayout";
-import { ConfirmDialog } from "../../components/ui/confirm-dialog";
-import { useToast } from "../../components/ui/toast";
-import { userService } from "../../services/user.service";
+import { AppLayout } from "../../widgets/app-shell/AppLayout";
+import { ConfirmDialog } from "../../shared/ui/confirm-dialog";
+import { useToast } from "../../shared/ui/toast";
+import { userService } from "../../entities/user/api/user.service";
+import { userKeys } from "../../entities/user/queries/keys";
 import type { User } from "../../types";
+import { MSG } from "../../shared/lib/messages";
 
 import { UsersFilters } from "./components/UsersFilters";
 import { UsersStats } from "./components/UsersStats";
@@ -22,18 +24,18 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = createSignal("all");
 
   const usersQuery = useQuery(() => ({
-    queryKey: ["users"],
+    queryKey: userKeys.list(),
     queryFn: () => userService.getAll(),
   }));
 
   const deleteMutation = useMutation(() => ({
     mutationFn: (id: string) => userService.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.list() });
       setDeleteTarget(null);
-      addToast("Team member removed", "success");
+      addToast(MSG.MEMBER_REMOVED, "success");
     },
-    onError: () => addToast("Failed to remove team member", "error"),
+    onError: () => addToast(MSG.MEMBER_REMOVE_FAILED, "error"),
   }));
 
   const users = () => usersQuery.data ?? [];

@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/solid-query';
 import { MetaProvider } from '@solidjs/meta';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
-import { ToastProvider } from '../../components/ui/toast';
+import { ToastProvider } from '../../shared/ui/toast';
 import ProjectsPage from '../../pages/projects/ProjectsPage';
 import { mockProjects, mockToken } from '../mocks/data';
 import type { JSX } from 'solid-js';
@@ -66,7 +66,8 @@ describe('ProjectsPage', () => {
 
     expect(screen.queryByLabelText(/project name/i)).not.toBeInTheDocument();
 
-    fireEvent.click(await screen.findByRole('button', { name: /create new project/i }));
+    const newProjectButtons = await screen.findAllByRole('button', { name: /new project/i });
+    fireEvent.click(newProjectButtons[0]);
 
     expect(screen.getByLabelText(/project name/i)).toBeInTheDocument();
   });
@@ -74,7 +75,8 @@ describe('ProjectsPage', () => {
   it('shows validation error for empty project name', async () => {
     renderWithProviders(() => <ProjectsPage />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /create new project/i }));
+    const newProjectButtons = await screen.findAllByRole('button', { name: /new project/i });
+    fireEvent.click(newProjectButtons[0]);
 
     // Submit form with empty name
     const form = screen.getByLabelText(/project name/i).closest('form')!;
@@ -88,7 +90,8 @@ describe('ProjectsPage', () => {
   it('shows validation error for invalid project name characters', async () => {
     renderWithProviders(() => <ProjectsPage />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /create new project/i }));
+    const newProjectButtons = await screen.findAllByRole('button', { name: /new project/i });
+    fireEvent.click(newProjectButtons[0]);
 
     fireEvent.input(screen.getByLabelText(/project name/i), {
       target: { value: 'invalid name!' },
@@ -105,7 +108,8 @@ describe('ProjectsPage', () => {
   it('creates a project and hides the form on success', async () => {
     renderWithProviders(() => <ProjectsPage />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /create new project/i }));
+    const newProjectButtons = await screen.findAllByRole('button', { name: /new project/i });
+    fireEvent.click(newProjectButtons[0]);
 
     fireEvent.input(screen.getByLabelText(/project name/i), {
       target: { value: 'new-project' },
@@ -127,7 +131,7 @@ describe('ProjectsPage', () => {
     await screen.findByRole('heading', { name: mockProjects[0].name });
 
     // Delete button accessible name comes from inner icon text "delete_outline"
-    const deleteButtons = await screen.findAllByTitle(/delete project/i);
+    const deleteButtons = await screen.findAllByTitle(/delete/i);
     fireEvent.click(deleteButtons[0]);
 
     await waitFor(() => {

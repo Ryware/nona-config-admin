@@ -2,13 +2,15 @@ import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { createMemo, createSignal, Show } from "solid-js";
-import { AppLayout } from "../../components/layout/AppLayout";
-import { ConfirmDialog } from "../../components/ui/confirm-dialog";
-import { Input } from "../../components/ui/input";
-import { MIcon } from "../../components/ui/icons";
-import { useToast } from "../../components/ui/toast";
-import { projectService } from "../../services/project.service";
+import { AppLayout } from "../../widgets/app-shell/AppLayout";
+import { ConfirmDialog } from "../../shared/ui/confirm-dialog";
+import { Input } from "../../shared/ui/input";
+import { MIcon } from "../../shared/ui/icons";
+import { useToast } from "../../shared/ui/toast";
+import { projectService } from "../../entities/project/api/project.service";
+import { projectKeys } from "../../entities/project/queries/keys";
 import type { Project } from "../../types";
+import { MSG } from "../../shared/lib/messages";
 import { ProjectCreateForm } from "./components/ProjectCreateForm";
 import { ProjectGrid } from "./components/ProjectGrid";
 import { ProjectsStats } from "./components/ProjectsStats";
@@ -23,7 +25,7 @@ export default function ProjectsPage() {
   const [search, setSearch] = createSignal("");
 
   const projectsQuery = useQuery(() => ({
-    queryKey: ["projects"],
+    queryKey: projectKeys.list(),
     queryFn: () => projectService.getAll(),
   }));
 
@@ -31,21 +33,21 @@ export default function ProjectsPage() {
     mutationFn: (data: { name: string; description?: string }) =>
       projectService.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: projectKeys.list() });
       setShowCreate(false);
-      addToast("Project created", "success");
+      addToast(MSG.PROJECT_CREATED, "success");
     },
-    onError: () => addToast("Failed to create project", "error"),
+    onError: () => addToast(MSG.PROJECT_CREATE_FAILED, "error"),
   }));
 
   const deleteMutation = useMutation(() => ({
     mutationFn: (projectName: string) => projectService.delete(projectName),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: projectKeys.list() });
       setDeleteTarget(null);
-      addToast("Project deleted", "success");
+      addToast(MSG.PROJECT_DELETED, "success");
     },
-    onError: () => addToast("Failed to delete project", "error"),
+    onError: () => addToast(MSG.PROJECT_DELETE_FAILED, "error"),
   }));
 
   const allProjects = () => projectsQuery.data ?? [];
@@ -53,7 +55,7 @@ export default function ProjectsPage() {
     const q = search().toLowerCase().trim();
     if (!q) return allProjects();
     return allProjects().filter(
-      (p) =>
+      (p: Project) =>
         p.name.toLowerCase().includes(q) ||
         p.urlSlug.toLowerCase().includes(q) ||
         (p.description ?? "").toLowerCase().includes(q),
@@ -92,7 +94,7 @@ export default function ProjectsPage() {
               type="text"
               placeholder="Search projects…"
               value={search()}
-              onInput={(e) => setSearch(e.currentTarget.value)}
+              onInput={(e: any) => setSearch(e.currentTarget.value)}
               leftIcon="search"
             />
           </div>

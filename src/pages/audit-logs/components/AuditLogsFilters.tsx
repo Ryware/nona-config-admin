@@ -1,9 +1,9 @@
 import { onMount, onCleanup, createEffect, Show } from "solid-js";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
-import { MIcon } from "../../../components/ui/icons";
-import { Input } from "../../../components/ui/input";
-import { Select } from "../../../components/ui/select";
+import { MIcon } from "../../../shared/ui/icons";
+import { Input } from "../../../shared/ui/input";
+import { Select } from "../../../shared/ui/select";
 
 interface AuditLogsFiltersProps {
   search: string;

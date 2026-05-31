@@ -1,5 +1,5 @@
 import { Show } from "solid-js";
-import { Input } from "../../../components/ui/input";
+import { Input } from "../../../shared/ui/input";
 
 interface UserInviteLinkProps {
   email: string;

@@ -1,12 +1,13 @@
 import { A, useNavigate } from "@solidjs/router";
 import { useMutation, useQuery } from "@tanstack/solid-query";
 import { createEffect, createSignal, Show } from "solid-js";
-import { AuthCard } from "../../components/auth/AuthCard";
-import { AuthLayout } from "../../components/auth/AuthLayout";
-import { FormField } from "../../components/auth/FormField";
-import { SsoSection } from "../../components/auth/SsoSection";
-import { ApiRequestError } from "../../services/api-client";
-import { authService } from "../../services/auth.service";
+import { AuthCard } from "../../widgets/auth-shell/AuthCard";
+import { AuthLayout } from "../../widgets/auth-shell/AuthLayout";
+import { FormField } from "../../widgets/auth-shell/FormField";
+import { SsoSection } from "../../widgets/auth-shell/SsoSection";
+import { ApiRequestError } from "../../shared/api/client";
+import { authService } from "../../entities/auth/api/auth.service";
+import { authStore } from "../../entities/auth/model/store";
 import type { LoginRequest, LoginResponse } from "../../types";
 
 export default function LoginPage() {
@@ -20,8 +21,11 @@ export default function LoginPage() {
   const [forgotSent, setForgotSent] = createSignal(false);
 
   const completeLogin = (result: LoginResponse) => {
-    const storage = rememberMe() ? localStorage : sessionStorage;
-    storage.setItem("auth_token", result.token);
+    authStore.saveSession(
+      result.token,
+      { email: result.username ?? "", role: result.role },
+      rememberMe(),
+    );
     navigate("/projects");
   };
 

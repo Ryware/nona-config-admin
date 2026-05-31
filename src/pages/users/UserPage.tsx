@@ -2,18 +2,22 @@ import { createSignal, createEffect, Show } from "solid-js";
 import { Title } from "@solidjs/meta";
 import { useNavigate, useLocation } from "@solidjs/router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
-import { AppLayout } from "../../components/layout/AppLayout";
-import { useToast } from "../../components/ui/toast";
-import { userService } from "../../services/user.service";
-import type { UpdateUserRequest } from "../../services/user.service";
-import { projectService } from "../../services/project.service";
-import type { CreateUserRequest, CreateUserResponse } from "../../types";
+import { AppLayout } from "../../widgets/app-shell/AppLayout";
+import { useToast } from "../../shared/ui/toast";
+import { userService } from "../../entities/user/api/user.service";
+import type { UpdateUserRequest } from "../../entities/user/api/user.service";
+import { projectService } from "../../entities/project/api/project.service";
+import { projectKeys } from "../../entities/project/queries/keys";
+import { userKeys } from "../../entities/user/queries/keys";
+import type { CreateUserRequest, CreateUserResponse, ProjectAccess } from "../../types";
+import { MSG } from "../../shared/lib/messages";
 
 import { UserStepProgress } from "./components/UserStepProgress";
 import { UserInviteLink } from "./components/UserInviteLink";
 import { UserIdentityForm } from "./components/UserIdentityForm";
 import { UserRoleSelector } from "./components/UserRoleSelector";
 import { UserProjectScope } from "./components/UserProjectScope";
+import { UserFormSkeleton } from "./components/UserFormSkeleton";
 
 export default function UserPage() {
   const navigate = useNavigate();
@@ -32,13 +36,13 @@ export default function UserPage() {
   const isEditMode = () => !!userId();
 
   const userQuery = useQuery(() => ({
-    queryKey: ["user", userId()],
+    queryKey: userKeys.detail(String(userId())),
     queryFn: () => userService.getById(userId()!),
     enabled: isEditMode(),
   }));
 
   const projectsQuery = useQuery(() => ({
-    queryKey: ["projects"],
+    queryKey: projectKeys.list(),
     queryFn: () => projectService.getAll(),
   }));
 
@@ -48,7 +52,7 @@ export default function UserPage() {
       setRole(userQuery.data.role as "editor" | "viewer");
       setName(userQuery.data.name);
       setSelectedProjects(
-        new Set((userQuery.data.projects ?? []).map((p) => p.projectName)),
+        new Set<string>((userQuery.data.projects ?? []).map((p: ProjectAccess) => p.projectName)),
       );
     }
   });
@@ -65,10 +69,10 @@ export default function UserPage() {
           projectsToAdd.map((slug) => userService.addProject(newUserId, slug, defaultRole)),
         );
       }
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.list() });
       setCreatedInvite(response);
       setCopyFeedback("");
-      addToast("Invitation link generated", "success");
+      addToast(MSG.INVITE_GENERATED, "success");
     },
     onError: (error: Error) => addToast(error.message || "Failed to invite member", "error"),
   }));
@@ -78,8 +82,8 @@ export default function UserPage() {
       userService.update(data.id, data.updates),
     onSuccess: async () => {
       // Sync project scope changes
-      const originalProjects = new Set(
-        (userQuery.data?.projects ?? []).map((p) => p.projectName),
+      const originalProjects = new Set<string>(
+        (userQuery.data?.projects ?? []).map((p: ProjectAccess) => p.projectName),
       );
       const current = selectedProjects();
       const defaultRole = userQuery.data?.scope ?? "viewer";
@@ -89,9 +93,9 @@ export default function UserPage() {
         ...toAdd.map((slug) => userService.addProject(userId()!, slug, defaultRole)),
         ...toRemove.map((slug) => userService.removeProject(userId()!, slug)),
       ]);
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["user", userId()] });
-      addToast("Member updated successfully", "success");
+      queryClient.invalidateQueries({ queryKey: userKeys.list() });
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(String(userId())) });
+      addToast(MSG.MEMBER_UPDATED, "success");
       navigate("/users");
     },
     onError: (error: Error) => addToast(error.message || "Failed to update member", "error"),
@@ -103,8 +107,8 @@ export default function UserPage() {
       const updates: UpdateUserRequest = { name: name(), role: role() };
       updateMutation.mutate({ id: userId()!, updates });
     } else {
-      if (!name()) { addToast("Name is required", "error"); return; }
-      if (!email()) { addToast("Email is required", "error"); return; }
+      if (!name()) { addToast(MSG.NAME_REQUIRED, "error"); return; }
+      if (!email()) { addToast(MSG.EMAIL_REQUIRED, "error"); return; }
       createMutation.mutate({ name: name(), email: email(), role: role() });
     }
   };
@@ -128,10 +132,10 @@ export default function UserPage() {
     try {
       await navigator.clipboard.writeText(invitationUrl());
       setCopyFeedback("Invitation link copied");
-      addToast("Invitation link copied", "success");
+      addToast(MSG.INVITE_COPIED, "success");
     } catch {
       setCopyFeedback("Copy failed. You can still copy the URL manually.");
-      addToast("Failed to copy invitation link", "error");
+      addToast(MSG.INVITE_COPY_FAILED, "error");
     }
   };
 
@@ -181,7 +185,7 @@ export default function UserPage() {
 
         <Show
           when={!isEditMode() || !userQuery.isLoading}
-          fallback={<div class="p-12 text-center text-outline">Loading member data…</div>}
+          fallback={<UserFormSkeleton />}
         >
           <form onSubmit={handleSubmit}>
             <div class="grid grid-cols-1 gap-8">

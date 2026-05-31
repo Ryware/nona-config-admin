@@ -1,6 +1,6 @@
 import { createSignal, For, Show } from "solid-js";
 import type { User } from "../../../types";
-import { MIcon } from "../../../components/ui/icons";
+import { MIcon } from "../../../shared/ui/icons";
 
 interface UsersTableProps {
   isLoading: boolean;

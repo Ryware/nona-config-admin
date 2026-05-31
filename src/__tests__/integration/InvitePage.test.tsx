@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
 import { Router, Route } from '@solidjs/router';
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query';
 import { MetaProvider } from '@solidjs/meta';
-import { ToastProvider } from '../../components/ui/toast';
+import { ToastProvider } from '../../shared/ui/toast';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import type { JSX } from 'solid-js';
@@ -27,11 +27,11 @@ const googleRenderMock = vi.fn(async (
   };
 });
 
-vi.mock('../../services/google-sso', () => ({
+vi.mock('../../entities/auth/api/google-sso', () => ({
   renderGoogleSsoButton: (...args: Parameters<typeof googleRenderMock>) => googleRenderMock(...args),
 }));
 
-vi.mock('../../services/microsoft-sso', () => ({
+vi.mock('../../entities/auth/api/microsoft-sso', () => ({
   signInWithMicrosoftPopup: (...args: Parameters<typeof microsoftPopupMock>) => microsoftPopupMock(...args),
 }));
 

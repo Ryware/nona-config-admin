@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/solid-query';
 import { MetaProvider } from '@solidjs/meta';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
-import { ToastProvider } from '../../components/ui/toast';
+import { ToastProvider } from '../../shared/ui/toast';
 import AuditLogsPage from '../../pages/audit-logs/AuditLogsPage';
 import { mockProjects, mockUsers, mockToken } from '../mocks/data';
 
@@ -40,8 +40,8 @@ describe('AuditLogsPage', () => {
   it('renders a "Created Project" entry for each project', async () => {
     renderAuditLogsPage();
     const list = await screen.findByTestId('audit-log-list');
-    // Wait for the loading state to clear
-    await waitFor(() => expect(list).not.toHaveTextContent(/loading activity/i));
+    // Wait for actual data to render (skeleton has no text content)
+    await waitFor(() => expect(list).toHaveTextContent(mockProjects[0].name));
     for (const project of mockProjects) {
       expect(list).toHaveTextContent(project.name);
     }
@@ -101,12 +101,8 @@ describe('AuditLogsPage', () => {
 
   it('shows an empty log when there are no projects or users', async () => {
     server.use(
-      http.get('http://localhost:5027/admin/projects', () => HttpResponse.json([])),
-      http.get('http://localhost:5027/admin/users', () => HttpResponse.json([])),
+      http.get('http://localhost:5027/admin/audit-logs', () => HttpResponse.json([])),
     );
-
-    // Set to empty array (not remove) to prevent the component from auto-seeding demo entries
-    localStorage.setItem('nonaconfig_audit_logs', '[]');
 
     renderAuditLogsPage();
 

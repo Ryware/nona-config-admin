@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* App root */
+#root {
+  margin: 0 auto;
+}
+
 /* ── Obsidian Architect Design System ─────────────────────────────────── */
 :root {
   /* Surface hierarchy (premium dark zinc) */
@@ -150,7 +155,11 @@ a {
   text-decoration: none;
 }
 
-/* Material Symbols */
+/* Material Symbols — use font-display:block via the Google Fonts URL
+   param (&display=block) so icon text names stay invisible until the
+   font file finishes loading. The overflow+size rules below act as a
+   secondary safety net: even if the browser briefly renders fallback
+   glyphs, the container clips them so nothing visually leaks. */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   display: inline-block;
@@ -161,6 +170,9 @@ a {
   white-space: nowrap;
   direction: ltr;
   vertical-align: middle;
+  overflow: hidden;
+  max-width: 1em;
+  max-height: 1em;
 }
 
 /* Scrollbar */

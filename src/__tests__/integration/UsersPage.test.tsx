@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/solid-query';
 import { MetaProvider } from '@solidjs/meta';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
-import { ToastProvider } from '../../components/ui/toast';
+import { ToastProvider } from '../../shared/ui/toast';
 import UsersPage from '../../pages/users/UsersPage';
 import { mockUsers, mockToken } from '../mocks/data';
 import type { JSX } from 'solid-js';
@@ -35,7 +35,7 @@ describe('UsersPage', () => {
 
   it('renders the Team Management heading', async () => {
     renderWithProviders(() => <UsersPage />);
-    expect(await screen.findByText(/team management/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /team/i })).toBeInTheDocument();
   });
 
   it('lists all users returned by the API', async () => {
@@ -110,7 +110,7 @@ describe('UsersPage', () => {
     await waitFor(() => screen.getByRole('button', { name: /edit member/i }));
 
     // Click the overlay (fixed inset div)
-    const overlay = document.querySelector('.fixed.inset-0.z-\\[5\\]') as HTMLElement;
+    const overlay = document.querySelector('.fixed.inset-0.z-\\[200\\]') as HTMLElement;
     if (overlay) fireEvent.click(overlay);
 
     await waitFor(() => {
@@ -127,7 +127,7 @@ describe('UsersPage', () => {
 
     renderWithProviders(() => <UsersPage />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /invite team member/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /invite member/i }));
 
     await waitFor(() => {
       expect(navigatedPaths.some((p) => p.includes('/user'))).toBe(true);

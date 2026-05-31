@@ -1,9 +1,10 @@
 import { Title } from "@solidjs/meta";
 import { useQuery } from "@tanstack/solid-query";
 import { Show } from "solid-js";
-import { AppLayout } from "../../components/layout/AppLayout";
-import { MIcon } from "../../components/ui/icons";
-import { apiClient } from "../../services/api-client";
+import { AppLayout } from "../../widgets/app-shell/AppLayout";
+import { MIcon } from "../../shared/ui/icons";
+import { QueryErrorBanner } from "../../shared/ui/QueryGuard";
+import { apiClient } from "../../shared/api/client";
 import type { DashboardCounts } from "../../types";
 
 function fetchDashboardCounts(): Promise<DashboardCounts> {
@@ -60,10 +61,10 @@ export default function DashboardPage() {
         </div>
 
         <Show when={countsQuery.isError}>
-          <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-error/10 border border-error/20 text-error text-[13px]">
-            <MIcon name="error" class="text-[18px]" />
-            Failed to load dashboard stats.
-          </div>
+          <QueryErrorBanner
+            message="Failed to load dashboard stats."
+            onRetry={() => countsQuery.refetch()}
+          />
         </Show>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -85,6 +86,68 @@ export default function DashboardPage() {
             value={countsQuery.data?.users}
             isLoading={countsQuery.isLoading}
           />
+        </div>
+
+        {/* Quick Actions */}
+        <div class="space-y-3">
+          <h3 class="text-[14px] font-headline font-bold text-on-surface/90">
+            Quick Actions
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <a
+              href="/projects"
+              class="flex items-center gap-4 p-5 rounded-2xl bg-surface-container-low border border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 transition-all group cursor-pointer text-current no-underline"
+            >
+              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                <MIcon name="folder" class="text-[20px]" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-headline font-semibold text-on-surface text-[14px] group-hover:text-primary transition-colors">
+                  Manage Projects
+                </div>
+                <div class="text-[11px] text-outline mt-0.5">
+                  Configure environments and parameters
+                </div>
+              </div>
+              <MIcon name="chevron_right" class="text-outline text-lg group-hover:translate-x-0.5 transition-transform" />
+            </a>
+
+            <a
+              href="/user"
+              class="flex items-center gap-4 p-5 rounded-2xl bg-surface-container-low border border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 transition-all group cursor-pointer text-current no-underline"
+            >
+              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                <MIcon name="person_add" class="text-[20px]" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-headline font-semibold text-on-surface text-[14px] group-hover:text-primary transition-colors">
+                  Invite Team Member
+                </div>
+                <div class="text-[11px] text-outline mt-0.5">
+                  Add new collaborators to your team
+                </div>
+              </div>
+              <MIcon name="chevron_right" class="text-outline text-lg group-hover:translate-x-0.5 transition-transform" />
+            </a>
+
+            <a
+              href="/audit-logs"
+              class="flex items-center gap-4 p-5 rounded-2xl bg-surface-container-low border border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 transition-all group cursor-pointer text-current no-underline"
+            >
+              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                <MIcon name="manage_history" class="text-[20px]" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-headline font-semibold text-on-surface text-[14px] group-hover:text-primary transition-colors">
+                  Security Audit Logs
+                </div>
+                <div class="text-[11px] text-outline mt-0.5">
+                  Audit changes and user activities
+                </div>
+              </div>
+              <MIcon name="chevron_right" class="text-outline text-lg group-hover:translate-x-0.5 transition-transform" />
+            </a>
+          </div>
         </div>
       </div>
     </AppLayout>

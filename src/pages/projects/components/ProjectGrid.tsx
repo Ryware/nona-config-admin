@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 import type { Project } from "../../../types";
-import { MIcon } from "../../../components/ui/icons";
+import { MIcon } from "../../../shared/ui/icons";
 
 interface ProjectGridProps {
   isLoading: boolean;

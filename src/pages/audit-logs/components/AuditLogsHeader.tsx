@@ -1,5 +1,5 @@
 import { createSignal, Show } from "solid-js";
-import { MIcon } from "../../../components/ui/icons";
+import { MIcon } from "../../../shared/ui/icons";
 
 interface AuditLogsHeaderProps {
   onExport: (format: "csv" | "json") => void;

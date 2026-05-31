@@ -1,4 +1,4 @@
-import { Input } from "../../../components/ui/input";
+import { Input } from "../../../shared/ui/input";
 
 interface UserIdentityFormProps {
   name: string;
@@ -25,7 +25,7 @@ export function UserIdentityForm(props: UserIdentityFormProps) {
             type="text"
             placeholder="e.g. John Smith"
             value={props.name}
-            onInput={(e) => props.onNameChange(e.currentTarget.value)}
+            onInput={(e: any) => props.onNameChange(e.currentTarget.value)}
             required={!props.isEditMode}
             leftIcon="person"
           />
@@ -39,7 +39,7 @@ export function UserIdentityForm(props: UserIdentityFormProps) {
             type="email"
             placeholder="alex@company.com"
             value={props.email}
-            onInput={(e) => props.onEmailChange(e.currentTarget.value)}
+            onInput={(e: any) => props.onEmailChange(e.currentTarget.value)}
             required
             autofocus={!props.isEditMode}
             leftIcon="alternate_email"

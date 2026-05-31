@@ -1,6 +1,6 @@
 import { createSignal, Show } from "solid-js";
-import { FormField } from "../../../components/auth/FormField";
-import { MIcon } from "../../../components/ui/icons";
+import { FormField } from "../../../widgets/auth-shell/FormField";
+import { MIcon } from "../../../shared/ui/icons";
 
 interface ProjectCreateFormProps {
   onCancel: () => void;
@@ -44,7 +44,7 @@ export function ProjectCreateForm(props: ProjectCreateFormProps) {
             type="text"
             placeholder="my-project"
             value={name()}
-            onInput={(e) => {
+            onInput={(e: any) => {
               setName(e.currentTarget.value);
               if (createError()) setCreateError("");
             }}
@@ -62,7 +62,7 @@ export function ProjectCreateForm(props: ProjectCreateFormProps) {
           type="text"
           placeholder="Optional description"
           value={description()}
-          onInput={(e) => setDescription(e.currentTarget.value)}
+          onInput={(e: any) => setDescription(e.currentTarget.value)}
           leftIcon="notes"
         />
         <div class="md:col-span-2 flex gap-3">

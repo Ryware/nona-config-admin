@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../mocks/server';
-import { ApiClient, ApiRequestError } from '../../../services/api-client';
+import { ApiClient, ApiRequestError } from '../../../shared/api/client';
+// Import authStore to register the auth:unauthorized event listener
+// (side-effect import — the listener is added at module evaluation time)
+import '../../../entities/auth/model/store';
 
 const BASE = 'http://localhost:5027';
 

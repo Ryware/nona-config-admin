@@ -6,7 +6,7 @@ import { MetaProvider } from '@solidjs/meta';
 import { onMount } from 'solid-js';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
-import { ToastProvider } from '../../components/ui/toast';
+import { ToastProvider } from '../../shared/ui/toast';
 import UserPage from '../../pages/users/UserPage';
 import { mockUsers, mockProjects, mockToken } from '../mocks/data';
 

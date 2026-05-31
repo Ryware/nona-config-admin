@@ -1,8 +1,8 @@
 import { Title } from "@solidjs/meta";
 import { useQuery } from "@tanstack/solid-query";
 import { createMemo, createSignal } from "solid-js";
-import { AppLayout } from "../../components/layout/AppLayout";
-import { auditLogService } from "../../services/audit-log.service";
+import { AppLayout } from "../../widgets/app-shell/AppLayout";
+import { auditLogService } from "../../entities/audit-log/api/audit-log.service";
 import type { AuditLog } from "../../types";
 
 import { AuditLogDrawer } from "./components/AuditLogDrawer";
