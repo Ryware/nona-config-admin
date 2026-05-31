@@ -1,4 +1,4 @@
-import { createSignal, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
 import type { User } from "../../../types";
 import { MIcon } from "../../../shared/ui/icons";
 
@@ -20,10 +20,6 @@ function roleMeta(role: string) {
 }
 
 export function UsersTable(props: UsersTableProps) {
-  const [actionUser, setActionUser] = createSignal<User | null>(null);
-
-  const closeModal = () => setActionUser(null);
-
   return (
     <>
       <div class="bg-surface-container-low rounded-xl border border-outline-variant/15 overflow-hidden">
@@ -97,7 +93,10 @@ export function UsersTable(props: UsersTableProps) {
                       : user.email.slice(0, 2).toUpperCase();
                     const rm = roleMeta(user.role);
                     return (
-                      <tr class="hover:bg-surface-container-high/40 transition-colors group">
+                      <tr
+                        onClick={() => props.onEdit(user)}
+                        class="group hover:bg-surface-container-high/40 transition-colors cursor-pointer"
+                      >
                         <td class="py-4 px-6">
                           <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-full flex items-center justify-center font-headline font-bold text-xs shrink-0 bg-primary/10 text-primary border border-primary/20">
@@ -122,13 +121,14 @@ export function UsersTable(props: UsersTableProps) {
                             <span>{user.role === "admin" ? "Global Access" : "Scoped Access"}</span>
                           </div>
                         </td>
-                        <td class="py-4 px-6 text-right">
+                        <td class="py-4 px-6 text-right" onClick={(e) => e.stopPropagation()}>
                           <button
-                            onClick={(e) => { e.stopPropagation(); setActionUser(user); }}
-                            aria-label="More options"
-                            class="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors bg-transparent border-0 cursor-pointer flex items-center justify-center rounded-lg ml-auto opacity-40 group-hover:opacity-100 focus:opacity-100"
+                            onClick={() => props.onDelete(user)}
+                            class="opacity-40 group-hover:opacity-100 focus:opacity-100 transition-opacity text-outline hover:text-error bg-transparent border-0 cursor-pointer p-1.5 rounded-lg hover:bg-error/10"
+                            title={`Remove ${user.name || user.email}`}
+                            aria-label={`Remove ${user.name || user.email}`}
                           >
-                            <span class="material-symbols-outlined text-lg">more_vert</span>
+                            <MIcon name="delete_outline" class="text-[18px]" />
                           </button>
                         </td>
                       </tr>
@@ -140,108 +140,6 @@ export function UsersTable(props: UsersTableProps) {
           </table>
         </div>
       </div>
-
-      {/* ── Action Modal ── */}
-      <Show when={actionUser()}>
-        {(() => {
-          const user = actionUser()!;
-          const initials = user.name
-            ? user.name.slice(0, 2).toUpperCase()
-            : user.email.slice(0, 2).toUpperCase();
-          const rm = roleMeta(user.role);
-
-          return (
-            <>
-              {/* Backdrop */}
-              <div
-                onClick={closeModal}
-                class="fixed inset-0 bg-black/60 backdrop-blur-sm z-200"
-              />
-
-              {/* Modal */}
-              <div class="fixed inset-0 z-201 flex items-center justify-center p-4 pointer-events-none">
-                <div
-                  class="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl shadow-2xl w-full max-w-sm pointer-events-auto animate-fade-in"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {/* Header — member card */}
-                  <div class="p-5 border-b border-outline-variant/10 flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3.5">
-                      <div class="w-11 h-11 rounded-full flex items-center justify-center font-headline font-bold text-sm bg-primary/10 text-primary border border-primary/20 shrink-0">
-                        {initials}
-                      </div>
-                      <div class="min-w-0">
-                        <div class="font-headline font-bold text-on-surface text-[14px] leading-tight truncate">
-                          {user.name || "Pending Invite"}
-                        </div>
-                        <div class="text-[11px] text-outline font-mono mt-0.5 truncate">{user.email}</div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={closeModal}
-                      class="w-7 h-7 flex items-center justify-center text-outline hover:text-on-surface bg-transparent border-0 cursor-pointer rounded-lg hover:bg-surface-container-high transition-all shrink-0"
-                      aria-label="Close"
-                    >
-                      <MIcon name="close" class="text-[16px]" />
-                    </button>
-                  </div>
-
-                  {/* Role + Scope info */}
-                  <div class="px-5 py-3.5 border-b border-outline-variant/10 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <MIcon name={rm.icon} class="text-[15px] text-outline" />
-                      <span class="text-[12px] text-outline-variant">Role</span>
-                    </div>
-                    <span class={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium ${rm.class}`}>
-                      {rm.label}
-                    </span>
-                  </div>
-                  <div class="px-5 py-3.5 border-b border-outline-variant/10 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <MIcon name={user.role === "admin" ? "public" : "lock_person"} class="text-[15px] text-outline" />
-                      <span class="text-[12px] text-outline-variant">Project Scope</span>
-                    </div>
-                    <span class="text-[12px] text-on-surface font-medium">
-                      {user.role === "admin" ? "Global Access" : "Scoped Access"}
-                    </span>
-                  </div>
-
-                  {/* Actions */}
-                  <div class="p-3 space-y-1">
-                    <button
-                      onClick={() => {
-                        closeModal();
-                        props.onEdit(user);
-                      }}
-                      class="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-[13px] text-on-surface hover:bg-primary/8 hover:text-primary transition-colors bg-transparent border-0 cursor-pointer text-left font-medium"
-                    >
-                      <MIcon name="edit" class="text-[17px] text-outline shrink-0" />
-                      <div>
-                        <div class="font-semibold">Edit Member</div>
-                        <div class="text-[10.5px] text-outline font-normal mt-0.5">Change role, permissions and details</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        closeModal();
-                        props.onDelete(user);
-                      }}
-                      class="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-[13px] text-error hover:bg-error/8 transition-colors bg-transparent border-0 cursor-pointer text-left font-medium"
-                    >
-                      <MIcon name="person_remove" class="text-[17px] shrink-0" />
-                      <div>
-                        <div class="font-semibold">Remove Member</div>
-                        <div class="text-[10.5px] text-error/60 font-normal mt-0.5">Revoke all access immediately</div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </>
-          );
-        })()}
-      </Show>
     </>
   );
 }
