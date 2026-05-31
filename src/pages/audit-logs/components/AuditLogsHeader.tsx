@@ -26,7 +26,7 @@ export function AuditLogsHeader(props: AuditLogsHeaderProps) {
           <MIcon name="arrow_drop_down" class="text-[16px]" />
         </button>
         <Show when={showExportMenu()}>
-          <div class="absolute right-0 top-full mt-1.5 bg-surface-container-low border border-outline-variant/20 rounded-lg shadow-xl z-50 overflow-hidden animate-fade-in min-w-[160px]">
+          <div class="absolute right-0 top-full mt-1.5 bg-surface-container-low border border-outline-variant/20 rounded-lg shadow-xl z-50 overflow-hidden animate-fade-in min-w-40">
             <button
               onClick={() => {
                 props.onExport("csv");

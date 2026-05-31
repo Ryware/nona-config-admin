@@ -6,6 +6,7 @@ import { AuthLayout } from "../../widgets/auth-shell/AuthLayout";
 import { FormField } from "../../widgets/auth-shell/FormField";
 import { SsoSection } from "../../widgets/auth-shell/SsoSection";
 import { ApiRequestError } from "../../shared/api/client";
+import { MSG } from "../../shared/lib/messages";
 import { authService } from "../../entities/auth/api/auth.service";
 import { authStore } from "../../entities/auth/model/store";
 import type { LoginRequest, LoginResponse } from "../../types";
@@ -33,14 +34,14 @@ export default function LoginPage() {
     mutationFn: (credentials: LoginRequest) => authService.login(credentials),
     onSuccess: completeLogin,
     onError: () => {
-      setError("Invalid credentials. Please try again.");
+      setError(MSG.LOGIN_FAILED);
     },
   }));
 
   const forgotMutation = useMutation(() => ({
     mutationFn: (e: string) => authService.requestPasswordReset({ email: e }),
     onSuccess: () => setForgotSent(true),
-    onError: () => setError("Failed to send reset email. Please try again."),
+    onError: () => setError(MSG.FORGOT_SEND_FAILED),
   }));
 
   const firstTimeQuery = useQuery(() => ({
@@ -86,7 +87,7 @@ export default function LoginPage() {
       setError(
         getErrorMessage(
           caught,
-          `${provider === "google" ? "Google" : "Microsoft"} sign-in failed. Please try again.`,
+          provider === "google" ? MSG.SSO_FAILED_GOOGLE : MSG.SSO_FAILED_MICROSOFT,
         ),
       );
       throw caught;
@@ -170,12 +171,13 @@ export default function LoginPage() {
             <FormField
               id="email"
               label="Email"
-              type="text"
+              type="email"
               placeholder="your@email.com"
               value={email()}
               onInput={(e) => setEmail(e.currentTarget.value)}
               required
               autofocus
+              autocomplete="email"
               leftIcon="alternate_email"
             />
             <FormField
@@ -186,6 +188,7 @@ export default function LoginPage() {
               value={password()}
               onInput={(e) => setPassword(e.currentTarget.value)}
               required
+              autocomplete="current-password"
               leftIcon="key"
             />
             <div class="pt-2">

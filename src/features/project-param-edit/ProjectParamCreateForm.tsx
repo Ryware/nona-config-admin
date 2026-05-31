@@ -77,6 +77,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
               onKeyDown={onKeyDownConfigKey}
               onInput={(e: any) => setCfgKey(e.currentTarget.value)}
               required
+              autofocus
               leftIcon="code"
             />
           </div>
@@ -113,6 +114,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
               placeholder="Explain what this configuration does..."
               value={cfgDescription()}
               onInput={(e: any) => setCfgDescription(e.currentTarget.value)}
+              maxLength={500}
             />
           </div>
         </div>

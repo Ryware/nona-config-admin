@@ -36,7 +36,6 @@ export const Sidebar = (props: {
   const projectsQuery = useQuery(() => ({
     queryKey: projectKeys.list(),
     queryFn: () => projectService.getAll(),
-    staleTime: 30_000,
   }));
 
   const isActive = (path: string) =>
@@ -64,7 +63,7 @@ export const Sidebar = (props: {
       </Show>
 
       <aside
-        class={`h-screen ${w()} fixed left-0 top-0 bg-[#030303] border-r border-white/6 flex flex-col z-50 sidebar-transition lg:translate-x-0 ${
+        class={`h-screen ${w()} fixed left-0 top-0 bg-surface-container-lowest border-r border-white/6 flex flex-col z-50 sidebar-transition lg:translate-x-0 ${
           props.isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -75,7 +74,7 @@ export const Sidebar = (props: {
             onClick={() => props.onClose()}
             class="flex items-center gap-3 group"
           >
-            <div class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center bg-primary/15 border border-primary/20 shadow-[0_0_12px_rgba(99,102,241,0.15)]">
+            <div class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center bg-primary/15 border border-primary/20 shadow-[0_0_12px_rgba(99,102,241,0.15)] group-hover:shadow-[0_0_20px_rgba(99,102,241,0.25)] transition-shadow duration-300">
               <span
                 class="material-symbols-outlined text-primary text-[18px]"
                 style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"
@@ -104,6 +103,7 @@ export const Sidebar = (props: {
             href="/projects"
             onClick={() => props.onClose()}
             title={props.collapsed ? "Projects" : undefined}
+            aria-label="Projects"
             class={navItem(isActive("/projects"), props.collapsed)}
           >
             <span
@@ -185,6 +185,7 @@ export const Sidebar = (props: {
                 href={item.path}
                 onClick={() => props.onClose()}
                 title={props.collapsed ? item.label : undefined}
+                aria-label={item.label}
                 class={navItem(isActive(item.path), props.collapsed)}
               >
                 <span

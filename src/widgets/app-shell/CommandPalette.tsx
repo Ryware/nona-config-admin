@@ -57,13 +57,11 @@ export const CommandPalette = (props: CommandPaletteProps) => {
   const projectsQuery = useQuery(() => ({
     queryKey: projectKeys.list(),
     queryFn: () => projectService.getAll(),
-    staleTime: 30_000,
   }));
 
   const usersQuery = useQuery(() => ({
     queryKey: userKeys.list(),
     queryFn: () => userService.getAll(),
-    staleTime: 30_000,
   }));
 
   const quickNav = [
@@ -178,7 +176,7 @@ export const CommandPalette = (props: CommandPaletteProps) => {
 
   return (
     <div
-      class="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] animate-backdrop-in"
+      class="fixed inset-0 z-100 flex items-start justify-center pt-[15vh] animate-backdrop-in"
       style="background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);"
       onClick={props.onClose}
     >

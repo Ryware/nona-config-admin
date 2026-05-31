@@ -37,34 +37,30 @@ export function ProjectEnvironments(props: ProjectEnvironmentsProps) {
           <div class="flex flex-wrap gap-2.5">
             <For each={props.environments}>
               {(env) => (
-                <div
-                  role="button"
-                  tabindex="0"
+                <button
+                  type="button"
                   class={`group flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-mono cursor-pointer transition-all duration-300 border outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                     props.activeEnvName === env.name
                       ? "border-primary/20 bg-primary/10 text-primary font-bold shadow-[0_0_15px_rgba(99,102,241,0.05)]"
                       : "border-outline-variant/10 bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high/60 hover:text-on-surface"
                   }`}
+                  title={env.name}
                   onClick={() => props.setActiveEnvName(props.activeEnvName === env.name ? "" : env.name)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      props.setActiveEnvName(props.activeEnvName === env.name ? "" : env.name);
-                    }
-                  }}
                 >
-                  <span>{env.name}</span>
-                  <button
+                  <span class="truncate max-w-50">{env.name}</span>
+                  <span
+                    role="button"
+                    tabindex="0"
                     onClick={(e) => {
                       e.stopPropagation();
                       props.onDeleteEnv(env.name);
                     }}
                     aria-label={`Delete environment ${env.name}`}
-                    class="opacity-0 group-hover:opacity-100 transition-opacity text-outline hover:text-error bg-transparent border-0 cursor-pointer p-0 ml-1 flex items-center justify-center"
+                    class="opacity-40 group-hover:opacity-100 focus:opacity-100 transition-opacity text-outline hover:text-error bg-transparent border-0 cursor-pointer p-0 ml-1 flex items-center justify-center"
                   >
                     <MIcon name="close" class="text-[14px]" />
-                  </button>
-                </div>
+                  </span>
+                </button>
               )}
             </For>
           </div>

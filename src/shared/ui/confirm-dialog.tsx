@@ -43,7 +43,7 @@ export const ConfirmDialog = (props: ConfirmDialogProps) => {
   const handleKey = (e: KeyboardEvent) => {
     if (!props.open) return;
     if (e.key === "Escape") props.onCancel();
-    if (e.key === "Enter") props.onConfirm();
+    if (e.key === "Enter" && !props.isLoading) props.onConfirm();
   };
 
   onMount(() => document.addEventListener("keydown", handleKey));
@@ -52,7 +52,7 @@ export const ConfirmDialog = (props: ConfirmDialogProps) => {
   return (
     <Show when={props.open}>
       <div
-        class="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-backdrop-in"
+        class="fixed inset-0 z-80 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-backdrop-in"
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"

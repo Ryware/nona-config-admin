@@ -11,6 +11,7 @@ import { projectService } from "../../entities/project/api/project.service";
 import { projectKeys } from "../../entities/project/queries/keys";
 import type { Project } from "../../types";
 import { MSG } from "../../shared/lib/messages";
+import { QueryErrorBanner } from "../../shared/ui/QueryGuard";
 import { ProjectCreateForm } from "./components/ProjectCreateForm";
 import { ProjectGrid } from "./components/ProjectGrid";
 import { ProjectsStats } from "./components/ProjectsStats";
@@ -86,6 +87,14 @@ export default function ProjectsPage() {
             {showCreate() ? "Cancel" : "New Project"}
           </button>
         </div>
+
+        {/* Error banner */}
+        <Show when={projectsQuery.isError}>
+          <QueryErrorBanner
+            message="Failed to load projects."
+            onRetry={() => projectsQuery.refetch()}
+          />
+        </Show>
 
         {/* Search bar */}
         <Show when={projectsQuery.isSuccess && allProjects().length > 0}>

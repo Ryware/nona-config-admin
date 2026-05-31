@@ -23,7 +23,12 @@ Tech-minimal, clean, professional, and highly intuitive. It takes inspiration fr
 2. **Preventative Guardrails**: Build robust confirmation steps, clear input validations, and error prevention checks to give non-technical users confidence.
 3. **Structured Simplicity**: Focus on clean visual hierarchies, consistent navigation, and clear calls to action so the UI disappears into the user's tasks.
 4. **Approachably Premium**: Maintain high visual standards (clean borders, balanced spacing, curated color palette) without introducing visual noise or over-stimulating animations.
+5. **Perceived Performance**: Show layout-accurate skeleton loaders for every async data load. Users should never see blank screens, spinners in content areas, or layout jumps.
 
 ## Accessibility & Inclusion
 - Target compliance: WCAG 2.1 AA.
 - High focus on text contrast (>= 4.5:1), clear keyboard navigation, and explicit labeling for form fields and control actions.
+- `focus-visible` rings on every interactive element (2px solid primary, 2px offset).
+- Keyboard shortcuts for power-user workflows (⌘K command palette).
+- `font-display: block` on icon fonts to prevent flash of unstyled text.
+- Reduced-motion support: respect `prefers-reduced-motion` for all entrance animations.

@@ -42,7 +42,7 @@ export function ProjectParamsTable(props: ProjectParamsTableProps) {
               <th class="py-3 px-6 text-[11px] font-medium text-outline uppercase tracking-[0.05em] text-right w-24">Actions</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-outline-variant/10">
+          <tbody class="divide-y divide-outline-variant/10 animate-stagger">
             <Show when={props.isLoading}>
               <For each={[1, 2, 3]}>
                 {() => (
@@ -89,13 +89,13 @@ export function ProjectParamsTable(props: ProjectParamsTableProps) {
                       </td>
                       <td class="py-4 px-6">
                         <div class="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <span class="font-mono text-on-surface-variant truncate max-w-[180px] block">
+                          <span class="font-mono text-on-surface-variant truncate max-w-45 block">
                             {entry.value}
                           </span>
                           <button
                             onClick={() => void props.onCopyValue(entry.key, entry.value)}
                             title="Copy value"
-                            class="opacity-0 group-hover:opacity-100 transition-all text-outline hover:text-primary bg-transparent border-0 cursor-pointer p-1 rounded hover:bg-primary/10 flex items-center justify-center shrink-0"
+                            class="opacity-40 group-hover:opacity-100 focus:opacity-100 transition-all text-outline hover:text-primary bg-transparent border-0 cursor-pointer p-1 rounded hover:bg-primary/10 flex items-center justify-center shrink-0"
                           >
                             <MIcon
                               name={props.copiedKey === entry.key ? "check" : "content_copy"}
@@ -125,7 +125,7 @@ export function ProjectParamsTable(props: ProjectParamsTableProps) {
                       <td class="py-4 px-6 text-right" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => props.onDeleteEntry(entry.key)}
-                          class="opacity-0 group-hover:opacity-100 transition-opacity text-outline hover:text-error bg-transparent border-0 cursor-pointer p-1.5 rounded-lg hover:bg-error/10"
+                          class="opacity-40 group-hover:opacity-100 focus:opacity-100 transition-opacity text-outline hover:text-error bg-transparent border-0 cursor-pointer p-1.5 rounded-lg hover:bg-error/10"
                           title={`Delete parameter ${entry.key}`}
                           aria-label={`Delete parameter ${entry.key}`}
                         >

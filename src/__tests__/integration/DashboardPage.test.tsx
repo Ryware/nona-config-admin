@@ -63,7 +63,7 @@ describe('DashboardPage', () => {
     renderWithProviders(() => <DashboardPage />);
 
     expect(await screen.findByRole('link', { name: /manage projects/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /invite team member/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /team management/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /security audit logs/i })).toBeInTheDocument();
   });
 });

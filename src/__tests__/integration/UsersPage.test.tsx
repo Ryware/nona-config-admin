@@ -110,7 +110,7 @@ describe('UsersPage', () => {
     await waitFor(() => screen.getByRole('button', { name: /edit member/i }));
 
     // Click the overlay (fixed inset div)
-    const overlay = document.querySelector('.fixed.inset-0.z-\\[200\\]') as HTMLElement;
+    const overlay = document.querySelector('.fixed.inset-0.z-200') as HTMLElement;
     if (overlay) fireEvent.click(overlay);
 
     await waitFor(() => {

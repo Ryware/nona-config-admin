@@ -165,7 +165,7 @@ export default function UserPage() {
         {/* Page header */}
         <div class="flex items-center gap-6 mb-12">
           <div
-            class="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-primary to-primary-container shadow-[0_0_20px_rgba(99,102,241,0.15)]"
+            class="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 bg-linear-to-br from-primary to-primary-container shadow-[0_0_20px_rgba(99,102,241,0.15)]"
           >
             <span class="material-symbols-outlined text-on-primary text-2xl font-bold">
               {isEditMode() ? "manage_accounts" : "person_add"}

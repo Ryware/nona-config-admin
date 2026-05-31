@@ -13,6 +13,8 @@ interface FormFieldProps {
   required?: boolean;
   autofocus?: boolean;
   leftIcon?: string;
+  autocomplete?: string;
+  maxLength?: number;
 }
 
 export const FormField: Component<FormFieldProps> = (props) => {
@@ -36,6 +38,8 @@ export const FormField: Component<FormFieldProps> = (props) => {
           required={props.required}
           autofocus={props.autofocus}
           onkeydown={props.onKeyDown}
+          autocomplete={props.autocomplete}
+          maxLength={props.maxLength}
           leftIcon={props.leftIcon}
           class={`py-3.5${props.type === "password" ? " pr-11" : ""}`}
         />

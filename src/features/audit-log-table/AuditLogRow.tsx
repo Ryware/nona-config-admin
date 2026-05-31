@@ -41,7 +41,7 @@ export function AuditLogRow(props: AuditLogRowProps) {
                 {ks().label}
               </span>
               <code
-                class={`font-mono text-[11px] px-1.5 py-0.5 rounded border truncate max-w-[180px] bg-surface-container-high border-outline-variant/20 ${
+                class={`font-mono text-[11px] px-1.5 py-0.5 rounded border truncate max-w-45 bg-surface-container-high border-outline-variant/20 ${
                   isDeleteAction(props.entry.action)
                     ? "text-outline/60 line-through"
                     : "text-on-surface-variant"
@@ -57,7 +57,7 @@ export function AuditLogRow(props: AuditLogRowProps) {
                 <span class="text-[11.5px] text-outline truncate">{props.entry.displayName}</span>
                 <Show when={props.entry.description}>
                   <span class="text-outline/30 shrink-0">·</span>
-                  <span class="text-[11px] text-outline/50 italic truncate max-w-[220px]">
+                  <span class="text-[11px] text-outline/50 italic truncate max-w-55">
                     {props.entry.description}
                   </span>
                 </Show>
@@ -85,7 +85,7 @@ export function AuditLogRow(props: AuditLogRowProps) {
           </span>
           <Show when={props.entry.project}>
             <span
-              class="text-[10px] font-mono text-outline/50 truncate max-w-[96px] text-center"
+              class="text-[10px] font-mono text-outline/50 truncate max-w-24 text-center"
               title={props.entry.project}
             >
               {props.entry.project}

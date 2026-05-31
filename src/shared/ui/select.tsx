@@ -46,7 +46,7 @@ export function Select(props: SelectProps) {
   return (
     <Root
       options={normalizedOptions()}
-      value={props.value ? selectedOption() : undefined}
+      value={props.value ? selectedOption() ?? null : null}
       onChange={handleValueChange}
       optionValue="value"
       optionTextValue="label"
@@ -55,7 +55,7 @@ export function Select(props: SelectProps) {
       itemComponent={(itemProps: any) => (
         <Item
           item={itemProps.item}
-          class="flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-colors cursor-pointer outline-none select-none relative data-[selected]:bg-surface-container-high/60"
+          class="flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-colors cursor-pointer outline-none select-none relative data-selected:bg-surface-container-high/60"
         >
           <div class="flex items-center gap-2">
             <span class="w-4 h-4 flex items-center justify-center shrink-0">
@@ -92,7 +92,7 @@ export function Select(props: SelectProps) {
         </Icon>
       </Trigger>
       <Portal>
-        <Content class="bg-surface-container-low border border-outline-variant/20 rounded-xl shadow-2xl p-1 z-[100] min-w-[160px] animate-fade-in outline-none">
+        <Content class="bg-surface-container-low border border-outline-variant/20 rounded-xl shadow-2xl p-1 z-100 min-w-40 animate-fade-in outline-none">
           <Listbox class="outline-none" />
         </Content>
       </Portal>

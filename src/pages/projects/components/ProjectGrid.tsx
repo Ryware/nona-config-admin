@@ -40,8 +40,10 @@ export function ProjectGrid(props: ProjectGridProps) {
         when={props.isSuccess && props.projects.length > 0}
         fallback={
           <Show when={props.isSuccess}>
-            <div class="bg-surface-container-low rounded-2xl p-16 text-center border border-outline-variant/15">
-              <MIcon name="folder_open" class="text-5xl text-outline mb-4 block" />
+            <div class="bg-surface-container-low rounded-2xl p-16 text-center border border-outline-variant/15 animate-fade-in">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/5 mb-5">
+                <MIcon name="folder_open" class="text-4xl text-primary/60" />
+              </div>
               <p class="text-on-surface text-[14px] font-headline font-bold mb-1">No projects yet</p>
               <p class="text-on-surface-variant text-[13px] mb-6">Create your first project to start managing configuration.</p>
               <button
@@ -64,13 +66,14 @@ export function ProjectGrid(props: ProjectGridProps) {
             </div>
           }
         >
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-stagger">
             <For each={props.filteredProjects}>
               {(project) => (
                 <div
                   role="link"
                   tabindex="0"
-                  class="group bg-surface-container-low rounded-2xl transition-colors duration-200 hover:bg-surface-container border border-outline-variant/15 hover:border-outline-variant/30 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  aria-label={`Open project ${project.name}`}
+                  class="group bg-surface-container-low rounded-2xl transition-all duration-200 hover:bg-surface-container hover:-translate-y-0.5 border border-outline-variant/15 hover:border-outline-variant/30 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   onClick={() => props.onNavigate(project.urlSlug)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
@@ -80,9 +83,9 @@ export function ProjectGrid(props: ProjectGridProps) {
                   }}
                 >
                   <div class="p-5 flex flex-col h-full">
-                    <span class="text-[11px] font-mono text-outline mb-2 block">{project.urlSlug}</span>
+                    <span class="text-[11px] font-mono text-outline mb-2 block truncate">{project.urlSlug}</span>
 
-                    <h3 class="text-[14px] font-headline font-semibold text-on-surface leading-tight mb-2">
+                    <h3 class="text-[14px] font-headline font-semibold text-on-surface leading-tight mb-2 truncate" title={project.name}>
                       {project.name}
                     </h3>
 
@@ -97,7 +100,7 @@ export function ProjectGrid(props: ProjectGridProps) {
                       <div class="flex items-center gap-1">
                         <button
                           onClick={(e) => { e.stopPropagation(); props.onDeleteTarget(project); }}
-                          class="p-1.5 rounded-lg text-outline hover:text-error hover:bg-error/10 bg-transparent border-0 cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                          class="p-1.5 rounded-lg text-outline hover:text-error hover:bg-error/10 bg-transparent border-0 cursor-pointer transition-colors opacity-40 group-hover:opacity-100 focus:opacity-100"
                           title={`Delete ${project.name}`}
                         >
                           <MIcon name="delete_outline" class="text-[16px]" />

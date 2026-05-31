@@ -252,7 +252,7 @@ export function ProjectBulkImport(props: ProjectBulkImportProps) {
                         />
                       </td>
                       <td class="py-2.5 px-4 font-mono font-bold text-on-surface">{item.key}</td>
-                      <td class="py-2.5 px-4 font-mono text-outline truncate max-w-[150px]">{item.value}</td>
+                      <td class="py-2.5 px-4 font-mono text-outline truncate max-w-37.5">{item.value}</td>
                       <td class="py-2.5 px-4">
                         <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-surface-container-high text-outline">
                           {item.contentType}

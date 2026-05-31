@@ -7,6 +7,7 @@ import { AuthLayout } from "../../widgets/auth-shell/AuthLayout";
 import { AuthCard } from "../../widgets/auth-shell/AuthCard";
 import { FormField } from "../../widgets/auth-shell/FormField";
 import { PasswordStrengthMeter } from "../../widgets/auth-shell/PasswordStrengthMeter";
+import { MSG } from "../../shared/lib/messages";
 import type { RegisterRequest } from "../../types";
 
 export default function RegisterPage() {
@@ -28,11 +29,11 @@ export default function RegisterPage() {
       } else if (result.error) {
         setError(result.error);
       } else {
-        setError("Registration failed. Please try again.");
+        setError(MSG.REGISTER_FAILED);
       }
     },
     onError: () => {
-      setError("An unexpected error occurred. Please try again.");
+      setError(MSG.REGISTER_UNEXPECTED);
     },
   }));
 
@@ -40,7 +41,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
     if (password() !== confirmPassword()) {
-      setError("Passwords do not match");
+      setError(MSG.PASSWORD_MISMATCH);
       return;
     }
     registerMutation.mutate({ email: email(), password: password() });
@@ -59,6 +60,7 @@ export default function RegisterPage() {
             onInput={(e) => setEmail(e.currentTarget.value)}
             required
             autofocus
+            autocomplete="username"
             leftIcon="alternate_email"
           />
 
@@ -71,6 +73,7 @@ export default function RegisterPage() {
               value={password()}
               onInput={(e) => setPassword(e.currentTarget.value)}
               required
+              autocomplete="new-password"
               leftIcon="key"
             />
             <PasswordStrengthMeter password={password()} />
@@ -84,6 +87,7 @@ export default function RegisterPage() {
             value={confirmPassword()}
             onInput={(e) => setConfirmPassword(e.currentTarget.value)}
             required
+            autocomplete="new-password"
             leftIcon="shield_lock"
           />
 

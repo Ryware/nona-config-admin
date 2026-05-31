@@ -44,4 +44,16 @@ export const MSG = {
 
   // --- Bulk Import ---
   BULK_IMPORT_NO_SELECTION: "No parameters selected to import",
+
+  // --- Auth ---
+  LOGIN_FAILED: "Email or password is incorrect. Please check your credentials.",
+  REGISTER_FAILED: "Registration failed. Please try again.",
+  REGISTER_UNEXPECTED: "An unexpected error occurred during registration.",
+  SSO_FAILED_GOOGLE: "Google sign-in failed. Please try again.",
+  SSO_FAILED_MICROSOFT: "Microsoft sign-in failed. Please try again.",
+  PASSWORD_MISMATCH: "Passwords do not match.",
+  FORGOT_SEND_FAILED: "Failed to send reset email. Please try again.",
+
+  // --- Bulk Import (dynamic) ---
+  bulkImportSuccess: (count: number) => `Imported ${count} parameter${count !== 1 ? "s" : ""} successfully`,
 } as const;

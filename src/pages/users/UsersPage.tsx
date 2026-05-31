@@ -1,7 +1,7 @@
 import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
-import { createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal, Show } from "solid-js";
 import { AppLayout } from "../../widgets/app-shell/AppLayout";
 import { ConfirmDialog } from "../../shared/ui/confirm-dialog";
 import { useToast } from "../../shared/ui/toast";
@@ -9,6 +9,7 @@ import { userService } from "../../entities/user/api/user.service";
 import { userKeys } from "../../entities/user/queries/keys";
 import type { User } from "../../types";
 import { MSG } from "../../shared/lib/messages";
+import { QueryErrorBanner } from "../../shared/ui/QueryGuard";
 
 import { UsersFilters } from "./components/UsersFilters";
 import { UsersStats } from "./components/UsersStats";
@@ -86,6 +87,14 @@ export default function UsersPage() {
           </button>
         </div>
 
+        {/* Error banner */}
+        <Show when={usersQuery.isError}>
+          <QueryErrorBanner
+            message="Failed to load team members."
+            onRetry={() => usersQuery.refetch()}
+          />
+        </Show>
+
         {/* Search + filter bar */}
         <UsersFilters
           search={search()}
@@ -101,6 +110,7 @@ export default function UsersPage() {
           filteredUsers={filteredUsers()}
           onEdit={(user) => navigate("/user", { state: { userId: user.id } })}
           onDelete={(user) => setDeleteTarget(user)}
+          onInvite={() => navigate("/user")}
         />
       </div>
 

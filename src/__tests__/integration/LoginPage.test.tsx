@@ -49,7 +49,7 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /login to console/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
+      expect(screen.getByText(/email or password is incorrect/i)).toBeInTheDocument();
     });
   });
 

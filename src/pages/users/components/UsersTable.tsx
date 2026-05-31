@@ -8,6 +8,7 @@ interface UsersTableProps {
   filteredUsers: User[];
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
+  onInvite?: () => void;
 }
 
 function roleMeta(role: string) {
@@ -60,7 +61,23 @@ export function UsersTable(props: UsersTableProps) {
 
               <Show when={!props.isLoading && props.filteredUsers.length === 0 && props.totalUsersCount === 0}>
                 <tr>
-                  <td colspan="4" class="py-16 text-center text-on-surface-variant text-sm">No team members yet</td>
+                  <td colspan="4" class="py-16 text-center">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/5 mb-4">
+                      <MIcon name="group_add" class="text-3xl text-primary/60" />
+                    </div>
+                    <p class="text-on-surface text-[14px] font-headline font-bold mb-1">No team members yet</p>
+                    <p class="text-on-surface-variant text-[13px] mb-4">Invite your first team member to get started.</p>
+                    <Show when={props.onInvite}>
+                      <button
+                        type="button"
+                        onClick={() => props.onInvite?.()}
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold bg-primary text-on-primary text-[13px] transition-all active:scale-[0.98] hover:brightness-105 cursor-pointer border-0"
+                      >
+                        <MIcon name="person_add" class="text-[17px]" />
+                        Invite Member
+                      </button>
+                    </Show>
+                  </td>
                 </tr>
               </Show>
 
@@ -109,7 +126,7 @@ export function UsersTable(props: UsersTableProps) {
                           <button
                             onClick={(e) => { e.stopPropagation(); setActionUser(user); }}
                             aria-label="More options"
-                            class="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors bg-transparent border-0 cursor-pointer flex items-center justify-center rounded-lg ml-auto opacity-0 group-hover:opacity-100"
+                            class="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors bg-transparent border-0 cursor-pointer flex items-center justify-center rounded-lg ml-auto opacity-40 group-hover:opacity-100 focus:opacity-100"
                           >
                             <span class="material-symbols-outlined text-lg">more_vert</span>
                           </button>
@@ -138,11 +155,11 @@ export function UsersTable(props: UsersTableProps) {
               {/* Backdrop */}
               <div
                 onClick={closeModal}
-                class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200]"
+                class="fixed inset-0 bg-black/60 backdrop-blur-sm z-200"
               />
 
               {/* Modal */}
-              <div class="fixed inset-0 z-[201] flex items-center justify-center p-4 pointer-events-none">
+              <div class="fixed inset-0 z-201 flex items-center justify-center p-4 pointer-events-none">
                 <div
                   class="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl shadow-2xl w-full max-w-sm pointer-events-auto animate-fade-in"
                   onClick={(e) => e.stopPropagation()}

@@ -10,7 +10,7 @@ interface AuthCardProps {
 
 export const AuthCard: Component<AuthCardProps> = (props) => {
   return (
-    <div class="w-full max-w-[420px] overflow-hidden rounded-2xl border border-outline-variant/15 shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-surface-container-low animate-fade-in">
+    <div class="w-full max-w-105 overflow-hidden rounded-2xl border border-outline-variant/15 shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-surface-container-low animate-fade-in">
       <div class="flex flex-col justify-center p-8 md:p-10">
         <div class="w-full mx-auto">
 

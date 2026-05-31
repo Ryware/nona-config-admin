@@ -1,8 +1,9 @@
 import { Title } from "@solidjs/meta";
 import { useQuery } from "@tanstack/solid-query";
-import { createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal, Show } from "solid-js";
 import { AppLayout } from "../../widgets/app-shell/AppLayout";
 import { auditLogService } from "../../entities/audit-log/api/audit-log.service";
+import { QueryErrorBanner } from "../../shared/ui/QueryGuard";
 import type { AuditLog } from "../../types";
 
 import { AuditLogDrawer } from "./components/AuditLogDrawer";
@@ -182,8 +183,15 @@ export default function AuditLogsPage() {
   return (
     <AppLayout>
       <Title>Audit Logs | Nona Config Admin</Title>
-      <div class="space-y-8">
+      <div class="space-y-8 animate-page-enter">
         <AuditLogsHeader onExport={exportLogs} />
+
+        <Show when={auditQuery.isError}>
+          <QueryErrorBanner
+            message="Failed to load audit logs."
+            onRetry={() => auditQuery.refetch()}
+          />
+        </Show>
 
         <AuditLogsFilters
           search={search()}

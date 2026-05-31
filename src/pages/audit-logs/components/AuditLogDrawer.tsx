@@ -69,11 +69,11 @@ export function AuditLogDrawer(props: AuditLogDrawerProps) {
             {/* Backdrop */}
             <div
               onClick={props.onClose}
-              class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] transition-opacity mb-0"
+              class="fixed inset-0 bg-black/70 backdrop-blur-sm z-200 transition-opacity mb-0"
             />
 
             {/* Drawer */}
-            <div class="fixed top-0 right-0 h-screen w-full max-w-[460px] bg-surface-container-lowest border-l border-outline-variant/15 z-[201] flex flex-col">
+            <div class="fixed top-0 right-0 h-screen w-full max-w-115 bg-surface-container-lowest border-l border-outline-variant/15 z-201 flex flex-col">
               {/* Header */}
               <div class="px-5 pt-5 pb-4 border-b border-outline-variant/15 flex items-start justify-between gap-3 shrink-0">
                 <div class="flex items-center gap-3">

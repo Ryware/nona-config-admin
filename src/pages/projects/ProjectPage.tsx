@@ -114,6 +114,7 @@ export default function ProjectPage() {
     try {
       await navigator.clipboard.writeText(value);
       setCopiedKey(key);
+      addToast(MSG.COPIED, "success");
       setTimeout(() => setCopiedKey(null), 1500);
     } catch {
       addToast(MSG.COPY_FAILED, "error");
@@ -300,7 +301,7 @@ export default function ProjectPage() {
     queryClient.invalidateQueries({ queryKey: projectKeys.configEntries(params.slug, activeEnvName()) });
     setShowBulkImport(false);
     addToast(
-      `Imported ${selectedItems.length} parameters successfully`,
+      MSG.bulkImportSuccess(selectedItems.length),
       "success",
     );
   };

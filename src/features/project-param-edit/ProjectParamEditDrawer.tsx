@@ -202,6 +202,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                         value={editDescription()}
                         onInput={(e: any) => setEditDescription(e.currentTarget.value)}
                         rows={3}
+                        maxLength={500}
                         class="w-full resize-none bg-surface-container-lowest border border-outline-variant/20 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-2.5 text-[13px] text-on-surface placeholder:text-outline/60 transition-all outline-none hover:border-outline-variant/30"
                         placeholder="Describe what this setting controls..."
                       />

@@ -139,8 +139,9 @@ export function AuditLogsFilters(props: AuditLogsFiltersProps) {
 
         <button
           onClick={props.clearAllFilters}
-          class="text-[12px] text-primary font-medium px-3 py-2 hover:bg-primary/10 rounded-lg transition-colors bg-transparent border-0 cursor-pointer"
+          class="text-[11px] text-outline hover:text-error transition-colors bg-transparent border-0 cursor-pointer flex items-center gap-1 font-medium"
         >
+          <MIcon name="close" class="text-[14px]" />
           Clear
         </button>
       </div>

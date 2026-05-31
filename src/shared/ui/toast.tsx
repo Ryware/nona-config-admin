@@ -1,4 +1,4 @@
-import { createContext, useContext, type ParentComponent } from "solid-js";
+import { createContext, useContext, For, type ParentComponent } from "solid-js";
 import { createStore } from "solid-js/store";
 
 export type ToastType = "success" | "error" | "info" | "warning";
@@ -75,24 +75,26 @@ const ToastContainer: ParentComponent<{
   removeToast: (id: string) => void;
 }> = (props) => {
   return (
-    <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2">
-      {props.toasts.map((toast) => (
-        <div
-          class={`flex items-center gap-3 rounded-xl px-4 py-3 shadow-xl max-w-sm ${toastStyles[toast.type]} animate-in`}
-        >
-          <span class="material-symbols-outlined text-[18px] shrink-0">
-            {toastIcons[toast.type]}
-          </span>
-          <span class="text-[13px] flex-1">{toast.message}</span>
-          <button
-            onClick={() => props.removeToast(toast.id)}
-            aria-label="Dismiss notification"
-            class="shrink-0 text-current opacity-60 hover:opacity-100 transition-opacity bg-transparent border-0 cursor-pointer"
+    <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2" role="status" aria-live="polite">
+      <For each={props.toasts}>
+        {(toast) => (
+          <div
+            class={`flex items-center gap-3 rounded-xl px-4 py-3 shadow-xl max-w-sm ${toastStyles[toast.type]} animate-in`}
           >
-            <span class="material-symbols-outlined text-[16px]">close</span>
-          </button>
-        </div>
-      ))}
+            <span class="material-symbols-outlined text-[18px] shrink-0">
+              {toastIcons[toast.type]}
+            </span>
+            <span class="text-[13px] flex-1">{toast.message}</span>
+            <button
+              onClick={() => props.removeToast(toast.id)}
+              aria-label="Dismiss notification"
+              class="shrink-0 text-current opacity-60 hover:opacity-100 transition-opacity bg-transparent border-0 cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          </div>
+        )}
+      </For>
     </div>
   );
 };
