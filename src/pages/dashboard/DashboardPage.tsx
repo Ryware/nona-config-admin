@@ -70,19 +70,19 @@ export default function DashboardPage() {
           <StatCard
             label="Projects"
             icon="folder"
-            value={countsQuery.data?.projects}
+            value={countsQuery.status === 'success' ? countsQuery.data?.projects : undefined}
             isLoading={countsQuery.isLoading}
           />
           <StatCard
             label="Config Entries"
             icon="settings"
-            value={countsQuery.data?.configEntries}
+            value={countsQuery.status === 'success' ? countsQuery.data?.configEntries : undefined}
             isLoading={countsQuery.isLoading}
           />
           <StatCard
             label="Team Members"
             icon="group"
-            value={countsQuery.data?.users}
+            value={countsQuery.status === 'success' ? countsQuery.data?.users : undefined}
             isLoading={countsQuery.isLoading}
           />
         </div>

@@ -87,7 +87,7 @@ export const CommandPalette = (props: CommandPaletteProps) => {
 
   const filteredProjects = createMemo(() => {
     const q = query().toLowerCase().trim();
-    const projects = projectsQuery.data ?? [];
+    const projects = projectsQuery.status === 'success' ? projectsQuery.data ?? [] : [];
     if (!q) return projects.slice(0, 5);
     return projects
       .filter(
@@ -102,7 +102,8 @@ export const CommandPalette = (props: CommandPaletteProps) => {
   const filteredUsers = createMemo(() => {
     const q = query().toLowerCase().trim();
     if (!q) return [];
-    return (usersQuery.data ?? [])
+    const users = usersQuery.status === 'success' ? usersQuery.data ?? [] : [];
+    return users
       .filter(
         (u) =>
           u.email.toLowerCase().includes(q) ||

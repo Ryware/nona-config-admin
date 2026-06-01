@@ -51,7 +51,7 @@ export default function ProjectsPage() {
     onError: () => addToast(MSG.PROJECT_DELETE_FAILED, "error"),
   }));
 
-  const allProjects = () => projectsQuery.data ?? [];
+  const allProjects = () => projectsQuery.status === 'success' ? projectsQuery.data ?? [] : [];
   const filteredProjects = createMemo(() => {
     const q = search().toLowerCase().trim();
     if (!q) return allProjects();

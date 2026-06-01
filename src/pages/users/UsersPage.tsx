@@ -39,7 +39,7 @@ export default function UsersPage() {
     onError: () => addToast(MSG.MEMBER_REMOVE_FAILED, "error"),
   }));
 
-  const users = () => usersQuery.data ?? [];
+  const users = () => usersQuery.status === 'success' ? usersQuery.data ?? [] : [];
 
   const filteredUsers = createMemo(() => {
     const q = search().toLowerCase().trim();

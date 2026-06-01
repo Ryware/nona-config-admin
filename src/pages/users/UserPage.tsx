@@ -219,7 +219,7 @@ export default function UserPage() {
 
               {/* Step 03 — Project Scope */}
               <UserProjectScope
-                projects={projectsQuery.data ?? []}
+                projects={projectsQuery.status === 'success' ? projectsQuery.data ?? [] : []}
                 selectedProjects={selectedProjects()}
                 onToggleProject={toggleProject}
               />

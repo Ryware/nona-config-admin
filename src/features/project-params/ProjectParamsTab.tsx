@@ -77,7 +77,7 @@ export function ProjectParamsTab(props: ProjectParamsTabProps) {
       </Show>
 
       {/* Parameters table */}
-      <Show when={props.activeEnvName && props.filteredConfig.length > 0}>
+      <Show when={props.activeEnvName && (props.isLoading || props.filteredConfig.length > 0)}>
         <ProjectParamsTable
           isLoading={props.isLoading}
           projectId={props.projectId}

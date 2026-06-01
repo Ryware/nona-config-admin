@@ -72,7 +72,9 @@ export default function ProjectPage() {
   }));
 
   const project = createMemo(() =>
-    projectsQuery.data?.find((p: Project) => p.urlSlug === params.slug),
+    projectsQuery.status === 'success'
+      ? projectsQuery.data?.find((p: Project) => p.urlSlug === params.slug)
+      : undefined
   );
 
   const projectId = createMemo(() => project()?.name ?? "");
@@ -84,7 +86,7 @@ export default function ProjectPage() {
   }));
 
   createEffect(() => {
-    const envs = environmentsQuery.data;
+    const envs = environmentsQuery.status === 'success' ? environmentsQuery.data : undefined;
     if (envs && envs.length > 0 && !activeEnvName()) {
       setActiveEnvName(envs[0].name);
     }
@@ -98,8 +100,9 @@ export default function ProjectPage() {
 
   const filteredConfig = createMemo(() => {
     const q = paramSearch().toLowerCase().trim();
-    if (!q) return configQuery.data ?? [];
-    return (configQuery.data ?? []).filter(
+    const data = configQuery.status === 'success' ? configQuery.data ?? [] : [];
+    if (!q) return data;
+    return data.filter(
       (e: ConfigEntry) =>
         e.key.toLowerCase().includes(q) ||
         e.value.toLowerCase().includes(q) ||
@@ -387,14 +390,14 @@ export default function ProjectPage() {
           <ProjectBulkImport
             onCancel={() => setShowBulkImport(false)}
             onImport={handleBulkImport}
-            existingEntries={configQuery.data ?? []}
+            existingEntries={configQuery.status === 'success' ? configQuery.data ?? [] : []}
             isPending={updateConfigMutation.isPending}
             addToast={addToast}
           />
         </Show>
 
         <ProjectEnvironments
-          environments={environmentsQuery.data ?? []}
+          environments={environmentsQuery.status === 'success' ? environmentsQuery.data ?? [] : []}
           activeEnvName={activeEnvName()}
           setActiveEnvName={setActiveEnvName}
           onCreateEnv={(name: string) =>
@@ -408,7 +411,7 @@ export default function ProjectPage() {
 
         <ProjectParamsTab
           activeEnvName={activeEnvName()}
-          environments={environmentsQuery.data ?? []}
+          environments={environmentsQuery.status === 'success' ? environmentsQuery.data ?? [] : []}
           filteredConfig={filteredConfig()}
           isLoading={configQuery.isLoading}
           projectId={projectId()}

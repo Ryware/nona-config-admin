@@ -86,11 +86,12 @@ export default function AuditLogsPage() {
     queryFn: () => auditLogService.getAll(),
   }));
 
-  const allEntries = createMemo<AuditEntry[]>(() =>
-    (auditQuery.data ?? [])
+  const allEntries = createMemo<AuditEntry[]>(() => {
+    const data = auditQuery.status === 'success' ? auditQuery.data ?? [] : [];
+    return data
       .map(mapAuditLog)
-      .sort((a, b) => b.time.getTime() - a.time.getTime()),
-  );
+      .sort((a, b) => b.time.getTime() - a.time.getTime());
+  });
 
   const filtered = createMemo(() => {
     let entries = allEntries();

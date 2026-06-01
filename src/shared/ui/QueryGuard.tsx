@@ -1,5 +1,5 @@
 import { Show, type JSX } from "solid-js";
-import type { CreateQueryResult } from "@tanstack/solid-query";
+import type { UseQueryResult } from "@tanstack/solid-query";
 import { MIcon } from "./icons";
 
 /* ── QueryGuard ──────────────────────────────────────────────────────────────
@@ -14,7 +14,7 @@ import { MIcon } from "./icons";
 
 interface QueryGuardProps<T> {
   /** The TanStack query result to guard. */
-  query: CreateQueryResult<T>;
+  query: UseQueryResult<T>;
   /** Rendered while the query is loading (first fetch). */
   loadingFallback: JSX.Element;
   /** If true, shows the empty fallback even when data arrived but is "empty". */
