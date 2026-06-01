@@ -46,7 +46,9 @@ describe('ProjectPage', () => {
   it('displays environments returned by the API', async () => {
     renderProjectPage('my-app');
 
-    expect(await screen.findByText('production')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByText('production').length).toBeGreaterThan(0);
+    });
     expect(await screen.findByText('staging')).toBeInTheDocument();
   });
 
@@ -95,6 +97,50 @@ describe('ProjectPage', () => {
     await waitFor(() => {
       expect(screen.getByLabelText(/^key$/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^value$/i)).toBeInTheDocument();
+    });
+  });
+
+  it('displays API keys returned by the API', async () => {
+    renderProjectPage('my-app');
+
+    expect(await screen.findByText('Web Client')).toBeInTheDocument();
+    expect(screen.getByText('Production Mobile')).toBeInTheDocument();
+    expect(screen.getByText('Project-wide')).toBeInTheDocument();
+  });
+
+  it('generates an environment-scoped API key', async () => {
+    renderProjectPage('my-app');
+
+    expect(await screen.findByRole('heading', { name: 'my-app' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByText('production').length).toBeGreaterThan(0);
+    });
+    const generateButton = await screen.findByRole('button', { name: /generate api key/i });
+    fireEvent.click(generateButton);
+
+    fireEvent.input(screen.getByLabelText(/^name$/i), {
+      target: { value: 'Mobile App' },
+    });
+    fireEvent.change(screen.getByLabelText(/environment/i), {
+      target: { value: 'production' },
+    });
+    fireEvent.change(screen.getByLabelText(/scope/i), {
+      target: { value: 'all' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /^generate$/i }));
+
+    expect(await screen.findByText('Mobile App')).toBeInTheDocument();
+    expect(screen.getByText('C'.repeat(64))).toBeInTheDocument();
+  });
+
+  it('deletes an API key from the project list', async () => {
+    renderProjectPage('my-app');
+
+    expect(await screen.findByText('Web Client')).toBeInTheDocument();
+    fireEvent.click(screen.getByTitle('Delete API key Web Client'));
+
+    await waitFor(() => {
+      expect(screen.queryByText('Web Client')).not.toBeInTheDocument();
     });
   });
 

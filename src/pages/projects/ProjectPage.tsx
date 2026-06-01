@@ -6,7 +6,7 @@ import { projectService } from "../../services/project.service";
 import { environmentService } from "../../services/environment.service";
 import { configEntryService } from "../../services/config-entry.service";
 import { useToast } from "../../components/ui/toast";
-import type { CreateEnvironmentRequest, CreateConfigEntryRequest, Environment } from "../../types";
+import type { ApiKey, CreateApiKeyRequest, CreateEnvironmentRequest, CreateConfigEntryRequest, Environment } from "../../types";
 import { FormField } from "../../components/auth/FormField";
 import { Select } from "../../components/ui/select";
 
@@ -42,6 +42,12 @@ export default function ProjectPage() {
   const environmentsQuery = useQuery(() => ({
     queryKey: ["environments", project()?.urlSlug],
     queryFn: () => environmentService.getAll(projectId()),
+    enabled: !!project(),
+  }));
+
+  const apiKeysQuery = useQuery(() => ({
+    queryKey: ["api-keys", project()?.urlSlug],
+    queryFn: () => projectService.getApiKeys(projectId()),
     enabled: !!project(),
   }));
 
@@ -83,6 +89,45 @@ export default function ProjectPage() {
     },
     onError: () => addToast("Failed to delete environment", "error"),
   }));
+
+  // ── API keys ───────────────────────────────────────────────────────────────
+  const [showApiKeyForm, setShowApiKeyForm] = createSignal(false);
+  const [apiKeyName, setApiKeyName] = createSignal("");
+  const [apiKeyEnvironment, setApiKeyEnvironment] = createSignal("");
+  const [apiKeyScope, setApiKeyScope] = createSignal<"client" | "server" | "all">("client");
+
+  const createApiKeyMutation = useMutation(() => ({
+    mutationFn: (req: CreateApiKeyRequest) => projectService.createApiKey(projectId(), req),
+    onSuccess: (created) => {
+      queryClient.setQueryData<ApiKey[]>(["api-keys", project()?.urlSlug], (current) => [
+        ...(current ?? []),
+        created,
+      ]);
+      setShowApiKeyForm(false);
+      setApiKeyName("");
+      setApiKeyEnvironment("");
+      setApiKeyScope("client");
+      addToast("API key generated", "success");
+    },
+    onError: () => addToast("Failed to generate API key", "error"),
+  }));
+
+  const deleteApiKeyMutation = useMutation(() => ({
+    mutationFn: (apiKeyId: number) => projectService.deleteApiKey(projectId(), apiKeyId),
+    onSuccess: (_, apiKeyId) => {
+      queryClient.setQueryData<ApiKey[]>(["api-keys", project()?.urlSlug], (current) =>
+        (current ?? []).filter((key) => key.id !== apiKeyId)
+      );
+      addToast("API key deleted", "success");
+    },
+    onError: () => addToast("Failed to delete API key", "error"),
+  }));
+
+  const copyApiKey = async (key: string) => {
+    if (!navigator.clipboard) return;
+    await navigator.clipboard.writeText(key);
+    addToast("API key copied", "success");
+  };
 
   // ── Create config entry ────────────────────────────────────────────────────
   const [showConfigForm, setShowConfigForm] = createSignal(false);
@@ -139,7 +184,14 @@ export default function ProjectPage() {
               <h2 class="text-4xl text-start font-headline font-bold text-primary tracking-tight">{project()!.name}</h2>
               <p class="text-on-surface-variant text-start max-w-xl leading-relaxed text-sm">{project()!.description || "No description"}</p>
             </div>
-            <div class="flex gap-3">
+            <div class="flex flex-wrap gap-3">
+              <button
+                onClick={() => setShowApiKeyForm(!showApiKeyForm())}
+                class="flex items-center gap-2 px-6 py-3 rounded text-[13px] font-bold bg-surface-container-high text-on-surface-variant hover:bg-surface-bright transition-all active:scale-[0.98] border-0 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-[18px]">vpn_key</span>
+                Generate Key
+              </button>
               <button
                 onClick={() => setShowEnvForm(!showEnvForm())}
                 class="flex items-center gap-2 px-6 py-3 rounded text-[13px] font-bold bg-surface-container-high text-on-surface-variant hover:bg-surface-bright transition-all active:scale-[0.98] border-0 cursor-pointer"
@@ -230,6 +282,149 @@ export default function ProjectPage() {
             </div>
           </form>
         </Show>
+
+        {/* API keys */}
+        <div>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-outline">API Keys</p>
+            <button
+              onClick={() => setShowApiKeyForm(!showApiKeyForm())}
+              class="w-fit flex items-center gap-2 px-4 py-2 rounded text-[12px] font-bold bg-surface-container-high text-on-surface-variant hover:bg-surface-bright transition-all border-0 cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-[16px]">{showApiKeyForm() ? "close" : "add"}</span>
+              {showApiKeyForm() ? "Cancel" : "Generate API Key"}
+            </button>
+          </div>
+
+          <Show when={showApiKeyForm()}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!apiKeyName().trim() || !project()) return;
+                createApiKeyMutation.mutate({
+                  name: apiKeyName().trim(),
+                  environment: apiKeyEnvironment() || null,
+                  scope: apiKeyScope(),
+                });
+              }}
+              class="bg-[#161b2b] rounded p-6 border border-outline-variant/10 mb-4 grid md:grid-cols-4 gap-4"
+            >
+              <div class="group">
+                <FormField
+                  id="api-key-name"
+                  label="Name"
+                  type="text"
+                  placeholder="web-client"
+                  value={apiKeyName()}
+                  onInput={(e) => setApiKeyName(e.currentTarget.value)}
+                  required
+                />
+              </div>
+              <div class="group">
+                <label for="api-key-environment" class="block text-[12px] font-medium text-start text-[#94A3B8] mb-1.5 tracking-wide">ENVIRONMENT</label>
+                <Select
+                  id="api-key-environment"
+                  value={apiKeyEnvironment()}
+                  onChange={(e) => setApiKeyEnvironment(e.currentTarget.value)}
+                >
+                  <option value="">Project-wide</option>
+                  <For each={environmentsQuery.data ?? []}>
+                    {(env: Environment) => <option value={env.name}>{env.name}</option>}
+                  </For>
+                </Select>
+              </div>
+              <div class="group">
+                <label for="api-key-scope" class="block text-[12px] font-medium text-start text-[#94A3B8] mb-1.5 tracking-wide">SCOPE</label>
+                <Select
+                  id="api-key-scope"
+                  value={apiKeyScope()}
+                  onChange={(e) => setApiKeyScope(e.currentTarget.value as "client" | "server" | "all")}
+                >
+                  <option value="client">client</option>
+                  <option value="server">server</option>
+                  <option value="all">all</option>
+                </Select>
+              </div>
+              <div class="flex gap-2 items-end">
+                <button
+                  type="submit"
+                  disabled={createApiKeyMutation.isPending}
+                  class="flex-1 py-2.5 rounded font-bold text-on-primary text-[12px] hover:opacity-90 transition-all disabled:opacity-50 border-0 cursor-pointer whitespace-nowrap"
+                  style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+                >
+                  {createApiKeyMutation.isPending ? "…" : "Generate"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowApiKeyForm(false)}
+                  class="flex-1 py-2.5 rounded font-bold text-on-surface-variant text-[12px] bg-surface-container-high hover:bg-surface-bright transition-all border-0 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </Show>
+
+          <Show when={!apiKeysQuery.isLoading && (apiKeysQuery.data?.length ?? 0) === 0}>
+            <div class="bg-[#161b2b] rounded p-8 text-center text-on-surface-variant text-sm">No API keys yet</div>
+          </Show>
+
+          <Show when={(apiKeysQuery.data?.length ?? 0) > 0}>
+            <div class="overflow-x-auto">
+              <table class="w-full text-[12px]">
+                <thead>
+                  <tr class="border-b border-outline-variant/15">
+                    <th class="text-left py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-outline">Name</th>
+                    <th class="text-left py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-outline">Key</th>
+                    <th class="text-left py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-outline">Environment</th>
+                    <th class="text-left py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-outline">Scope</th>
+                    <th class="py-3 px-4 w-24"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <For each={apiKeysQuery.data ?? []}>
+                    {(apiKey) => (
+                      <tr class="group border-b border-outline-variant/10 hover:bg-[#161b2b] transition-colors">
+                        <td class="py-3 px-4">
+                          <span class="font-bold text-on-surface">{apiKey.name}</span>
+                        </td>
+                        <td class="py-3 px-4 min-w-[320px]">
+                          <span class="font-mono text-on-surface-variant break-all">{apiKey.key}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                          <span class="font-mono text-on-surface-variant">{apiKey.environment || "Project-wide"}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                          <span class={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${SCOPE_STYLE[apiKey.scope] ?? ""}`}>
+                            {apiKey.scope}
+                          </span>
+                        </td>
+                        <td class="py-3 px-4">
+                          <div class="flex justify-end gap-2">
+                            <button
+                              onClick={() => copyApiKey(apiKey.key)}
+                              class="text-outline hover:text-primary bg-transparent border-0 cursor-pointer"
+                              title={`Copy API key ${apiKey.name}`}
+                            >
+                              <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                            </button>
+                            <button
+                              onClick={() => deleteApiKeyMutation.mutate(apiKey.id)}
+                              class="text-outline hover:text-error bg-transparent border-0 cursor-pointer"
+                              title={`Delete API key ${apiKey.name}`}
+                            >
+                              <span class="material-symbols-outlined text-[16px]">delete_outline</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </For>
+                </tbody>
+              </table>
+            </div>
+          </Show>
+        </div>
 
         {/* Config entries table */}
         <div>
