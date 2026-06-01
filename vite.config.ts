@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'happy-dom',
       globals: true,
+      exclude: ['**/node_modules/**', '**/dist/**', 'tests/**/*.visual.spec.ts'],
       setupFiles: ['./src/__tests__/setup.ts'],
       transformMode: { web: [/\.[jt]sx$/] },
       coverage: {
