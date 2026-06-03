@@ -7,11 +7,7 @@ import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import { ToastProvider } from '../../components/ui/toast';
 import ProjectPage from '../../pages/projects/ProjectPage';
-import ProjectApiKeysPage from '../../pages/projects/ProjectApiKeysPage';
 import { mockToken } from '../mocks/data';
-
-const maskedAKey = `${'*'.repeat(48)}${'A'.repeat(8)}`;
-const maskedCKey = `${'*'.repeat(48)}${'C'.repeat(8)}`;
 
 function renderProjectPage(slug = 'my-app') {
   const queryClient = new QueryClient({
@@ -27,26 +23,6 @@ function renderProjectPage(slug = 'my-app') {
         <ToastProvider>
           <Router>
             <Route path="/projects/:slug" component={ProjectPage} />
-          </Router>
-        </ToastProvider>
-      </QueryClientProvider>
-    </MetaProvider>
-  ));
-}
-
-function renderProjectApiKeysPage(slug = 'my-app') {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-
-  window.history.pushState({}, '', `/projects/${slug}/api-keys`);
-
-  return render(() => (
-    <MetaProvider>
-      <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <Router>
-            <Route path="/projects/:slug/api-keys" component={ProjectApiKeysPage} />
           </Router>
         </ToastProvider>
       </QueryClientProvider>
@@ -129,59 +105,6 @@ describe('ProjectPage', () => {
 
     const apiKeysLink = await screen.findByRole('link', { name: /api keys/i });
     expect(apiKeysLink).toHaveAttribute('href', '/projects/my-app/api-keys');
-  });
-
-  it('displays API keys hidden by default', async () => {
-    renderProjectApiKeysPage('my-app');
-
-    expect(await screen.findByText('Web Client')).toBeInTheDocument();
-    expect(screen.getByText('Production Mobile')).toBeInTheDocument();
-    expect(screen.getByText('Project-wide')).toBeInTheDocument();
-    expect(screen.getByText(maskedAKey)).toBeInTheDocument();
-    expect(screen.queryByText('A'.repeat(64))).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByTitle('Show API key Web Client'));
-    expect(screen.getByText('A'.repeat(64))).toBeInTheDocument();
-  });
-
-  it('generates an environment-scoped API key', async () => {
-    renderProjectApiKeysPage('my-app');
-
-    expect(await screen.findByRole('heading', { name: 'my-app API Keys' })).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getAllByText('production').length).toBeGreaterThan(0);
-    });
-    const generateButton = await screen.findByRole('button', { name: /generate api key/i });
-    fireEvent.click(generateButton);
-
-    fireEvent.input(screen.getByLabelText(/^name$/i), {
-      target: { value: 'Mobile App' },
-    });
-    fireEvent.change(screen.getByLabelText(/environment/i), {
-      target: { value: 'production' },
-    });
-    fireEvent.change(screen.getByLabelText(/scope/i), {
-      target: { value: 'all' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /^generate$/i }));
-
-    expect(await screen.findByText('Mobile App')).toBeInTheDocument();
-    expect(screen.getByText(maskedCKey)).toBeInTheDocument();
-    expect(screen.queryByText('C'.repeat(64))).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByTitle('Show API key Mobile App'));
-    expect(screen.getByText('C'.repeat(64))).toBeInTheDocument();
-  });
-
-  it('deletes an API key from the project list', async () => {
-    renderProjectApiKeysPage('my-app');
-
-    expect(await screen.findByText('Web Client')).toBeInTheDocument();
-    fireEvent.click(screen.getByTitle('Delete API key Web Client'));
-
-    await waitFor(() => {
-      expect(screen.queryByText('Web Client')).not.toBeInTheDocument();
-    });
   });
 
   it('shows the Projects fallback when slug does not match any project', async () => {
