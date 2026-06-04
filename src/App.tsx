@@ -12,6 +12,7 @@ const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
 const InvitePage = lazy(() => import("./pages/auth/InvitePage"));
 const ProjectsPage = lazy(() => import("./pages/projects/ProjectsPage"));
 const ProjectPage = lazy(() => import("./pages/projects/ProjectPage"));
+const ProjectApiKeysPage = lazy(() => import("./pages/projects/ProjectApiKeysPage"));
 const UsersPage = lazy(() => import("./pages/users/UsersPage"));
 const UserPage = lazy(() => import("./pages/users/UserPage"));
 const AuditLogsPage = lazy(() => import("./pages/audit-logs/AuditLogsPage"));
@@ -55,6 +56,7 @@ const App: Component = () => {
               <Route path="/register" component={() => <PublicRoute component={RegisterPage} />} />
               <Route path="/invite/:token" component={InvitePage} />
               <Route path="/projects" component={() => <ProtectedRoute component={ProjectsPage} />} />
+              <Route path="/projects/:slug/api-keys" component={() => <ProtectedRoute component={ProjectApiKeysPage} />} />
               <Route path="/projects/:slug" component={() => <ProtectedRoute component={ProjectPage} />} />
               <Route path="/users" component={() => <ProtectedRoute component={UsersPage} />} />
               <Route path="/user" component={() => <ProtectedRoute component={UserPage} />} />

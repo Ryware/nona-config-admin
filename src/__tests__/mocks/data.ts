@@ -1,4 +1,4 @@
-import type { Project, Environment, ConfigEntry, User } from '../../types';
+import type { Project, Environment, ConfigEntry, User, ApiKey } from '../../types';
 
 export const mockProjects: Project[] = [
   {
@@ -64,6 +64,29 @@ export const mockConfigEntries: ConfigEntry[] = [
     scope: 'client',
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
+  },
+];
+
+export const mockApiKeys: ApiKey[] = [
+  {
+    id: 1,
+    name: 'Web Client',
+    key: 'A'.repeat(64),
+    project: 'my-app',
+    environment: null,
+    scope: 'client',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 2,
+    name: 'Production Mobile',
+    key: 'B'.repeat(64),
+    project: 'my-app',
+    environment: 'production',
+    scope: 'all',
+    createdAt: '2024-01-02T00:00:00Z',
+    updatedAt: '2024-01-02T00:00:00Z',
   },
 ];
 

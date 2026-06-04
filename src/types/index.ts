@@ -68,6 +68,23 @@ export interface UpdateProjectRequest {
   description?: string;
 }
 
+export interface ApiKey {
+  id: number;
+  name: string;
+  key: string;
+  project: string;
+  environment?: string | null;
+  scope: 'client' | 'server' | 'all';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateApiKeyRequest {
+  name: string;
+  environment?: string | null;
+  scope?: 'client' | 'server' | 'all';
+}
+
 // Environment Types
 export interface Environment {
   project: string;

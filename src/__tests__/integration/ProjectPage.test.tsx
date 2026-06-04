@@ -46,7 +46,9 @@ describe('ProjectPage', () => {
   it('displays environments returned by the API', async () => {
     renderProjectPage('my-app');
 
-    expect(await screen.findByText('production')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByText('production').length).toBeGreaterThan(0);
+    });
     expect(await screen.findByText('staging')).toBeInTheDocument();
   });
 
@@ -96,6 +98,13 @@ describe('ProjectPage', () => {
       expect(screen.getByLabelText(/^key$/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^value$/i)).toBeInTheDocument();
     });
+  });
+
+  it('links API keys to the dedicated project page', async () => {
+    renderProjectPage('my-app');
+
+    const apiKeysLink = await screen.findByRole('link', { name: /api keys/i });
+    expect(apiKeysLink).toHaveAttribute('href', '/projects/my-app/api-keys');
   });
 
   it('shows the Projects fallback when slug does not match any project', async () => {

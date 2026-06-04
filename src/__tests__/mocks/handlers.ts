@@ -3,6 +3,7 @@ import {
   mockProjects,
   mockEnvironments,
   mockConfigEntries,
+  mockApiKeys,
   mockUsers,
   mockToken,
 } from './data';
@@ -157,6 +158,29 @@ export const handlers = [
   }),
 
   http.delete(`${BASE}/admin/projects/:slug`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.get(`${BASE}/admin/projects/:projectId/api-keys`, ({ params }) => {
+    const keys = mockApiKeys.filter((key) => key.project === params.projectId);
+    return HttpResponse.json(keys);
+  }),
+
+  http.post(`${BASE}/admin/projects/:projectId/api-keys`, async ({ params, request }) => {
+    const body = await request.json() as { name: string; environment?: string | null; scope?: 'client' | 'server' | 'all' };
+    return HttpResponse.json({
+      id: 99,
+      name: body.name,
+      key: 'C'.repeat(64),
+      project: params.projectId,
+      environment: body.environment || null,
+      scope: body.scope ?? 'client',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }, { status: 201 });
+  }),
+
+  http.delete(`${BASE}/admin/projects/:projectId/api-keys/:apiKeyId`, () => {
     return new HttpResponse(null, { status: 204 });
   }),
 

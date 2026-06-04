@@ -1,5 +1,5 @@
 import { createSignal, createEffect, untrack, Show, For, createMemo } from "solid-js";
-import { useParams } from "@solidjs/router";
+import { A, useParams } from "@solidjs/router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import { AppLayout } from "../../components/layout/AppLayout";
 import { projectService } from "../../services/project.service";
@@ -139,7 +139,14 @@ export default function ProjectPage() {
               <h2 class="text-4xl text-start font-headline font-bold text-primary tracking-tight">{project()!.name}</h2>
               <p class="text-on-surface-variant text-start max-w-xl leading-relaxed text-sm">{project()!.description || "No description"}</p>
             </div>
-            <div class="flex gap-3">
+            <div class="flex flex-wrap gap-3">
+              <A
+                href={`/projects/${project()!.urlSlug}/api-keys`}
+                class="flex items-center gap-2 px-6 py-3 rounded text-[13px] font-bold bg-surface-container-high text-on-surface-variant hover:bg-surface-bright transition-all active:scale-[0.98] border-0 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-[18px]">vpn_key</span>
+                API Keys
+              </A>
               <button
                 onClick={() => setShowEnvForm(!showEnvForm())}
                 class="flex items-center gap-2 px-6 py-3 rounded text-[13px] font-bold bg-surface-container-high text-on-surface-variant hover:bg-surface-bright transition-all active:scale-[0.98] border-0 cursor-pointer"
