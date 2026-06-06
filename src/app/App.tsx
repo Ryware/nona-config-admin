@@ -1,0 +1,67 @@
+import { type Component, lazy, Suspense } from "solid-js";
+import { Router, Route, Navigate } from "@solidjs/router";
+import { Dynamic } from "solid-js/web";
+import { QueryClientProvider } from "@tanstack/solid-query";
+import { queryClient } from "./query-client";
+import { authService } from "../entities/auth/api/auth.service";
+// Import authStore to activate the auth:unauthorized event listener (side-effect import)
+import "../entities/auth/model/store";
+import { ToastProvider } from "../shared/ui/toast";
+import { RouteLoader } from "../shared/ui/Skeleton";
+import "./App.css"; // intentionally empty — styles live in src/index.css
+import { MetaProvider, Title } from "@solidjs/meta";
+
+// Lazy load pages
+const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage"));
+const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
+const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
+const InvitePage = lazy(() => import("../pages/auth/InvitePage"));
+const ProjectsPage = lazy(() => import("../pages/projects/ProjectsPage"));
+const ProjectPage = lazy(() => import("../pages/projects/ProjectPage"));
+const UsersPage = lazy(() => import("../pages/users/UsersPage"));
+const UserPage = lazy(() => import("../pages/users/UserPage"));
+const AuditLogsPage = lazy(() => import("../pages/audit-logs/AuditLogsPage"));
+
+// Protected Route Component
+const ProtectedRoute: Component<{ component: Component }> = (props) => {
+  if (!authService.isAuthenticated()) {
+    return <Navigate href="/login" />;
+  }
+  return <Dynamic component={props.component} />;
+};
+
+// Public Route Component (redirect to dashboard if already authenticated)
+const PublicRoute: Component<{ component: Component }> = (props) => {
+  if (authService.isAuthenticated()) {
+    return <Navigate href="/projects" />;
+  }
+  return <Dynamic component={props.component} />;
+};
+
+const App: Component = () => {
+  return (
+    <MetaProvider>
+    <Title>Nona Config Admin</Title>
+      <QueryClientProvider client={queryClient}>
+          <ToastProvider>
+            <Suspense fallback={<RouteLoader />}>
+            <Router>
+              <Route path="/" component={() => <Navigate href="/projects" />} />
+              <Route path="/login" component={() => <PublicRoute component={LoginPage} />} />
+              <Route path="/register" component={() => <PublicRoute component={RegisterPage} />} />
+              <Route path="/invite/:token" component={InvitePage} />
+              <Route path="/dashboard" component={() => <ProtectedRoute component={DashboardPage} />} />
+              <Route path="/projects" component={() => <ProtectedRoute component={ProjectsPage} />} />
+              <Route path="/projects/:slug" component={() => <ProtectedRoute component={ProjectPage} />} />
+              <Route path="/users" component={() => <ProtectedRoute component={UsersPage} />} />
+              <Route path="/user" component={() => <ProtectedRoute component={UserPage} />} />
+              <Route path="/audit-logs" component={() => <ProtectedRoute component={AuditLogsPage} />} />
+            </Router>
+            </Suspense>
+          </ToastProvider>
+      </QueryClientProvider>
+    </MetaProvider>
+  );
+};
+
+export default App

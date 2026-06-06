@@ -8,7 +8,23 @@ import {
   mockToken,
 } from './data';
 
-const BASE = 'http://localhost:5027';
+const getBaseUrl = () => {
+  try {
+    const url = import.meta.env.VITE_API_URL;
+    if (url && url !== "undefined") {
+      if (url.startsWith("http")) {
+        return url.replace(/\/$/, "");
+      }
+      if (typeof window !== "undefined") {
+        return new URL(url, window.location.origin).toString().replace(/\/$/, "");
+      }
+      return url.replace(/\/$/, "");
+    }
+  } catch {}
+  return "http://localhost:5027";
+};
+
+const BASE = getBaseUrl();
 
 export const handlers = [
   // ── Auth ────────────────────────────────────────────────────────────────────
@@ -286,5 +302,65 @@ export const handlers = [
 
   http.delete(`${BASE}/admin/users/:id`, () => {
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Dashboard ────────────────────────────────────────────────────────────────
+  http.get(`${BASE}/admin/dashboard/counts`, () => {
+    return HttpResponse.json({
+      projects: mockProjects.length,
+      users: mockUsers.length,
+      configEntries: mockConfigEntries.length,
+    });
+  }),
+
+  // ── Forgot Password ──────────────────────────────────────────────────────────
+  http.post(`${BASE}/auth/forgot-password`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Audit Logs ───────────────────────────────────────────────────────────────
+  http.get(`${BASE}/admin/audit-logs`, () => {
+    return HttpResponse.json([
+      {
+        id: 'log-proj-1',
+        actor: 'admin@example.com',
+        actorIsSystem: false,
+        action: 'create_project',
+        target: 'my-app',
+        project: 'my-app',
+        environment: null,
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'log-proj-2',
+        actor: 'admin@example.com',
+        actorIsSystem: false,
+        action: 'create_project',
+        target: 'backend-api',
+        project: 'backend-api',
+        environment: null,
+        createdAt: '2024-01-02T00:00:00Z',
+      },
+      {
+        id: 'log-user-1',
+        actor: 'admin@example.com',
+        actorIsSystem: false,
+        action: 'invite_user',
+        target: 'alice@example.com',
+        project: null,
+        environment: null,
+        createdAt: '2024-01-03T00:00:00Z',
+      },
+      {
+        id: 'log-user-2',
+        actor: 'admin@example.com',
+        actorIsSystem: false,
+        action: 'invite_user',
+        target: 'bob@example.com',
+        project: null,
+        environment: null,
+        createdAt: '2024-01-04T00:00:00Z',
+      },
+    ]);
   }),
 ];

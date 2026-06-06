@@ -1,8 +1,13 @@
 import { createSignal } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate, A } from "@solidjs/router";
 import { useMutation } from "@tanstack/solid-query";
-import { authService } from "../../services/auth.service";
-import { AuthLayout } from "../../components/auth/AuthLayout";
+import { authService } from "../../entities/auth/api/auth.service";
+import { authStore } from "../../entities/auth/model/store";
+import { AuthLayout } from "../../widgets/auth-shell/AuthLayout";
+import { AuthCard } from "../../widgets/auth-shell/AuthCard";
+import { FormField } from "../../widgets/auth-shell/FormField";
+import { PasswordStrengthMeter } from "../../widgets/auth-shell/PasswordStrengthMeter";
+import { MSG } from "../../shared/lib/messages";
 import type { RegisterRequest } from "../../types";
 
 export default function RegisterPage() {
@@ -16,16 +21,19 @@ export default function RegisterPage() {
     mutationFn: (data: RegisterRequest) => authService.register(data),
     onSuccess: (result) => {
       if (result.success && result.response?.token) {
-        localStorage.setItem("auth_token", result.response.token);
+        authStore.saveSession(
+          result.response.token,
+          { email: email(), role: result.response.role },
+        );
         navigate("/projects");
       } else if (result.error) {
         setError(result.error);
       } else {
-        setError("Registration failed. Please try again.");
+        setError(MSG.REGISTER_FAILED);
       }
     },
     onError: () => {
-      setError("An unexpected error occurred. Please try again.");
+      setError(MSG.REGISTER_UNEXPECTED);
     },
   }));
 
@@ -33,7 +41,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
     if (password() !== confirmPassword()) {
-      setError("Passwords do not match");
+      setError(MSG.PASSWORD_MISMATCH);
       return;
     }
     registerMutation.mutate({ email: email(), password: password() });
@@ -41,117 +49,85 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout>
-      <div class="w-full max-w-[440px] overflow-hidden rounded shadow-2xl">
-        <div class="p-10 bg-[#0e1323]">
+      <AuthCard title="Admin Registration" description="Initialize the root administrator account" error={error()}>
+        <form onSubmit={handleSubmit} class="space-y-5">
+          <FormField
+            id="reg-username"
+            label="System Username"
+            type="text"
+            placeholder="admin@nona.dev"
+            value={email()}
+            onInput={(e) => setEmail(e.currentTarget.value)}
+            required
+            autofocus
+            autocomplete="username"
+            leftIcon="alternate_email"
+          />
 
-          {/* Brand + Title */}
-          <div class="flex flex-col items-center gap-4 mb-8 text-center">
-            <div
-              class="w-12 h-12 rounded flex items-center justify-center"
-              style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
-            >
-              <span class="material-symbols-outlined text-on-primary font-bold"
-                    style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;">terminal</span>
-            </div>
-            <div>
-              <h1 class="font-headline text-2xl font-bold text-on-surface tracking-tight">Admin Registration</h1>
-              <p class="text-on-surface-variant text-sm mt-1">Initialize the root administrator account</p>
-            </div>
+          <div class="space-y-1.5">
+            <FormField
+              id="reg-password"
+              label="Root Password"
+              type="password"
+              placeholder="••••••••••••"
+              value={password()}
+              onInput={(e) => setPassword(e.currentTarget.value)}
+              required
+              autocomplete="new-password"
+              leftIcon="key"
+            />
+            <PasswordStrengthMeter password={password()} />
           </div>
 
-          {/* Error */}
-          {error() && (
-            <div class="mb-6 p-3 text-sm text-error bg-error-container/20 border border-error/20 rounded flex items-center gap-2">
-              <span class="material-symbols-outlined text-[16px]">error</span>
-              {error()}
-            </div>
-          )}
+          <FormField
+            id="reg-confirm-password"
+            label="Verify Password"
+            type="password"
+            placeholder="••••••••••••"
+            value={confirmPassword()}
+            onInput={(e) => setConfirmPassword(e.currentTarget.value)}
+            required
+            autocomplete="new-password"
+            leftIcon="shield_lock"
+          />
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} class="space-y-6">
-            <div class="group">
-              <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2 group-focus-within:text-primary transition-colors">
-                System Username
-              </label>
-              <div class="relative">
-                <span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-outline text-[18px]">alternate_email</span>
-                <input
-                  type="text"
-                  placeholder="admin@nona.dev"
-                  value={email()}
-                  onInput={(e) => setEmail(e.currentTarget.value)}
-                  required
-                  autofocus
-                  class="w-full bg-transparent border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface placeholder:text-outline/40 py-3 pl-8 pr-0 transition-all font-mono text-[13px] outline-none"
-                />
-              </div>
-            </div>
+          <div class="pt-2">
+            <button
+              type="submit"
+              disabled={registerMutation.isPending}
+              class="w-full py-3.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed bg-primary text-on-primary text-[13px] hover:brightness-105 border-0 cursor-pointer"
+            >
+              <span>{registerMutation.isPending ? "Creating account…" : "Create Account"}</span>
+              <span class="material-symbols-outlined text-[18px]">arrow_right_alt</span>
+            </button>
+          </div>
+        </form>
 
-            <div class="group">
-              <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2 group-focus-within:text-primary transition-colors">
-                Root Password
-              </label>
-              <div class="relative">
-                <span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-outline text-[18px]">key</span>
-                <input
-                  type="password"
-                  placeholder="••••••••••••"
-                  value={password()}
-                  onInput={(e) => setPassword(e.currentTarget.value)}
-                  required
-                  class="w-full bg-transparent border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface placeholder:text-outline/40 py-3 pl-8 pr-0 transition-all font-mono text-[13px] outline-none"
-                />
-              </div>
-            </div>
-
-            <div class="group">
-              <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2 group-focus-within:text-primary transition-colors">
-                Verify Password
-              </label>
-              <div class="relative">
-                <span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-outline text-[18px]">shield_lock</span>
-                <input
-                  type="password"
-                  placeholder="••••••••••••"
-                  value={confirmPassword()}
-                  onInput={(e) => setConfirmPassword(e.currentTarget.value)}
-                  required
-                  class="w-full bg-transparent border-none border-b-2 border-b-outline-variant/30 focus:ring-0 focus:border-b-primary text-on-surface placeholder:text-outline/40 py-3 pl-8 pr-0 transition-all font-mono text-[13px] outline-none"
-                />
-              </div>
-            </div>
-
-            <div class="pt-2">
-              <button
-                type="submit"
-                disabled={registerMutation.isPending}
-                class="w-full py-4 rounded font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed bg-blue-400 text-white hover:bg-blue-300"
-              >
-                <span>{registerMutation.isPending ? "Creating account…" : "Create Account"}</span>
-                <span class="material-symbols-outlined text-[18px]">arrow_right_alt</span>
-              </button>
-            </div>
-          </form>
+        <div class="mt-5 text-center text-[12px] text-on-surface-variant">
+          Already have an account?{" "}
+          <A href="/login" class="text-primary hover:text-primary/80 hover:underline font-bold transition-colors">
+            Log in
+          </A>
         </div>
 
-        {/* Security footer */}
-        <div class="px-10 py-4 bg-[#080d1d] border-t border-outline-variant/10">
-          <div class="flex items-center justify-center gap-6 text-[10px] uppercase tracking-widest text-outline">
-            <span class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-[12px]">lock</span>
+        {/* Security Info footer */}
+        <div class="mt-6 pt-5 border-t border-outline-variant/15">
+          <div class="flex items-center justify-center gap-6 text-[10px] text-outline font-medium">
+            <span class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[14px]">lock</span>
               TLS 1.3
             </span>
-            <span class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-[12px]">history</span>
-              Audit Logging
+            <span class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[14px]">history</span>
+              Audited
             </span>
-            <span class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-[12px]">verified</span>
-              Local Instance
+            <span class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[14px]">verified</span>
+              Local
             </span>
           </div>
         </div>
-      </div>
+      </AuthCard>
     </AuthLayout>
   );
 }

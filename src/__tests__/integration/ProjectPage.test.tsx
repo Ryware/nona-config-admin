@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/solid-query';
 import { MetaProvider } from '@solidjs/meta';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
-import { ToastProvider } from '../../components/ui/toast';
+import { ToastProvider } from '../../shared/ui/toast';
 import ProjectPage from '../../pages/projects/ProjectPage';
 import { mockToken } from '../mocks/data';
 

@@ -1,378 +1,525 @@
-import { createSignal, createEffect, untrack, Show, For, createMemo } from "solid-js";
-import { A, useParams } from "@solidjs/router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
-import { AppLayout } from "../../components/layout/AppLayout";
-import { projectService } from "../../services/project.service";
-import { environmentService } from "../../services/environment.service";
-import { configEntryService } from "../../services/config-entry.service";
-import { useToast } from "../../components/ui/toast";
-import type { CreateEnvironmentRequest, CreateConfigEntryRequest, Environment } from "../../types";
-import { FormField } from "../../components/auth/FormField";
-import { Select } from "../../components/ui/select";
+import { Title } from "@solidjs/meta";
+import { useParams } from "@solidjs/router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
+import {
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+} from "solid-js";
 
-const TYPE_STYLE: Record<string, string> = {
-  string: "bg-[#161b2b] border border-primary/20 text-primary",
-  number: "bg-[#162b1b] border border-[#10B981]/20 text-[#6ee7b7]",
-  boolean: "bg-[#2b2216] border border-[#F59E0B]/20 text-[#fcd34d]",
-  json: "bg-[#211b2b] border border-secondary/20 text-secondary",
-};
+import { AppLayout } from "../../widgets/app-shell/AppLayout";
+import { ConfirmDialog } from "../../shared/ui/confirm-dialog";
+import { useToast } from "../../shared/ui/toast";
+import { configEntryService } from "../../entities/project/api/config-entry.service";
+import { environmentService } from "../../entities/project/api/environment.service";
+import { projectService } from "../../entities/project/api/project.service";
 
-const SCOPE_STYLE: Record<string, string> = {
-  all: "bg-[#1a1f2f] border border-outline-variant/20 text-outline",
-  client: "bg-[#161b2b] border border-primary/20 text-primary",
-  server: "bg-[#162b1b] border border-[#10B981]/20 text-[#6ee7b7]",
-};
+import type { ParsedImport } from "../../features/project-bulk-import/ProjectBulkImport";
+import { ProjectBulkImport } from "../../features/project-bulk-import/ProjectBulkImport";
+import { ProjectEnvironments } from "../../features/project-environments/ProjectEnvironments";
+import { ProjectParamEditDrawer } from "../../features/project-param-edit/ProjectParamEditDrawer";
+import { ProjectParamsTab } from "../../features/project-params/ProjectParamsTab";
+import { ProjectApiKeys } from "./components/ProjectApiKeys";
+import { ProjectHeader } from "./components/ProjectHeader";
+import { ProjectPageSkeleton } from "./components/ProjectPageSkeleton";
+
+import type {
+  CreateConfigEntryRequest,
+  CreateEnvironmentRequest,
+  Project,
+  ConfigEntry,
+} from "../../types";
+import {
+  localParamMetadataService,
+  autoFormatKey,
+} from "../../entities/project/api/metadata.service";
+import type { ParamRevision } from "../../entities/project/api/metadata.service";
+import { authStore } from "../../entities/auth/model/store";
+import { projectKeys } from "../../entities/project/queries/keys";
+import { useEscapeKey } from "../../shared/hooks/useEscapeKey";
+import { MSG } from "../../shared/lib/messages";
+
+
 
 export default function ProjectPage() {
   const params = useParams<{ slug: string }>();
   const queryClient = useQueryClient();
   const { addToast } = useToast();
 
+  const [activeEnvName, setActiveEnvName] = createSignal<string>("");
+  const [paramSearch, setParamSearch] = createSignal("");
+  const [copiedKey, setCopiedKey] = createSignal<string | null>(null);
+  const [showEnvForm, setShowEnvForm] = createSignal(false);
+  const [showConfigForm, setShowConfigForm] = createSignal(false);
+  const [confirmDeleteEntry, setConfirmDeleteEntry] = createSignal<
+    string | null
+  >(null);
+  const [confirmDeleteEnv, setConfirmDeleteEnv] = createSignal<string | null>(
+    null,
+  );
+  const [editingEntry, setEditingEntry] = createSignal<ConfigEntry | null>(null);
+  const [editDisplayName, setEditDisplayName] = createSignal("");
+  const [editDescription, setEditDescription] = createSignal("");
+  const [historyRevisions, setHistoryRevisions] = createSignal<ParamRevision[]>(
+    [],
+  );
+  const [showBulkImport, setShowBulkImport] = createSignal(false);
+
   const projectsQuery = useQuery(() => ({
-    queryKey: ["projects"],
+    queryKey: projectKeys.list(),
     queryFn: () => projectService.getAll(),
   }));
 
   const project = createMemo(() =>
-    projectsQuery.data?.find((p) => p.urlSlug === params.slug)
+    projectsQuery.status === 'success'
+      ? projectsQuery.data?.find((p: Project) => p.urlSlug === params.slug)
+      : undefined
   );
 
   const projectId = createMemo(() => project()?.name ?? "");
 
   const environmentsQuery = useQuery(() => ({
-    queryKey: ["environments", project()?.urlSlug],
+    queryKey: projectKeys.environments(params.slug),
     queryFn: () => environmentService.getAll(projectId()),
     enabled: !!project(),
   }));
 
-  const [activeEnvName, setActiveEnvName] = createSignal<string>("");
-
   createEffect(() => {
-    if (!untrack(activeEnvName) && environmentsQuery.data && environmentsQuery.data.length > 0) {
-      setActiveEnvName(environmentsQuery.data[0].name);
+    const envs = environmentsQuery.status === 'success' ? environmentsQuery.data : undefined;
+    if (envs && envs.length > 0 && !activeEnvName()) {
+      setActiveEnvName(envs[0].name);
     }
   });
 
   const configQuery = useQuery(() => ({
-    queryKey: ["config-entries", project()?.urlSlug, activeEnvName()],
+    queryKey: projectKeys.configEntries(params.slug, activeEnvName()),
     queryFn: () => configEntryService.getAll(projectId(), activeEnvName()),
     enabled: !!project() && !!activeEnvName(),
   }));
 
-  // ── Create env ─────────────────────────────────────────────────────────────
-  const [showEnvForm, setShowEnvForm] = createSignal(false);
-  const [envName, setEnvName] = createSignal("");
+  const filteredConfig = createMemo(() => {
+    const q = paramSearch().toLowerCase().trim();
+    const data = configQuery.status === 'success' ? configQuery.data ?? [] : [];
+    if (!q) return data;
+    return data.filter(
+      (e: ConfigEntry) =>
+        e.key.toLowerCase().includes(q) ||
+        e.value.toLowerCase().includes(q) ||
+        localParamMetadataService
+          .getMeta(projectId(), activeEnvName(), e.key)
+          .displayName.toLowerCase()
+          .includes(q),
+    );
+  });
 
+  const copyValue = async (key: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedKey(key);
+      addToast(MSG.COPIED, "success");
+      setTimeout(() => setCopiedKey(null), 1500);
+    } catch {
+      addToast(MSG.COPY_FAILED, "error");
+    }
+  };
+
+  // Close drawers on Escape
+  useEscapeKey(() => {
+    setEditingEntry(null);
+    setShowConfigForm(false);
+    setShowEnvForm(false);
+    setShowBulkImport(false);
+  });
+
+  // Env creation mutation
   const createEnvMutation = useMutation(() => ({
-    mutationFn: (req: CreateEnvironmentRequest) => environmentService.create(req),
+    mutationFn: (req: CreateEnvironmentRequest) =>
+      environmentService.create(req),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["environments"] });
+      queryClient.invalidateQueries({ queryKey: projectKeys.environments(params.slug) });
       setShowEnvForm(false);
-      setEnvName("");
-      addToast("Environment created", "success");
+      addToast(MSG.ENV_CREATED, "success");
     },
-    onError: () => addToast("Failed to create environment", "error"),
+    onError: () => addToast(MSG.ENV_CREATE_FAILED, "error"),
   }));
 
+  // Env deletion mutation
   const deleteEnvMutation = useMutation(() => ({
     mutationFn: (environmentName: string) =>
       environmentService.delete(projectId(), environmentName),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["environments"] });
-      addToast("Environment deleted", "success");
+      queryClient.invalidateQueries({ queryKey: projectKeys.environments(params.slug) });
+      addToast(MSG.ENV_DELETED, "success");
     },
-    onError: () => addToast("Failed to delete environment", "error"),
+    onError: () => addToast(MSG.ENV_DELETE_FAILED, "error"),
   }));
 
-  // ── Create config entry ────────────────────────────────────────────────────
-  const [showConfigForm, setShowConfigForm] = createSignal(false);
-  const [cfgKey, setCfgKey] = createSignal("");
-  const [cfgValue, setCfgValue] = createSignal("");
-  const [cfgType, setCfgType] = createSignal<"string" | "number" | "boolean" | "json">("string");
-  const [cfgScope] = createSignal<"client" | "server" | "all">("all");
-
+  // Param creation mutation
   const createConfigMutation = useMutation(() => ({
     mutationFn: (req: CreateConfigEntryRequest) =>
       configEntryService.upsert(req.projectId, activeEnvName(), req.key, req),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["config-entries"] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: projectKeys.configEntries(params.slug, activeEnvName()) });
+      const meta = localParamMetadataService.getMeta(
+        projectId(),
+        activeEnvName(),
+        variables.key,
+      );
+      localParamMetadataService.addRevision(
+        projectId(),
+        activeEnvName(),
+        variables.key,
+        variables.value,
+        authStore.getSession()?.email ?? "system",
+        meta.displayName,
+        meta.description,
+      );
       setShowConfigForm(false);
-      setCfgKey(""); setCfgValue("");
-      addToast("Parameter created", "success");
+      addToast(MSG.PARAM_CREATED, "success");
     },
-    onError: () => addToast("Failed to create parameter", "error"),
+    onError: () => addToast(MSG.PARAM_CREATE_FAILED, "error"),
   }));
 
+  // Param deletion mutation
   const deleteConfigMutation = useMutation(() => ({
     mutationFn: (id: string) =>
       configEntryService.delete(projectId(), activeEnvName(), id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["config-entries"] });
-      addToast("Parameter deleted", "success");
+      queryClient.invalidateQueries({ queryKey: projectKeys.configEntries(params.slug, activeEnvName()) });
+      addToast(MSG.PARAM_DELETED, "success");
     },
-    onError: () => addToast("Failed to delete parameter", "error"),
+    onError: () => addToast(MSG.PARAM_DELETE_FAILED, "error"),
   }));
 
-  const onKeyDownConfigKey = (e: KeyboardEvent) => {
-    if (e.key === " ") {
-      e.preventDefault();
+  // Drawer handlers
+  const handleOpenEditDrawer = (entry: ConfigEntry) => {
+    setEditingEntry(entry);
+    const meta = localParamMetadataService.getMeta(
+      projectId(),
+      activeEnvName(),
+      entry.key,
+    );
+    setEditDisplayName(meta.displayName);
+    setEditDescription(meta.description);
+    setHistoryRevisions(
+      localParamMetadataService.getRevisions(
+        projectId(),
+        activeEnvName(),
+        entry.key,
+      ),
+    );
+  };
+
+  // Param update settings mutation
+  const updateConfigMutation = useMutation(() => ({
+    mutationFn: (req: {
+      key: string;
+      value: string;
+      contentType: ConfigEntry['contentType'];
+      scope: ConfigEntry['scope'];
+      displayName?: string;
+      description?: string;
+    }) =>
+      configEntryService.upsert(projectId(), activeEnvName(), req.key, {
+        value: req.value,
+        contentType: req.contentType,
+        scope: req.scope,
+      }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: projectKeys.configEntries(params.slug, activeEnvName()) });
+
+      const dispName =
+        variables.displayName !== undefined
+          ? variables.displayName.trim()
+          : editDisplayName().trim();
+      const desc =
+        variables.description !== undefined
+          ? variables.description.trim()
+          : editDescription().trim();
+
+      if (editingEntry()) {
+        localParamMetadataService.setMeta(
+          projectId(),
+          activeEnvName(),
+          editingEntry()!.key,
+          { displayName: dispName, description: desc },
+        );
+      }
+
+      localParamMetadataService.addRevision(
+        projectId(),
+        activeEnvName(),
+        variables.key,
+        variables.value,
+        authStore.getSession()?.email ?? "system",
+        dispName,
+        desc,
+      );
+
+      const entry = editingEntry();
+      if (entry) {
+        setHistoryRevisions(
+          localParamMetadataService.getRevisions(
+            projectId(),
+            activeEnvName(),
+            entry.key,
+          ),
+        );
+      }
+
+      setEditingEntry(null);
+      addToast(MSG.PARAM_UPDATED, "success");
+    },
+    onError: () => addToast(MSG.PARAM_UPDATE_FAILED, "error"),
+  }));
+
+  // Bulk import callback
+  const handleBulkImport = async (selectedItems: ParsedImport[]) => {
+    for (const item of selectedItems) {
+      const dispName = autoFormatKey(item.key);
+      const desc = `Imported parameter: ${item.key}`;
+
+      localParamMetadataService.setMeta(projectId(), activeEnvName(), item.key, {
+        displayName: dispName,
+        description: desc,
+      });
+      localParamMetadataService.addRevision(
+        projectId(),
+        activeEnvName(),
+        item.key,
+        item.value,
+        authStore.getSession()?.email ?? "system",
+        dispName,
+        desc,
+      );
+
+      await configEntryService.upsert(projectId(), activeEnvName(), item.key, {
+        value: item.value,
+        contentType: item.contentType,
+        scope: item.scope,
+      });
     }
-  }
+
+    queryClient.invalidateQueries({ queryKey: projectKeys.configEntries(params.slug, activeEnvName()) });
+    setShowBulkImport(false);
+    addToast(
+      MSG.bulkImportSuccess(selectedItems.length),
+      "success",
+    );
+  };
+
+  const handleRestoreRevision = (rev: ParamRevision) => {
+    const entry = editingEntry();
+    if (entry) {
+      const currentMeta = localParamMetadataService.getMeta(
+        projectId(),
+        activeEnvName(),
+        entry.key,
+      );
+      const targetDisplayName =
+        rev.displayName !== undefined
+          ? rev.displayName
+          : currentMeta.displayName;
+      const targetDescription =
+        rev.description !== undefined
+          ? rev.description
+          : currentMeta.description;
+
+      setEditDisplayName(targetDisplayName);
+      setEditDescription(targetDescription);
+
+      updateConfigMutation.mutate({
+        key: entry.key,
+        value: rev.value,
+        contentType: entry.contentType,
+        scope: entry.scope,
+        displayName: targetDisplayName,
+        description: targetDescription,
+      });
+    }
+  };
+
+  // API key reroll mutation
+  const rerollKeysMutation = useMutation(() => ({
+    mutationFn: (keyType: 'Server' | 'Client') =>
+      projectService.rerollKeys(projectId(), keyType),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: projectKeys.detail(params.slug) });
+      queryClient.invalidateQueries({ queryKey: projectKeys.list() });
+      addToast(MSG.API_KEY_REGENERATED, "success");
+    },
+    onError: () => addToast(MSG.API_KEY_REGEN_FAILED, "error"),
+  }));
 
   return (
     <AppLayout>
-      <div class="space-y-8">
+      <Title>
+        {project()
+          ? `${project()!.name} | Nona Config Admin`
+          : "Project | Nona Config Admin"}
+      </Title>
+      <div class="space-y-6">
+        <Show when={!projectsQuery.isLoading} fallback={<ProjectPageSkeleton />}>
+        <ProjectHeader
+          project={project()}
+          showConfigForm={showConfigForm()}
+          showBulkImport={showBulkImport()}
+          showEnvForm={showEnvForm()}
+          onToggleEnvForm={() => setShowEnvForm(!showEnvForm())}
+          onToggleBulkImport={() => {
+            setShowBulkImport(!showBulkImport());
+            setShowConfigForm(false);
+          }}
+          onToggleConfigForm={() => {
+            setShowConfigForm(!showConfigForm());
+            setShowBulkImport(false);
+          }}
+        />
 
-        {/* Header */}
-        <Show when={project()} fallback={
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div class="space-y-2">
-              <h2 class="text-4xl text-start font-headline font-bold text-primary tracking-tight">Projects</h2>
-              <p class="text-on-surface-variant text-start max-w-xl leading-relaxed text-sm">
-                Manage and organize your configuration projects across environments and deployments.
-              </p>
-            </div>
-          </div>
-        }>
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div class="space-y-2">
-              <h2 class="text-4xl text-start font-headline font-bold text-primary tracking-tight">{project()!.name}</h2>
-              <p class="text-on-surface-variant text-start max-w-xl leading-relaxed text-sm">{project()!.description || "No description"}</p>
-            </div>
-            <div class="flex flex-wrap gap-3">
-              <A
-                href={`/projects/${project()!.urlSlug}/api-keys`}
-                class="flex items-center gap-2 px-6 py-3 rounded text-[13px] font-bold bg-surface-container-high text-on-surface-variant hover:bg-surface-bright transition-all active:scale-[0.98] border-0 cursor-pointer"
-              >
-                <span class="material-symbols-outlined text-[18px]">vpn_key</span>
-                API Keys
-              </A>
-              <button
-                onClick={() => setShowEnvForm(!showEnvForm())}
-                class="flex items-center gap-2 px-6 py-3 rounded text-[13px] font-bold bg-surface-container-high text-on-surface-variant hover:bg-surface-bright transition-all active:scale-[0.98] border-0 cursor-pointer"
-              >
-                <span class="material-symbols-outlined text-[18px]">add</span>
-                Add Environment
-              </button>
-              <button
-                onClick={() => setShowConfigForm(!showConfigForm())}
-                class="flex items-center gap-2 px-6 py-3 rounded text-[13px] font-bold text-on-primary transition-all active:scale-[0.98] hover:opacity-90 border-0 cursor-pointer"
-                style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
-              >
-                <span class="material-symbols-outlined text-[18px]">add</span>
-                Add Parameter
-              </button>
-            </div>
-          </div>
+        <Show when={project()}>
+          <ProjectApiKeys
+            project={project()!}
+            isRolling={rerollKeysMutation.isPending}
+            onReroll={(keyType) => rerollKeysMutation.mutate(keyType)}
+            onCopied={(msg) => addToast(msg, "success")}
+          />
         </Show>
 
-        {/* Environments */}
-        <div>
-          <p class="text-[10px] font-bold uppercase tracking-widest text-outline mb-3">Environments</p>
-          <Show
-            when={(environmentsQuery.data?.length ?? 0) > 0}
-            fallback={<span class="text-on-surface-variant text-sm">No environments yet</span>}
-          >
-            <div class="flex flex-wrap gap-2">
-              <For each={environmentsQuery.data ?? []}>
-                {(env: Environment) => (
-                  <div
-                    class={`group flex items-center gap-2 px-3 py-1.5 rounded text-[12px] font-mono cursor-pointer transition-all ${activeEnvName() === env.name
-                      ? "border-l-2 border-primary bg-[#161b2b] text-primary"
-                      : "bg-surface-container-high text-on-surface-variant hover:bg-[#161b2b] hover:text-on-surface"
-                      }`}
-                    onClick={() => setActiveEnvName(activeEnvName() === env.name ? "" : env.name)}
-                  >
-                    <span>{env.name}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteEnvMutation.mutate(env.name);
-                      }}
-                      class="opacity-0 group-hover:opacity-100 transition-opacity text-outline hover:text-error bg-transparent border-0 cursor-pointer p-0 ml-1"
-                    >
-                      <span class="material-symbols-outlined text-[14px]">close</span>
-                    </button>
-                  </div>
-                )}
-              </For>
-            </div>
-          </Show>
-        </div>
-
-        {/* Create env form */}
-        <Show when={showEnvForm()}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!envName().trim() || !project()) return;
-              createEnvMutation.mutate({ projectId: projectId(), name: envName().trim() });
-            }}
-            class="bg-[#161b2b] rounded p-6 border border-outline-variant/10 flex flex-col sm:flex-row gap-4 items-start"
-          >
-            <div class="group flex-1">
-              <FormField
-                id="project-name"
-                label="Environment Name *"
-                type="text"
-                placeholder="production"
-                value={envName()}
-                onInput={(e) => setEnvName(e.currentTarget.value)}
-                required
-              />
-            </div>
-            <div class="flex gap-2 pt-6">
-              <button
-                type="submit"
-                disabled={createEnvMutation.isPending}
-                class="px-4 py-2.5 rounded font-bold text-on-primary text-[12px] hover:opacity-90 transition-all disabled:opacity-50 border-0 cursor-pointer"
-                style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
-              >
-                {createEnvMutation.isPending ? "Creating…" : "Create"}
-              </button>
-              <button type="button" onClick={() => setShowEnvForm(false)}
-                class="px-4 py-2.5 rounded font-bold text-on-surface-variant text-[12px] bg-surface-container-high hover:bg-surface-bright transition-all border-0 cursor-pointer">
-                Cancel
-              </button>
-            </div>
-          </form>
+        <Show when={showBulkImport()}>
+          <ProjectBulkImport
+            onCancel={() => setShowBulkImport(false)}
+            onImport={handleBulkImport}
+            existingEntries={configQuery.status === 'success' ? configQuery.data ?? [] : []}
+            isPending={updateConfigMutation.isPending}
+            addToast={addToast}
+          />
         </Show>
 
-        {/* Config entries table */}
-        <div>
-          <p class="text-[10px] font-bold uppercase tracking-widest text-outline mb-3">
-            Parameters
-            {activeEnvName() && (
-              <span class="ml-2 text-primary">
-                — {environmentsQuery.data?.find((e: Environment) => e.name === activeEnvName())?.name}
-              </span>
-            )}
-          </p>
+        <ProjectEnvironments
+          environments={environmentsQuery.status === 'success' ? environmentsQuery.data ?? [] : []}
+          activeEnvName={activeEnvName()}
+          setActiveEnvName={setActiveEnvName}
+          onCreateEnv={(name: string) =>
+            createEnvMutation.mutate({ projectId: projectId(), name })
+          }
+          onDeleteEnv={setConfirmDeleteEnv}
+          showEnvForm={showEnvForm()}
+          setShowEnvForm={setShowEnvForm}
+          createEnvPending={createEnvMutation.isPending}
+        />
 
-          <Show when={!activeEnvName()}>
-            <div class="bg-[#161b2b] rounded p-8 text-center text-on-surface-variant text-sm">
-              Select an environment above to view its parameters
-            </div>
-          </Show>
+        <ProjectParamsTab
+          activeEnvName={activeEnvName()}
+          environments={environmentsQuery.status === 'success' ? environmentsQuery.data ?? [] : []}
+          filteredConfig={filteredConfig()}
+          isLoading={configQuery.isLoading}
+          projectId={projectId()}
+          paramSearch={paramSearch()}
+          onParamSearch={setParamSearch}
+          showConfigForm={showConfigForm()}
+          onCancelCreate={() => setShowConfigForm(false)}
+          onSubmitCreate={(data) => {
+            localParamMetadataService.setMeta(
+              projectId(),
+              activeEnvName(),
+              data.key,
+              { displayName: data.displayName, description: data.description },
+            );
+            createConfigMutation.mutate({
+              projectId: projectId(),
+              key: data.key,
+              value: data.value,
+              contentType: data.contentType,
+              scope: data.scope,
+            });
+          }}
+          isCreatePending={createConfigMutation.isPending}
+          onSelectEntry={handleOpenEditDrawer}
+          onDeleteEntry={setConfirmDeleteEntry}
+          copiedKey={copiedKey()}
+          onCopyValue={copyValue}
+          getParamMeta={(proj, env, key) =>
+            localParamMetadataService.getMeta(proj, env, key)
+          }
+        />
 
-          <Show when={activeEnvName() && showConfigForm()}>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!cfgKey().trim()) return;
-                createConfigMutation.mutate({
-                  projectId: projectId(),
-                  key: cfgKey().trim(),
-                  value: cfgValue().trim(),
-                  contentType: cfgType(),
-                  scope: cfgScope(),
-                });
-              }}
-              class="bg-[#161b2b] rounded p-6 border border-outline-variant/10 mb-4 grid md:grid-cols-4 gap-4"
-            >
-              <div class="group">
-                <FormField
-                  id="config-entry-key"
-                  label="Key"
-                  type="text"
-                  placeholder="CONFIG_KEY"
-                  value={cfgKey()}
-                  onKeyDown={onKeyDownConfigKey}
-                  onInput={(e) => setCfgKey(e.currentTarget.value)}
-                  required
-                />
-              </div>
-              <div class="group">
-                <FormField
-                  id="config-entry-value"
-                  label="Value"
-                  type="text"
-                  placeholder="VALUE"
-                  value={cfgValue()}
-                  onInput={(e) => setCfgValue(e.currentTarget.value)}
-                  required
-                />
-              </div>
-              <div class="group">
-                <label class="block text-[12px] font-medium text-start text-[#94A3B8] mb-1.5 tracking-wide">TYPE</label>
-                <Select
-                  value={cfgType()}
-                  onChange={(e) => setCfgType(e.currentTarget.value as any)}
-                >
-                  <option value="string">string</option>
-                  <option value="number">number</option>
-                  <option value="boolean">boolean</option>
-                  <option value="json">json</option>
-                </Select>
-              </div>
-              <div class="flex gap-2 items-end">
-                <button
-                  type="submit"
-                  disabled={createConfigMutation.isPending}
-                  class="flex-1 py-2.5 rounded font-bold text-on-primary text-[12px] hover:opacity-90 transition-all disabled:opacity-50 border-0 cursor-pointer whitespace-nowrap"
-                  style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
-                >
-                  {createConfigMutation.isPending ? "…" : "Add"}
-                </button>
-                <button type="button" onClick={() => setShowConfigForm(false)}
-                  class="flex-1 py-2.5 rounded font-bold text-on-surface-variant text-[12px] bg-surface-container-high hover:bg-surface-bright transition-all border-0 cursor-pointer">Cancel</button>
-              </div>
-            </form>
-          </Show>
-
-          <Show when={activeEnvName() && (configQuery.data?.length ?? 0) > 0}>
-            <div class="overflow-x-auto">
-              <table class="w-full text-[12px]">
-                <thead>
-                  <tr class="border-b border-outline-variant/15">
-                    <th class="text-left py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-outline">Key</th>
-                    <th class="text-left py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-outline">Value</th>
-                    <th class="text-left py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-outline">Type</th>
-                    <th class="text-left py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-outline">Scope</th>
-                    <th class="py-3 px-4 w-16"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <For each={configQuery.data ?? []}>
-                    {(entry) => (
-                      <tr class="group border-b border-outline-variant/10 hover:bg-[#161b2b] transition-colors">
-                        <td class="py-3 px-4">
-                          <span class="font-mono text-on-surface bg-primary/10 px-2 py-0.5 rounded text-[11px]">{entry.key}</span>
-                        </td>
-                        <td class="py-3 px-4">
-                          <span class="font-mono text-on-surface-variant truncate max-w-[200px] block">{entry.value}</span>
-                        </td>
-                        <td class="py-3 px-4">
-                          <span class={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${TYPE_STYLE[entry.contentType] ?? ""}`}>
-                            {entry.contentType}
-                          </span>
-                        </td>
-                        <td class="py-3 px-4">
-                          <span class={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${SCOPE_STYLE[entry.scope] ?? ""}`}>
-                            {entry.scope}
-                          </span>
-                        </td>
-                        <td class="py-3 px-4">
-                          <button
-                            onClick={() => deleteConfigMutation.mutate(entry.key)}
-                            class="opacity-0 group-hover:opacity-100 transition-opacity text-outline hover:text-error bg-transparent border-0 cursor-pointer"
-                          >
-                            <span class="material-symbols-outlined text-[16px]">delete_outline</span>
-                          </button>
-                        </td>
-                      </tr>
-                    )}
-                  </For>
-                </tbody>
-              </table>
-            </div>
-          </Show>
-
-          <Show when={activeEnvName() && !configQuery.isLoading && (configQuery.data?.length ?? 0) === 0}>
-            <div class="bg-[#161b2b] rounded p-8 text-center text-on-surface-variant text-sm">No parameters yet for this environment</div>
-          </Show>
-        </div>
+        <ProjectParamEditDrawer
+          entry={editingEntry()}
+          activeEnvName={activeEnvName()}
+          initialDisplayName={editDisplayName()}
+          initialDescription={editDescription()}
+          onClose={() => setEditingEntry(null)}
+          onSaveSettings={(data) => {
+            setEditDisplayName(data.displayName);
+            setEditDescription(data.description);
+            updateConfigMutation.mutate({
+              key: editingEntry()!.key,
+              value: data.value,
+              contentType: editingEntry()!.contentType,
+              scope: editingEntry()!.scope,
+              displayName: data.displayName,
+              description: data.description,
+            });
+          }}
+          isSaving={updateConfigMutation.isPending}
+          historyRevisions={historyRevisions()}
+          onRestoreRevision={handleRestoreRevision}
+        />
+        </Show>
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteEntry() !== null}
+        title="Delete Parameter?"
+        message={
+          <>
+            Permanently delete{" "}
+            <span class="font-mono text-primary font-bold">
+              {confirmDeleteEntry()}
+            </span>{" "}
+            from the{" "}
+            <span class="font-medium text-on-surface">{activeEnvName()}</span>{" "}
+            environment?
+          </>
+        }
+        confirmLabel="Delete Parameter"
+        variant="danger"
+        isLoading={deleteConfigMutation.isPending}
+        onConfirm={() => {
+          const key = confirmDeleteEntry();
+          if (key) {
+            deleteConfigMutation.mutate(key);
+            setConfirmDeleteEntry(null);
+          }
+        }}
+        onCancel={() => setConfirmDeleteEntry(null)}
+      />
+
+      <ConfirmDialog
+        open={confirmDeleteEnv() !== null}
+        title="Delete Environment?"
+        message={
+          <>
+            Permanently delete the{" "}
+            <span class="font-mono text-primary font-bold">
+              {confirmDeleteEnv()}
+            </span>{" "}
+            environment and all its parameters?
+          </>
+        }
+        confirmLabel="Delete Environment"
+        variant="danger"
+        isLoading={deleteEnvMutation.isPending}
+        onConfirm={() => {
+          const env = confirmDeleteEnv();
+          if (env) {
+            deleteEnvMutation.mutate(env);
+            setConfirmDeleteEnv(null);
+          }
+        }}
+        onCancel={() => setConfirmDeleteEnv(null)}
+      />
     </AppLayout>
   );
 }

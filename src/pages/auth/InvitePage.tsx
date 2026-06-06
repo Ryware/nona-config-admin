@@ -1,17 +1,15 @@
-import { createEffect, createSignal, onCleanup, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 import { useMutation, useQuery } from "@tanstack/solid-query";
-import { authService } from "../../services/auth.service";
-import { ApiRequestError } from "../../services/api-client";
-import { renderGoogleSsoButton } from "../../services/google-sso";
-import { signInWithMicrosoftPopup } from "../../services/microsoft-sso";
-import { AuthLayout } from "../../components/auth/AuthLayout";
-import { AuthCard } from "../../components/auth/AuthCard";
-import { FormField } from "../../components/auth/FormField";
-import { Button } from "../../components/ui/button";
+import { authService } from "../../entities/auth/api/auth.service";
+import { authStore } from "../../entities/auth/model/store";
+import { ApiRequestError } from "../../shared/api/client";
+import { AuthLayout } from "../../widgets/auth-shell/AuthLayout";
+import { AuthCard } from "../../widgets/auth-shell/AuthCard";
+import { FormField } from "../../widgets/auth-shell/FormField";
+import { SsoSection } from "../../widgets/auth-shell/SsoSection";
 import type { LoginResponse } from "../../types";
-
-type SsoProvider = "google" | "microsoft";
+import { MIcon } from "../../shared/ui/icons";
 
 export default function InvitePage() {
   const navigate = useNavigate();
@@ -19,11 +17,12 @@ export default function InvitePage() {
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [error, setError] = createSignal("");
-  const [activeSsoProvider, setActiveSsoProvider] = createSignal<SsoProvider | null>(null);
-  let googleButtonHost: HTMLDivElement | undefined;
 
   const completeLogin = (result: LoginResponse) => {
-    localStorage.setItem("auth_token", result.token);
+    authStore.saveSession(
+      result.token,
+      { email: result.username ?? "", role: result.role },
+    );
     navigate("/projects");
   };
 
@@ -41,60 +40,13 @@ export default function InvitePage() {
   }));
 
   const passwordMutation = useMutation(() => ({
-    mutationFn: (newPassword: string) => authService.completeInvitationWithPassword(params.token, newPassword),
+    mutationFn: (newPassword: string) =>
+      authService.completeInvitationWithPassword(params.token, newPassword),
     onSuccess: completeLogin,
     onError: (caught) => {
       setError(getInviteErrorMessage(caught, "Unable to complete invitation right now."));
     },
   }));
-
-  createEffect(() => {
-    const googleConfig = ssoConfigQuery.data?.google;
-    if (!invitationQuery.isSuccess || !googleConfig?.enabled || !googleConfig.clientId || !googleButtonHost) {
-      return;
-    }
-
-    let disposed = false;
-    let cleanup: (() => void) | undefined;
-
-    void renderGoogleSsoButton(
-      googleButtonHost,
-      googleConfig.clientId,
-      async (idToken) => {
-        setActiveSsoProvider("google");
-        setError("");
-
-        try {
-          const result = await authService.completeInvitationWithGoogle(params.token, idToken);
-          completeLogin(result);
-        } catch (caught) {
-          setError(getInviteErrorMessage(caught, "Google sign-in failed. Please try again."));
-        } finally {
-          setActiveSsoProvider(null);
-        }
-      },
-      (message) => {
-        setError(message);
-        setActiveSsoProvider(null);
-      },
-    )
-      .then((nextCleanup) => {
-        if (disposed) {
-          nextCleanup();
-          return;
-        }
-
-        cleanup = nextCleanup;
-      })
-      .catch(() => {
-        setError("Google sign-in is unavailable right now. Please try again.");
-      });
-
-    onCleanup(() => {
-      disposed = true;
-      cleanup?.();
-    });
-  });
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
@@ -108,29 +60,25 @@ export default function InvitePage() {
     passwordMutation.mutate(password());
   };
 
-  const handleMicrosoftLogin = async () => {
-    const microsoftConfig = ssoConfigQuery.data?.microsoft;
-    if (!microsoftConfig?.enabled || !microsoftConfig.clientId || !microsoftConfig.authority) {
-      setError("Microsoft sign-in is not configured.");
-      return;
-    }
-
-    setActiveSsoProvider("microsoft");
-    setError("");
-
+  const handleSsoSuccess = async (provider: "google" | "microsoft", idToken: string) => {
     try {
-      const idToken = await signInWithMicrosoftPopup(microsoftConfig.clientId, microsoftConfig.authority);
-      const result = await authService.completeInvitationWithMicrosoft(params.token, idToken);
+      const result =
+        provider === "google"
+          ? await authService.completeInvitationWithGoogle(params.token, idToken)
+          : await authService.completeInvitationWithMicrosoft(params.token, idToken);
       completeLogin(result);
     } catch (caught) {
-      setError(getInviteErrorMessage(caught, "Microsoft sign-in failed. Please try again."));
-    } finally {
-      setActiveSsoProvider(null);
+      setError(
+        getInviteErrorMessage(
+          caught,
+          `${provider === "google" ? "Google" : "Microsoft"} sign-in failed. Please try again.`
+        )
+      );
+      throw caught;
     }
   };
 
-  const isBusy = () => passwordMutation.isPending || activeSsoProvider() !== null;
-  const hasSsoOptions = () => !!(ssoConfigQuery.data?.google.enabled || ssoConfigQuery.data?.microsoft.enabled);
+  const isBusy = () => passwordMutation.isPending;
   const inviteLoadError = () => getInviteLoadError(invitationQuery.error);
 
   return (
@@ -154,12 +102,13 @@ export default function InvitePage() {
           description={`You're joining as ${invitationQuery.data?.email}. Create a password or continue with SSO to activate your account.`}
           error={error()}
         >
-          <div class="mb-6 rounded border border-outline-variant/20 bg-surface-container-low px-4 py-3 text-sm text-on-surface">
-            <div class="font-bold">{invitationQuery.data?.name || invitationQuery.data?.email}</div>
-            <div class="text-on-surface-variant">{invitationQuery.data?.email}</div>
+          <div class="mb-6 rounded-xl border border-outline-variant/15 bg-surface-container-low/40 px-4 py-3.5 text-xs text-on-surface">
+            <div class="text-[9px] font-bold text-outline uppercase tracking-wider mb-1.5 font-headline">Invited Account</div>
+            <div class="font-bold text-on-surface text-sm">{invitationQuery.data?.name || invitationQuery.data?.email}</div>
+            <div class="text-on-surface-variant font-mono text-[11px] mt-0.5">{invitationQuery.data?.email}</div>
           </div>
 
-          <form onSubmit={handleSubmit} class="space-y-6">
+          <form onSubmit={handleSubmit} class="space-y-5">
             <FormField
               id="password"
               label="Create Password"
@@ -169,6 +118,8 @@ export default function InvitePage() {
               onInput={(e) => setPassword(e.currentTarget.value)}
               required
               autofocus
+              autocomplete="new-password"
+              leftIcon="key"
             />
             <FormField
               id="confirm-password"
@@ -178,50 +129,28 @@ export default function InvitePage() {
               value={confirmPassword()}
               onInput={(e) => setConfirmPassword(e.currentTarget.value)}
               required
+              autocomplete="new-password"
+              leftIcon="shield_lock"
             />
             <div class="pt-2">
               <button
                 type="submit"
                 disabled={isBusy()}
-                class="w-full py-4 rounded font-bold text-on-primary flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
+                class="w-full py-3.5 rounded-lg font-bold bg-primary text-on-primary text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:brightness-105 cursor-pointer border-0"
               >
                 <span>{passwordMutation.isPending ? "Activating account…" : "Set Password and Continue"}</span>
-                <span class="material-symbols-outlined text-[18px]">lock</span>
+                <MIcon name="lock" class="text-[18px]" />
               </button>
             </div>
           </form>
 
-          <Show when={hasSsoOptions()}>
-            <div class="my-8 flex items-center gap-4 text-outline text-[11px] uppercase tracking-[0.2em]">
-              <div class="h-px flex-1 bg-outline/20" />
-              <span>Or skip password and use SSO</span>
-              <div class="h-px flex-1 bg-outline/20" />
-            </div>
-
-            <div class="space-y-3">
-              <Show when={ssoConfigQuery.data?.google.enabled}>
-                <div class="flex flex-col gap-2">
-                  <div ref={(element) => { googleButtonHost = element; }} class="w-full flex justify-center" />
-                  <Show when={activeSsoProvider() === "google"}>
-                    <p class="text-center text-xs text-outline">Verifying Google sign-in…</p>
-                  </Show>
-                </div>
-              </Show>
-
-              <Show when={ssoConfigQuery.data?.microsoft.enabled}>
-                <Button
-                  variant="outline"
-                  class="w-full h-12 text-on-surface"
-                  disabled={isBusy()}
-                  onClick={handleMicrosoftLogin}
-                >
-                  <span class="material-symbols-outlined text-[18px]">domain_verification</span>
-                  {activeSsoProvider() === "microsoft" ? "Connecting to Microsoft…" : "Continue with Microsoft"}
-                </Button>
-              </Show>
-            </div>
-          </Show>
+          <SsoSection
+            ssoConfig={ssoConfigQuery.data}
+            isBusy={isBusy()}
+            onSsoSuccess={handleSsoSuccess}
+            onSsoError={(msg) => setError(msg)}
+            dividerLabel="Or skip password and use SSO"
+          />
         </AuthCard>
       </Show>
     </AuthLayout>

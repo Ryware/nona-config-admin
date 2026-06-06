@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/solid-query';
 import { MetaProvider } from '@solidjs/meta';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
-import { ToastProvider } from '../../components/ui/toast';
+import { ToastProvider } from '../../shared/ui/toast';
 import LoginPage from '../../pages/auth/LoginPage';
 import { mockToken } from '../mocks/data';
 import type { JSX } from 'solid-js';
@@ -37,7 +37,7 @@ describe('LoginPage', () => {
     renderWithProviders(LoginPage);
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /login to console/i })).toBeInTheDocument();
   });
 
@@ -45,11 +45,11 @@ describe('LoginPage', () => {
     renderWithProviders(LoginPage);
 
     fireEvent.input(screen.getByLabelText(/email/i), { target: { value: 'wrong@example.com' } });
-    fireEvent.input(screen.getByLabelText(/password/i), { target: { value: 'wrongpassword' } });
+    fireEvent.input(screen.getByLabelText(/^password$/i), { target: { value: 'wrongpassword' } });
     fireEvent.click(screen.getByRole('button', { name: /login to console/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
+      expect(screen.getByText(/email or password is incorrect/i)).toBeInTheDocument();
     });
   });
 
@@ -57,7 +57,7 @@ describe('LoginPage', () => {
     renderWithProviders(LoginPage);
 
     fireEvent.input(screen.getByLabelText(/email/i), { target: { value: 'admin@example.com' } });
-    fireEvent.input(screen.getByLabelText(/password/i), { target: { value: 'password' } });
+    fireEvent.input(screen.getByLabelText(/^password$/i), { target: { value: 'password' } });
     fireEvent.click(screen.getByRole('button', { name: /login to console/i }));
 
     await waitFor(() => {
@@ -77,7 +77,7 @@ describe('LoginPage', () => {
     renderWithProviders(LoginPage);
 
     fireEvent.input(screen.getByLabelText(/email/i), { target: { value: 'admin@example.com' } });
-    fireEvent.input(screen.getByLabelText(/password/i), { target: { value: 'password' } });
+    fireEvent.input(screen.getByLabelText(/^password$/i), { target: { value: 'password' } });
     fireEvent.click(screen.getByRole('button', { name: /login to console/i }));
 
     await waitFor(() => {
