@@ -1,10 +1,9 @@
 import { Title } from "@solidjs/meta";
 import { useQuery } from "@tanstack/solid-query";
 import { Show } from "solid-js";
-import { AppLayout } from "../../widgets/app-shell/AppLayout";
+import { apiClient } from "../../shared/api/client";
 import { MIcon } from "../../shared/ui/icons";
 import { QueryErrorBanner } from "../../shared/ui/QueryGuard";
-import { apiClient } from "../../shared/api/client";
 import type { DashboardCounts } from "../../types";
 
 function fetchDashboardCounts(): Promise<DashboardCounts> {
@@ -20,19 +19,18 @@ interface StatCardProps {
 
 function StatCard(props: StatCardProps) {
   return (
-    <div class="bg-surface-container-low border border-outline-variant/15 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+    <div class="bg-surface-container-low border-outline-variant/15 flex flex-col gap-4 rounded-2xl border p-6 shadow-sm">
       <div class="flex items-center justify-between">
-        <span class="text-[11px] font-medium tracking-[0.05em] text-on-surface-variant uppercase">
+        <span class="text-on-surface-variant text-[11px] font-medium tracking-[0.05em] uppercase">
           {props.label}
         </span>
-        <span class="material-symbols-outlined text-primary text-[20px]">
-          {props.icon}
-        </span>
+        <span class="material-symbols-outlined text-primary text-[20px]">{props.icon}</span>
       </div>
-      <div class="text-[36px] font-headline font-bold text-on-surface leading-none">
-        <Show when={!props.isLoading} fallback={
-          <div class="h-9 w-16 rounded-lg bg-surface-container-highest animate-pulse" />
-        }>
+      <div class="font-headline text-on-surface text-[36px] leading-none font-bold">
+        <Show
+          when={!props.isLoading}
+          fallback={<div class="bg-surface-container-highest h-9 w-16 animate-pulse rounded-lg" />}
+        >
           {props.value?.toLocaleString() ?? "—"}
         </Show>
       </div>
@@ -43,20 +41,18 @@ function StatCard(props: StatCardProps) {
 export default function DashboardPage() {
   const countsQuery = useQuery(() => ({
     queryKey: ["dashboard-counts"],
-    queryFn: fetchDashboardCounts,
+    queryFn: fetchDashboardCounts
   }));
 
   return (
-    <AppLayout>
+    <>
       <Title>Dashboard | Nona Config Admin</Title>
-      <div class="space-y-6 animate-page-enter">
+      <div class="animate-page-enter space-y-6">
         <div class="space-y-1.5">
-          <h2 class="text-[17px] font-headline font-bold text-on-surface tracking-tight">
+          <h2 class="font-headline text-on-surface text-[17px] font-bold tracking-tight">
             Dashboard
           </h2>
-          <p class="text-[12.5px] text-on-surface-variant">
-            System overview at a glance
-          </p>
+          <p class="text-on-surface-variant text-[12.5px]">System overview at a glance</p>
         </div>
 
         <Show when={countsQuery.isError}>
@@ -66,89 +62,92 @@ export default function DashboardPage() {
           />
         </Show>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-stagger">
+        <div class="animate-stagger grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard
             label="Projects"
             icon="folder"
-            value={countsQuery.status === 'success' ? countsQuery.data?.projects : undefined}
+            value={countsQuery.status === "success" ? countsQuery.data?.projects : undefined}
             isLoading={countsQuery.isLoading}
           />
           <StatCard
             label="Config Entries"
             icon="settings"
-            value={countsQuery.status === 'success' ? countsQuery.data?.configEntries : undefined}
+            value={countsQuery.status === "success" ? countsQuery.data?.configEntries : undefined}
             isLoading={countsQuery.isLoading}
           />
           <StatCard
             label="Team Members"
             icon="group"
-            value={countsQuery.status === 'success' ? countsQuery.data?.users : undefined}
+            value={countsQuery.status === "success" ? countsQuery.data?.users : undefined}
             isLoading={countsQuery.isLoading}
           />
         </div>
 
         {/* Quick Actions */}
         <div class="space-y-3">
-          <h3 class="text-[14px] font-headline font-bold text-on-surface/90">
-            Quick Actions
-          </h3>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <h3 class="font-headline text-on-surface/90 text-[14px] font-bold">Quick Actions</h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <a
               href="/projects"
-              class="flex items-center gap-4 p-5 rounded-2xl bg-surface-container-low border border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 transition-all group cursor-pointer text-current no-underline"
+              class="bg-surface-container-low border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 group flex cursor-pointer items-center gap-4 rounded-2xl border p-5 text-current no-underline transition-all"
             >
-              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div class="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
                 <MIcon name="folder" class="text-[20px]" />
               </div>
-              <div class="flex-1 min-w-0">
-                <div class="font-headline font-semibold text-on-surface text-[14px] group-hover:text-primary transition-colors">
+              <div class="min-w-0 flex-1">
+                <div class="font-headline text-on-surface group-hover:text-primary text-[14px] font-semibold transition-colors">
                   Manage Projects
                 </div>
-                <div class="text-[11px] text-outline mt-0.5">
+                <div class="text-outline mt-0.5 text-[11px]">
                   Configure environments and parameters
                 </div>
               </div>
-              <MIcon name="chevron_right" class="text-outline text-lg group-hover:translate-x-0.5 transition-transform" />
+              <MIcon
+                name="chevron_right"
+                class="text-outline text-lg transition-transform group-hover:translate-x-0.5"
+              />
             </a>
 
             <a
               href="/users"
-              class="flex items-center gap-4 p-5 rounded-2xl bg-surface-container-low border border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 transition-all group cursor-pointer text-current no-underline"
+              class="bg-surface-container-low border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 group flex cursor-pointer items-center gap-4 rounded-2xl border p-5 text-current no-underline transition-all"
             >
-              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div class="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
                 <MIcon name="group" class="text-[20px]" />
               </div>
-              <div class="flex-1 min-w-0">
-                <div class="font-headline font-semibold text-on-surface text-[14px] group-hover:text-primary transition-colors">
+              <div class="min-w-0 flex-1">
+                <div class="font-headline text-on-surface group-hover:text-primary text-[14px] font-semibold transition-colors">
                   Team Management
                 </div>
-                <div class="text-[11px] text-outline mt-0.5">
-                  Manage members, roles, and access
-                </div>
+                <div class="text-outline mt-0.5 text-[11px]">Manage members, roles, and access</div>
               </div>
-              <MIcon name="chevron_right" class="text-outline text-lg group-hover:translate-x-0.5 transition-transform" />
+              <MIcon
+                name="chevron_right"
+                class="text-outline text-lg transition-transform group-hover:translate-x-0.5"
+              />
             </a>
 
             <a
               href="/audit-logs"
-              class="flex items-center gap-4 p-5 rounded-2xl bg-surface-container-low border border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 transition-all group cursor-pointer text-current no-underline"
+              class="bg-surface-container-low border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 group flex cursor-pointer items-center gap-4 rounded-2xl border p-5 text-current no-underline transition-all"
             >
-              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div class="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
                 <MIcon name="manage_history" class="text-[20px]" />
               </div>
-              <div class="flex-1 min-w-0">
-                <div class="font-headline font-semibold text-on-surface text-[14px] group-hover:text-primary transition-colors">
+              <div class="min-w-0 flex-1">
+                <div class="font-headline text-on-surface group-hover:text-primary text-[14px] font-semibold transition-colors">
                   Security Audit Logs
                 </div>
-                <div class="text-[11px] text-outline mt-0.5">
-                  Audit changes and user activities
-                </div>
+                <div class="text-outline mt-0.5 text-[11px]">Audit changes and user activities</div>
               </div>
-              <MIcon name="chevron_right" class="text-outline text-lg group-hover:translate-x-0.5 transition-transform" />
+              <MIcon
+                name="chevron_right"
+                class="text-outline text-lg transition-transform group-hover:translate-x-0.5"
+              />
             </a>
           </div>
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 }

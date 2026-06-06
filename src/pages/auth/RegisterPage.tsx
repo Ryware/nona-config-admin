@@ -1,14 +1,13 @@
-import { createSignal } from "solid-js";
-import { useNavigate, A } from "@solidjs/router";
+import { A, useNavigate } from "@solidjs/router";
 import { useMutation } from "@tanstack/solid-query";
+import { createSignal } from "solid-js";
 import { authService } from "../../entities/auth/api/auth.service";
 import { authStore } from "../../entities/auth/model/store";
-import { AuthLayout } from "../../widgets/auth-shell/AuthLayout";
+import { MSG } from "../../shared/lib/messages";
+import type { RegisterRequest } from "../../types";
 import { AuthCard } from "../../widgets/auth-shell/AuthCard";
 import { FormField } from "../../widgets/auth-shell/FormField";
 import { PasswordStrengthMeter } from "../../widgets/auth-shell/PasswordStrengthMeter";
-import { MSG } from "../../shared/lib/messages";
-import type { RegisterRequest } from "../../types";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -19,12 +18,12 @@ export default function RegisterPage() {
 
   const registerMutation = useMutation(() => ({
     mutationFn: (data: RegisterRequest) => authService.register(data),
-    onSuccess: (result) => {
+    onSuccess: result => {
       if (result.success && result.response?.token) {
-        authStore.saveSession(
-          result.response.token,
-          { email: email(), role: result.response.role },
-        );
+        authStore.saveSession(result.response.token, {
+          email: email(),
+          role: result.response.role
+        });
         navigate("/projects");
       } else if (result.error) {
         setError(result.error);
@@ -34,7 +33,7 @@ export default function RegisterPage() {
     },
     onError: () => {
       setError(MSG.REGISTER_UNEXPECTED);
-    },
+    }
   }));
 
   const handleSubmit = (e: Event) => {
@@ -48,8 +47,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthLayout>
-      <AuthCard title="Admin Registration" description="Initialize the root administrator account" error={error()}>
+    <>
+      <AuthCard
+        title="Admin Registration"
+        description="Initialize the root administrator account"
+        error={error()}
+      >
         <form onSubmit={handleSubmit} class="space-y-5">
           <FormField
             id="reg-username"
@@ -57,7 +60,7 @@ export default function RegisterPage() {
             type="text"
             placeholder="admin@nona.dev"
             value={email()}
-            onInput={(e) => setEmail(e.currentTarget.value)}
+            onInput={e => setEmail(e.currentTarget.value)}
             required
             autofocus
             autocomplete="username"
@@ -71,7 +74,7 @@ export default function RegisterPage() {
               type="password"
               placeholder="••••••••••••"
               value={password()}
-              onInput={(e) => setPassword(e.currentTarget.value)}
+              onInput={e => setPassword(e.currentTarget.value)}
               required
               autocomplete="new-password"
               leftIcon="key"
@@ -85,7 +88,7 @@ export default function RegisterPage() {
             type="password"
             placeholder="••••••••••••"
             value={confirmPassword()}
-            onInput={(e) => setConfirmPassword(e.currentTarget.value)}
+            onInput={e => setConfirmPassword(e.currentTarget.value)}
             required
             autocomplete="new-password"
             leftIcon="shield_lock"
@@ -95,7 +98,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={registerMutation.isPending}
-              class="w-full py-3.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed bg-primary text-on-primary text-[13px] hover:brightness-105 border-0 cursor-pointer"
+              class="bg-primary text-on-primary flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-0 py-3.5 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <span>{registerMutation.isPending ? "Creating account…" : "Create Account"}</span>
               <span class="material-symbols-outlined text-[18px]">arrow_right_alt</span>
@@ -103,16 +106,19 @@ export default function RegisterPage() {
           </div>
         </form>
 
-        <div class="mt-5 text-center text-[12px] text-on-surface-variant">
+        <div class="text-on-surface-variant mt-5 text-center text-[12px]">
           Already have an account?{" "}
-          <A href="/login" class="text-primary hover:text-primary/80 hover:underline font-bold transition-colors">
+          <A
+            href="/login"
+            class="text-primary hover:text-primary/80 font-bold transition-colors hover:underline"
+          >
             Log in
           </A>
         </div>
 
         {/* Security Info footer */}
-        <div class="mt-6 pt-5 border-t border-outline-variant/15">
-          <div class="flex items-center justify-center gap-6 text-[10px] text-outline font-medium">
+        <div class="border-outline-variant/15 mt-6 border-t pt-5">
+          <div class="text-outline flex items-center justify-center gap-6 text-[10px] font-medium">
             <span class="flex items-center gap-1.5">
               <span class="material-symbols-outlined text-[14px]">lock</span>
               TLS 1.3
@@ -128,6 +134,6 @@ export default function RegisterPage() {
           </div>
         </div>
       </AuthCard>
-    </AuthLayout>
+    </>
   );
 }

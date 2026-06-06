@@ -1,15 +1,14 @@
-import { createSignal, Show } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 import { useMutation, useQuery } from "@tanstack/solid-query";
+import { createSignal, Show } from "solid-js";
 import { authService } from "../../entities/auth/api/auth.service";
 import { authStore } from "../../entities/auth/model/store";
 import { ApiRequestError } from "../../shared/api/client";
-import { AuthLayout } from "../../widgets/auth-shell/AuthLayout";
+import { MIcon } from "../../shared/ui/icons";
+import type { LoginResponse } from "../../types";
 import { AuthCard } from "../../widgets/auth-shell/AuthCard";
 import { FormField } from "../../widgets/auth-shell/FormField";
 import { SsoSection } from "../../widgets/auth-shell/SsoSection";
-import type { LoginResponse } from "../../types";
-import { MIcon } from "../../shared/ui/icons";
 
 export default function InvitePage() {
   const navigate = useNavigate();
@@ -19,33 +18,30 @@ export default function InvitePage() {
   const [error, setError] = createSignal("");
 
   const completeLogin = (result: LoginResponse) => {
-    authStore.saveSession(
-      result.token,
-      { email: result.username ?? "", role: result.role },
-    );
+    authStore.saveSession(result.token, { email: result.username ?? "", role: result.role });
     navigate("/projects");
   };
 
   const invitationQuery = useQuery(() => ({
     queryKey: ["invitation", params.token],
     queryFn: () => authService.getInvitation(params.token),
-    retry: false,
+    retry: false
   }));
 
   const ssoConfigQuery = useQuery(() => ({
     queryKey: ["sso-config"],
     queryFn: () => authService.getSsoConfig(),
     retry: false,
-    enabled: invitationQuery.isSuccess,
+    enabled: invitationQuery.isSuccess
   }));
 
   const passwordMutation = useMutation(() => ({
     mutationFn: (newPassword: string) =>
       authService.completeInvitationWithPassword(params.token, newPassword),
     onSuccess: completeLogin,
-    onError: (caught) => {
+    onError: caught => {
       setError(getInviteErrorMessage(caught, "Unable to complete invitation right now."));
-    },
+    }
   }));
 
   const handleSubmit = (e: Event) => {
@@ -82,17 +78,21 @@ export default function InvitePage() {
   const inviteLoadError = () => getInviteLoadError(invitationQuery.error);
 
   return (
-    <AuthLayout>
+    <>
       <Show
         when={invitationQuery.isSuccess}
         fallback={
           <AuthCard
             title={invitationQuery.isPending ? "Validating Invitation" : "Invitation Unavailable"}
-            description={invitationQuery.isPending ? "Checking your invitation link…" : inviteLoadError()}
+            description={
+              invitationQuery.isPending ? "Checking your invitation link…" : inviteLoadError()
+            }
             error={!invitationQuery.isPending ? inviteLoadError() : undefined}
           >
             <Show when={invitationQuery.isPending}>
-              <p class="text-sm text-center text-on-surface-variant">Please wait while we verify your link.</p>
+              <p class="text-on-surface-variant text-center text-sm">
+                Please wait while we verify your link.
+              </p>
             </Show>
           </AuthCard>
         }
@@ -102,10 +102,16 @@ export default function InvitePage() {
           description={`You're joining as ${invitationQuery.data?.email}. Create a password or continue with SSO to activate your account.`}
           error={error()}
         >
-          <div class="mb-6 rounded-xl border border-outline-variant/15 bg-surface-container-low/40 px-4 py-3.5 text-xs text-on-surface">
-            <div class="text-[9px] font-bold text-outline uppercase tracking-wider mb-1.5 font-headline">Invited Account</div>
-            <div class="font-bold text-on-surface text-sm">{invitationQuery.data?.name || invitationQuery.data?.email}</div>
-            <div class="text-on-surface-variant font-mono text-[11px] mt-0.5">{invitationQuery.data?.email}</div>
+          <div class="border-outline-variant/15 bg-surface-container-low/40 text-on-surface mb-6 rounded-xl border px-4 py-3.5 text-xs">
+            <div class="text-outline font-headline mb-1.5 text-[9px] font-bold tracking-wider uppercase">
+              Invited Account
+            </div>
+            <div class="text-on-surface text-sm font-bold">
+              {invitationQuery.data?.name || invitationQuery.data?.email}
+            </div>
+            <div class="text-on-surface-variant mt-0.5 font-mono text-[11px]">
+              {invitationQuery.data?.email}
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} class="space-y-5">
@@ -115,7 +121,7 @@ export default function InvitePage() {
               type="password"
               placeholder="••••••••••••"
               value={password()}
-              onInput={(e) => setPassword(e.currentTarget.value)}
+              onInput={e => setPassword(e.currentTarget.value)}
               required
               autofocus
               autocomplete="new-password"
@@ -127,7 +133,7 @@ export default function InvitePage() {
               type="password"
               placeholder="••••••••••••"
               value={confirmPassword()}
-              onInput={(e) => setConfirmPassword(e.currentTarget.value)}
+              onInput={e => setConfirmPassword(e.currentTarget.value)}
               required
               autocomplete="new-password"
               leftIcon="shield_lock"
@@ -136,9 +142,11 @@ export default function InvitePage() {
               <button
                 type="submit"
                 disabled={isBusy()}
-                class="w-full py-3.5 rounded-lg font-bold bg-primary text-on-primary text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:brightness-105 cursor-pointer border-0"
+                class="bg-primary text-on-primary flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-0 py-3.5 text-xs font-bold tracking-wider uppercase shadow-md transition-all hover:brightness-105 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span>{passwordMutation.isPending ? "Activating account…" : "Set Password and Continue"}</span>
+                <span>
+                  {passwordMutation.isPending ? "Activating account…" : "Set Password and Continue"}
+                </span>
                 <MIcon name="lock" class="text-[18px]" />
               </button>
             </div>
@@ -148,12 +156,12 @@ export default function InvitePage() {
             ssoConfig={ssoConfigQuery.data}
             isBusy={isBusy()}
             onSsoSuccess={handleSsoSuccess}
-            onSsoError={(msg) => setError(msg)}
+            onSsoError={msg => setError(msg)}
             dividerLabel="Or skip password and use SSO"
           />
         </AuthCard>
       </Show>
-    </AuthLayout>
+    </>
   );
 }
 

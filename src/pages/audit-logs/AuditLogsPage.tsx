@@ -1,7 +1,6 @@
 import { Title } from "@solidjs/meta";
 import { useQuery } from "@tanstack/solid-query";
 import { createMemo, createSignal, Show } from "solid-js";
-import { AppLayout } from "../../widgets/app-shell/AppLayout";
 import { auditLogService } from "../../entities/audit-log/api/audit-log.service";
 import { QueryErrorBanner } from "../../shared/ui/QueryGuard";
 import type { AuditLog } from "../../types";
@@ -40,7 +39,7 @@ function resolveActionLabel(action: string): string {
     delete_config_entry: "Deleted Parameter",
     deleted_config_entry: "Deleted Parameter",
     delete_entry: "Deleted Parameter",
-    deleted_entry: "Deleted Parameter",
+    deleted_entry: "Deleted Parameter"
   };
   return MAP[normalized] || action;
 }
@@ -68,7 +67,7 @@ function mapAuditLog(log: AuditLog): AuditEntry {
     env,
     envStyle: ENV_STYLE[env] ?? ENV_STYLE["Global Scope"],
     sysId: String(log.id).replace(/-/g, "").slice(0, 8).toUpperCase(),
-    project: log.project ?? undefined,
+    project: log.project ?? undefined
   };
 }
 
@@ -83,38 +82,34 @@ export default function AuditLogsPage() {
 
   const auditQuery = useQuery(() => ({
     queryKey: ["audit-logs"],
-    queryFn: () => auditLogService.getAll(),
+    queryFn: () => auditLogService.getAll()
   }));
 
   const allEntries = createMemo<AuditEntry[]>(() => {
-    const data = auditQuery.status === 'success' ? auditQuery.data ?? [] : [];
-    return data
-      .map(mapAuditLog)
-      .sort((a, b) => b.time.getTime() - a.time.getTime());
+    const data = auditQuery.status === "success" ? (auditQuery.data ?? []) : [];
+    return data.map(mapAuditLog).sort((a, b) => b.time.getTime() - a.time.getTime());
   });
 
   const filtered = createMemo(() => {
     let entries = allEntries();
-    if (filterAction() !== "all")
-      entries = entries.filter((e) => e.action === filterAction());
-    if (filterEnv() !== "all")
-      entries = entries.filter((e) => e.env === filterEnv());
+    if (filterAction() !== "all") entries = entries.filter(e => e.action === filterAction());
+    if (filterEnv() !== "all") entries = entries.filter(e => e.env === filterEnv());
 
     if (dateFrom()) {
       const from = new Date(dateFrom()).getTime();
-      if (!isNaN(from)) entries = entries.filter((e) => e.time.getTime() >= from);
+      if (!isNaN(from)) entries = entries.filter(e => e.time.getTime() >= from);
     }
     if (dateTo()) {
       const to = new Date(dateTo()).getTime() + 86_400_000;
-      if (!isNaN(to)) entries = entries.filter((e) => e.time.getTime() <= to);
+      if (!isNaN(to)) entries = entries.filter(e => e.time.getTime() <= to);
     }
     if (search().trim()) {
       const q = search().toLowerCase();
       entries = entries.filter(
-        (e) =>
+        e =>
           e.actor.toLowerCase().includes(q) ||
           e.target.toLowerCase().includes(q) ||
-          (e.project ?? "").toLowerCase().includes(q),
+          (e.project ?? "").toLowerCase().includes(q)
       );
     }
     return entries;
@@ -122,10 +117,10 @@ export default function AuditLogsPage() {
 
   const totalPages = createMemo(() => Math.max(1, Math.ceil(filtered().length / PAGE_SIZE)));
   const pageEntries = createMemo(() =>
-    filtered().slice(page() * PAGE_SIZE, (page() + 1) * PAGE_SIZE),
+    filtered().slice(page() * PAGE_SIZE, (page() + 1) * PAGE_SIZE)
   );
-  const uniqueActions = createMemo(() => [...new Set(allEntries().map((e) => e.action))]);
-  const uniqueEnvs = createMemo(() => [...new Set(allEntries().map((e) => e.env))]);
+  const uniqueActions = createMemo(() => [...new Set(allEntries().map(e => e.action))]);
+  const uniqueEnvs = createMemo(() => [...new Set(allEntries().map(e => e.env))]);
   const isLoading = () => auditQuery.isLoading;
 
   const changePage = (n: number) => {
@@ -145,7 +140,7 @@ export default function AuditLogsPage() {
     const entries = filtered();
     if (format === "json") {
       const json = JSON.stringify(
-        entries.map((e) => ({
+        entries.map(e => ({
           id: e.id,
           time: e.time.toISOString(),
           actor: e.actor,
@@ -153,10 +148,10 @@ export default function AuditLogsPage() {
           target: e.target,
           environment: e.env,
           sysId: e.sysId,
-          project: e.project,
+          project: e.project
         })),
         null,
-        2,
+        2
       );
       const blob = new Blob([json], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -168,8 +163,8 @@ export default function AuditLogsPage() {
     } else {
       const header = "Time,Actor,Action,Target,Environment,SysID,Project\n";
       const rows = entries.map(
-        (e) =>
-          `"${e.time.toISOString()}","${e.actor}","${e.action}","${e.target}","${e.env}","${e.sysId}","${e.project ?? ""}"`,
+        e =>
+          `"${e.time.toISOString()}","${e.actor}","${e.action}","${e.target}","${e.env}","${e.sysId}","${e.project ?? ""}"`
       );
       const blob = new Blob([header + rows.join("\n")], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
@@ -182,9 +177,9 @@ export default function AuditLogsPage() {
   };
 
   return (
-    <AppLayout>
+    <>
       <Title>Audit Logs | Nona Config Admin</Title>
-      <div class="space-y-8 animate-page-enter">
+      <div class="animate-page-enter space-y-8">
         <AuditLogsHeader onExport={exportLogs} />
 
         <Show when={auditQuery.isError}>
@@ -196,15 +191,30 @@ export default function AuditLogsPage() {
 
         <AuditLogsFilters
           search={search()}
-          setSearch={(v) => { setSearch(v); setPage(0); }}
+          setSearch={v => {
+            setSearch(v);
+            setPage(0);
+          }}
           filterAction={filterAction()}
-          setFilterAction={(v) => { setFilterAction(v); setPage(0); }}
+          setFilterAction={v => {
+            setFilterAction(v);
+            setPage(0);
+          }}
           filterEnv={filterEnv()}
-          setFilterEnv={(v) => { setFilterEnv(v); setPage(0); }}
+          setFilterEnv={v => {
+            setFilterEnv(v);
+            setPage(0);
+          }}
           dateFrom={dateFrom()}
-          setDateFrom={(v) => { setDateFrom(v); setPage(0); }}
+          setDateFrom={v => {
+            setDateFrom(v);
+            setPage(0);
+          }}
           dateTo={dateTo()}
-          setDateTo={(v) => { setDateTo(v); setPage(0); }}
+          setDateTo={v => {
+            setDateTo(v);
+            setPage(0);
+          }}
           uniqueActions={uniqueActions()}
           uniqueEnvs={uniqueEnvs()}
           clearAllFilters={clearFilters}
@@ -221,11 +231,8 @@ export default function AuditLogsPage() {
           onChangePage={changePage}
         />
 
-        <AuditLogDrawer
-          entry={selectedEntry()}
-          onClose={() => setSelectedEntry(null)}
-        />
+        <AuditLogDrawer entry={selectedEntry()} onClose={() => setSelectedEntry(null)} />
       </div>
-    </AppLayout>
+    </>
   );
 }

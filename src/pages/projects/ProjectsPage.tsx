@@ -2,16 +2,15 @@ import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { createMemo, createSignal, Show } from "solid-js";
-import { AppLayout } from "../../widgets/app-shell/AppLayout";
-import { ConfirmDialog } from "../../shared/ui/confirm-dialog";
-import { Input } from "../../shared/ui/input";
-import { MIcon } from "../../shared/ui/icons";
-import { useToast } from "../../shared/ui/toast";
 import { projectService } from "../../entities/project/api/project.service";
 import { projectKeys } from "../../entities/project/queries/keys";
-import type { Project } from "../../types";
 import { MSG } from "../../shared/lib/messages";
+import { ConfirmDialog } from "../../shared/ui/confirm-dialog";
+import { MIcon } from "../../shared/ui/icons";
+import { Input } from "../../shared/ui/input";
 import { QueryErrorBanner } from "../../shared/ui/QueryGuard";
+import { useToast } from "../../shared/ui/toast";
+import type { Project } from "../../types";
 import { ProjectCreateForm } from "./components/ProjectCreateForm";
 import { ProjectGrid } from "./components/ProjectGrid";
 import { ProjectsStats } from "./components/ProjectsStats";
@@ -27,18 +26,17 @@ export default function ProjectsPage() {
 
   const projectsQuery = useQuery(() => ({
     queryKey: projectKeys.list(),
-    queryFn: () => projectService.getAll(),
+    queryFn: () => projectService.getAll()
   }));
 
   const createMutation = useMutation(() => ({
-    mutationFn: (data: { name: string; description?: string }) =>
-      projectService.create(data),
+    mutationFn: (data: { name: string; description?: string }) => projectService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: projectKeys.list() });
       setShowCreate(false);
       addToast(MSG.PROJECT_CREATED, "success");
     },
-    onError: () => addToast(MSG.PROJECT_CREATE_FAILED, "error"),
+    onError: () => addToast(MSG.PROJECT_CREATE_FAILED, "error")
   }));
 
   const deleteMutation = useMutation(() => ({
@@ -48,10 +46,10 @@ export default function ProjectsPage() {
       setDeleteTarget(null);
       addToast(MSG.PROJECT_DELETED, "success");
     },
-    onError: () => addToast(MSG.PROJECT_DELETE_FAILED, "error"),
+    onError: () => addToast(MSG.PROJECT_DELETE_FAILED, "error")
   }));
 
-  const allProjects = () => projectsQuery.status === 'success' ? projectsQuery.data ?? [] : [];
+  const allProjects = () => (projectsQuery.status === "success" ? (projectsQuery.data ?? []) : []);
   const filteredProjects = createMemo(() => {
     const q = search().toLowerCase().trim();
     if (!q) return allProjects();
@@ -59,18 +57,18 @@ export default function ProjectsPage() {
       (p: Project) =>
         p.name.toLowerCase().includes(q) ||
         p.urlSlug.toLowerCase().includes(q) ||
-        (p.description ?? "").toLowerCase().includes(q),
+        (p.description ?? "").toLowerCase().includes(q)
     );
   });
 
   return (
-    <AppLayout>
+    <>
       <Title>Projects | Nona Config Admin</Title>
       <div class="space-y-6">
         {/* Page header */}
-        <div class="flex items-start sm:items-center justify-between gap-4">
+        <div class="flex items-start justify-between gap-4 sm:items-center">
           <div class="space-y-1.5">
-            <h2 class="text-[17px] font-headline font-bold text-on-surface tracking-tight">
+            <h2 class="font-headline text-on-surface text-[17px] font-bold tracking-tight">
               Projects
             </h2>
             <ProjectsStats
@@ -81,7 +79,7 @@ export default function ProjectsPage() {
           </div>
           <button
             onClick={() => setShowCreate(!showCreate())}
-            class="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold bg-primary text-on-primary text-[13px] transition-all active:scale-[0.98] hover:brightness-105 shrink-0 cursor-pointer border-0"
+            class="bg-primary text-on-primary flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98]"
           >
             <MIcon name={showCreate() ? "close" : "add"} class="text-[17px]" />
             {showCreate() ? "Cancel" : "New Project"}
@@ -113,7 +111,7 @@ export default function ProjectsPage() {
         <Show when={showCreate()}>
           <ProjectCreateForm
             onCancel={() => setShowCreate(false)}
-            onSubmit={(data) => createMutation.mutate(data)}
+            onSubmit={data => createMutation.mutate(data)}
             isPending={createMutation.isPending}
           />
         </Show>
@@ -125,7 +123,7 @@ export default function ProjectsPage() {
           projects={allProjects()}
           filteredProjects={filteredProjects()}
           search={search()}
-          onNavigate={(slug) => navigate(`/projects/${slug}`)}
+          onNavigate={slug => navigate(`/projects/${slug}`)}
           onDeleteTarget={setDeleteTarget}
           onCreateClick={() => setShowCreate(true)}
         />
@@ -137,10 +135,8 @@ export default function ProjectsPage() {
           message={
             <span>
               This will permanently delete{" "}
-              <span class="font-mono text-primary font-bold">
-                {deleteTarget()?.name}
-              </span>{" "}
-              and all its configuration data.
+              <span class="text-primary font-mono font-bold">{deleteTarget()?.name}</span> and all
+              its configuration data.
             </span>
           }
           confirmLabel="Delete"
@@ -150,6 +146,6 @@ export default function ProjectsPage() {
           variant="danger"
         />
       </div>
-    </AppLayout>
+    </>
   );
 }

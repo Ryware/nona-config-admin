@@ -1,9 +1,9 @@
 import { useLocation } from "@solidjs/router";
-import { type ParentComponent, createEffect, createSignal, Show } from "solid-js";
+import { createEffect, createSignal, type JSX, Show } from "solid-js";
+import { useKeyboardShortcut } from "../../shared/hooks/useKeyboardShortcut";
 import { CommandPalette } from "./CommandPalette";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
-import { useKeyboardShortcut } from "../../shared/hooks/useKeyboardShortcut";
 
 const getInitialCollapsed = (): boolean => {
   try {
@@ -14,7 +14,7 @@ const getInitialCollapsed = (): boolean => {
   return false;
 };
 
-export const AppLayout: ParentComponent = (props) => {
+export function AppLayout(props: { children?: JSX.Element }): JSX.Element {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = createSignal(false);
   const [collapsed, setCollapsed] = createSignal(getInitialCollapsed());
@@ -39,15 +39,21 @@ export const AppLayout: ParentComponent = (props) => {
   });
 
   // Setup Keyboard Shortcuts
-  useKeyboardShortcut("k", () => setShowPalette((v) => !v), { metaOrCtrl: true });
-  useKeyboardShortcut("Escape", () => {
-    if (showPalette()) {
-      setShowPalette(false);
-    }
-  }, { metaOrCtrl: false });
+  useKeyboardShortcut("k", () => setShowPalette(v => !v), {
+    metaOrCtrl: true
+  });
+  useKeyboardShortcut(
+    "Escape",
+    () => {
+      if (showPalette()) {
+        setShowPalette(false);
+      }
+    },
+    { metaOrCtrl: false }
+  );
 
   return (
-    <div class="flex min-h-screen bg-background overflow-hidden">
+    <div class="bg-background flex min-h-screen overflow-hidden">
       <Sidebar
         isOpen={isSidebarOpen()}
         onClose={() => setIsSidebarOpen(false)}
@@ -57,7 +63,7 @@ export const AppLayout: ParentComponent = (props) => {
 
       {/* Main Area */}
       <div
-        class={`flex-1 flex flex-col min-w-0 ml-0 ${sidebarWidth()} transition-[margin-left] duration-300`}
+        class={`ml-0 flex min-w-0 flex-1 flex-col ${sidebarWidth()} transition-[margin-left] duration-300`}
       >
         <Header
           isSidebarOpen={isSidebarOpen()}
@@ -75,4 +81,4 @@ export const AppLayout: ParentComponent = (props) => {
       </Show>
     </div>
   );
-};
+}

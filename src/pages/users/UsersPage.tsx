@@ -2,14 +2,13 @@ import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { createMemo, createSignal, Show } from "solid-js";
-import { AppLayout } from "../../widgets/app-shell/AppLayout";
-import { ConfirmDialog } from "../../shared/ui/confirm-dialog";
-import { useToast } from "../../shared/ui/toast";
 import { userService } from "../../entities/user/api/user.service";
 import { userKeys } from "../../entities/user/queries/keys";
-import type { User } from "../../types";
 import { MSG } from "../../shared/lib/messages";
+import { ConfirmDialog } from "../../shared/ui/confirm-dialog";
 import { QueryErrorBanner } from "../../shared/ui/QueryGuard";
+import { useToast } from "../../shared/ui/toast";
+import type { User } from "../../types";
 
 import { UsersFilters } from "./components/UsersFilters";
 import { UsersStats } from "./components/UsersStats";
@@ -26,7 +25,7 @@ export default function UsersPage() {
 
   const usersQuery = useQuery(() => ({
     queryKey: userKeys.list(),
-    queryFn: () => userService.getAll(),
+    queryFn: () => userService.getAll()
   }));
 
   const deleteMutation = useMutation(() => ({
@@ -36,10 +35,10 @@ export default function UsersPage() {
       setDeleteTarget(null);
       addToast(MSG.MEMBER_REMOVED, "success");
     },
-    onError: () => addToast(MSG.MEMBER_REMOVE_FAILED, "error"),
+    onError: () => addToast(MSG.MEMBER_REMOVE_FAILED, "error")
   }));
 
-  const users = () => usersQuery.status === 'success' ? usersQuery.data ?? [] : [];
+  const users = () => (usersQuery.status === "success" ? (usersQuery.data ?? []) : []);
 
   const filteredUsers = createMemo(() => {
     const q = search().toLowerCase().trim();
@@ -47,31 +46,24 @@ export default function UsersPage() {
     return users().filter((u: User) => {
       const matchesRole = role === "all" || u.role === role;
       const matchesSearch =
-        !q ||
-        u.email.toLowerCase().includes(q) ||
-        (u.name ?? "").toLowerCase().includes(q);
+        !q || u.email.toLowerCase().includes(q) || (u.name ?? "").toLowerCase().includes(q);
       return matchesRole && matchesSearch;
     });
   });
 
-  const adminCount = () =>
-    users().filter((u: User) => u.role === "admin").length;
-  const editorsCount = () =>
-    users().filter((u: User) => u.role === "editor").length;
-  const viewersCount = () =>
-    users().filter((u: User) => u.role === "viewer").length;
+  const adminCount = () => users().filter((u: User) => u.role === "admin").length;
+  const editorsCount = () => users().filter((u: User) => u.role === "editor").length;
+  const viewersCount = () => users().filter((u: User) => u.role === "viewer").length;
 
   return (
-    <AppLayout>
+    <>
       <Title>Team Management | Nona Config Admin</Title>
 
       <div class="space-y-6">
         {/* Page header */}
-        <div class="flex items-start sm:items-center justify-between gap-4">
+        <div class="flex items-start justify-between gap-4 sm:items-center">
           <div class="space-y-1.5">
-            <h2 class="text-[17px] font-headline font-bold text-on-surface tracking-tight">
-              Team
-            </h2>
+            <h2 class="font-headline text-on-surface text-[17px] font-bold tracking-tight">Team</h2>
             <UsersStats
               totalMembers={users().length}
               editorsAdminsCount={editorsCount() + adminCount()}
@@ -80,7 +72,7 @@ export default function UsersPage() {
           </div>
           <button
             onClick={() => navigate("/user")}
-            class="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold bg-primary text-on-primary text-[13px] transition-all active:scale-[0.98] hover:brightness-105 shrink-0 cursor-pointer border-0"
+            class="bg-primary text-on-primary flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98]"
           >
             <span class="material-symbols-outlined text-[17px]">person_add</span>
             Invite Member
@@ -108,8 +100,8 @@ export default function UsersPage() {
           isLoading={usersQuery.isLoading}
           totalUsersCount={users().length}
           filteredUsers={filteredUsers()}
-          onEdit={(user) => navigate("/user", { state: { userId: user.id } })}
-          onDelete={(user) => setDeleteTarget(user)}
+          onEdit={user => navigate("/user", { state: { userId: user.id } })}
+          onDelete={user => setDeleteTarget(user)}
           onInvite={() => navigate("/user")}
         />
       </div>
@@ -122,15 +114,11 @@ export default function UsersPage() {
         message={
           <>
             <p class="mb-1">
-              Remove{" "}
-              <span class="font-semibold text-on-surface">
-                {deleteTarget()?.email}
-              </span>{" "}
-              from this instance?
+              Remove <span class="text-on-surface font-semibold">{deleteTarget()?.email}</span> from
+              this instance?
             </p>
-            <p class="text-[11px] text-outline font-sans">
-              All active sessions and credentials will be terminated
-              immediately.
+            <p class="text-outline font-sans text-[11px]">
+              All active sessions and credentials will be terminated immediately.
             </p>
           </>
         }
@@ -140,6 +128,6 @@ export default function UsersPage() {
         onConfirm={() => deleteMutation.mutate(deleteTarget()!.id)}
         onCancel={() => setDeleteTarget(null)}
       />
-    </AppLayout>
+    </>
   );
 }

@@ -1,15 +1,14 @@
 import { A, useNavigate } from "@solidjs/router";
 import { useMutation, useQuery } from "@tanstack/solid-query";
 import { createEffect, createSignal, Show } from "solid-js";
-import { AuthCard } from "../../widgets/auth-shell/AuthCard";
-import { AuthLayout } from "../../widgets/auth-shell/AuthLayout";
-import { FormField } from "../../widgets/auth-shell/FormField";
-import { SsoSection } from "../../widgets/auth-shell/SsoSection";
-import { ApiRequestError } from "../../shared/api/client";
-import { MSG } from "../../shared/lib/messages";
 import { authService } from "../../entities/auth/api/auth.service";
 import { authStore } from "../../entities/auth/model/store";
+import { ApiRequestError } from "../../shared/api/client";
+import { MSG } from "../../shared/lib/messages";
 import type { LoginRequest, LoginResponse } from "../../types";
+import { AuthCard } from "../../widgets/auth-shell/AuthCard";
+import { FormField } from "../../widgets/auth-shell/FormField";
+import { SsoSection } from "../../widgets/auth-shell/SsoSection";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -25,7 +24,7 @@ export default function LoginPage() {
     authStore.saveSession(
       result.token,
       { email: result.username ?? "", role: result.role },
-      rememberMe(),
+      rememberMe()
     );
     navigate("/projects");
   };
@@ -35,24 +34,24 @@ export default function LoginPage() {
     onSuccess: completeLogin,
     onError: () => {
       setError(MSG.LOGIN_FAILED);
-    },
+    }
   }));
 
   const forgotMutation = useMutation(() => ({
     mutationFn: (e: string) => authService.requestPasswordReset({ email: e }),
     onSuccess: () => setForgotSent(true),
-    onError: () => setError(MSG.FORGOT_SEND_FAILED),
+    onError: () => setError(MSG.FORGOT_SEND_FAILED)
   }));
 
   const firstTimeQuery = useQuery(() => ({
     queryKey: ["first-time"],
-    queryFn: () => authService.firstTime(),
+    queryFn: () => authService.firstTime()
   }));
 
   const ssoConfigQuery = useQuery(() => ({
     queryKey: ["sso-config"],
     queryFn: () => authService.getSsoConfig(),
-    retry: false,
+    retry: false
   }));
 
   createEffect(() => {
@@ -73,10 +72,7 @@ export default function LoginPage() {
     forgotMutation.mutate(forgotEmail());
   };
 
-  const handleSsoSuccess = async (
-    provider: "google" | "microsoft",
-    idToken: string,
-  ) => {
+  const handleSsoSuccess = async (provider: "google" | "microsoft", idToken: string) => {
     try {
       const result =
         provider === "google"
@@ -87,8 +83,8 @@ export default function LoginPage() {
       setError(
         getErrorMessage(
           caught,
-          provider === "google" ? MSG.SSO_FAILED_GOOGLE : MSG.SSO_FAILED_MICROSOFT,
-        ),
+          provider === "google" ? MSG.SSO_FAILED_GOOGLE : MSG.SSO_FAILED_MICROSOFT
+        )
       );
       throw caught;
     }
@@ -97,7 +93,7 @@ export default function LoginPage() {
   const isBusy = () => loginMutation.isPending;
 
   return (
-    <AuthLayout>
+    <>
       <Show
         when={!showForgot()}
         fallback={
@@ -105,14 +101,14 @@ export default function LoginPage() {
             <Show
               when={!forgotSent()}
               fallback={
-                <div class="text-center space-y-4 py-2">
+                <div class="space-y-4 py-2 text-center">
                   <span class="material-symbols-outlined text-primary text-[40px]">
                     mark_email_read
                   </span>
-                  <p class="text-[13px] text-on-surface-variant">
+                  <p class="text-on-surface-variant text-[13px]">
                     If an account exists for{" "}
-                    <strong class="text-on-surface">{forgotEmail()}</strong>, a
-                    reset link has been sent.
+                    <strong class="text-on-surface">{forgotEmail()}</strong>, a reset link has been
+                    sent.
                   </p>
                   <button
                     onClick={() => {
@@ -120,7 +116,7 @@ export default function LoginPage() {
                       setForgotSent(false);
                       setForgotEmail("");
                     }}
-                    class="text-primary text-[12px] font-medium hover:underline bg-transparent border-0 cursor-pointer"
+                    class="text-primary cursor-pointer border-0 bg-transparent text-[12px] font-medium hover:underline"
                   >
                     Back to login
                   </button>
@@ -128,7 +124,7 @@ export default function LoginPage() {
               }
             >
               <form onSubmit={handleForgotSubmit} class="space-y-5">
-                <p class="text-[12.5px] text-on-surface-variant">
+                <p class="text-on-surface-variant text-[12.5px]">
                   Enter your email and we'll send a password reset link.
                 </p>
                 <FormField
@@ -137,7 +133,7 @@ export default function LoginPage() {
                   type="text"
                   placeholder="your@email.com"
                   value={forgotEmail()}
-                  onInput={(e) => setForgotEmail(e.currentTarget.value)}
+                  onInput={e => setForgotEmail(e.currentTarget.value)}
                   required
                   autofocus
                   leftIcon="alternate_email"
@@ -149,14 +145,14 @@ export default function LoginPage() {
                       setShowForgot(false);
                       setError("");
                     }}
-                    class="flex-1 py-3 rounded-lg text-[13px] font-semibold bg-surface-container-high text-on-surface-variant hover:bg-surface-bright transition-all border-0 cursor-pointer"
+                    class="bg-surface-container-high text-on-surface-variant hover:bg-surface-bright flex-1 cursor-pointer rounded-lg border-0 py-3 text-[13px] font-semibold transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={forgotMutation.isPending || !forgotEmail()}
-                    class="flex-1 py-3 rounded-lg font-bold bg-primary text-on-primary text-[13px] flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-105 cursor-pointer border-0"
+                    class="bg-primary text-on-primary flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border-0 py-3 text-[13px] font-bold transition-all hover:brightness-105 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {forgotMutation.isPending ? "Sending…" : "Send Reset Link"}
                   </button>
@@ -174,7 +170,7 @@ export default function LoginPage() {
               type="email"
               placeholder="your@email.com"
               value={email()}
-              onInput={(e) => setEmail(e.currentTarget.value)}
+              onInput={e => setEmail(e.currentTarget.value)}
               required
               autofocus
               autocomplete="email"
@@ -186,30 +182,28 @@ export default function LoginPage() {
               type="password"
               placeholder="••••••••••••"
               value={password()}
-              onInput={(e) => setPassword(e.currentTarget.value)}
+              onInput={e => setPassword(e.currentTarget.value)}
               required
               autocomplete="current-password"
               leftIcon="key"
             />
             <div class="pt-2">
-              <label class="flex items-center gap-2.5 mb-4 cursor-pointer group w-fit">
+              <label class="group mb-4 flex w-fit cursor-pointer items-center gap-2.5">
                 <div
-                  class={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all shrink-0 ${
+                  class={`flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-all ${
                     rememberMe()
                       ? "bg-primary border-primary"
                       : "border-outline-variant/50 group-hover:border-outline"
                   }`}
-                  onClick={() => setRememberMe((v) => !v)}
+                  onClick={() => setRememberMe(v => !v)}
                 >
                   <Show when={rememberMe()}>
-                    <span class="material-symbols-outlined text-on-primary text-[11px]">
-                      check
-                    </span>
+                    <span class="material-symbols-outlined text-on-primary text-[11px]">check</span>
                   </Show>
                 </div>
                 <span
-                  class="text-[12px] text-on-surface-variant select-none"
-                  onClick={() => setRememberMe((v) => !v)}
+                  class="text-on-surface-variant text-[12px] select-none"
+                  onClick={() => setRememberMe(v => !v)}
                 >
                   Remember me on this device
                 </span>
@@ -217,11 +211,9 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isBusy()}
-                class="w-full py-3.5 rounded-lg font-bold bg-primary text-on-primary text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:brightness-105 cursor-pointer border-0"
+                class="bg-primary text-on-primary flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-0 py-3.5 text-xs font-bold tracking-wider uppercase shadow-md transition-all hover:brightness-105 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span>
-                  {loginMutation.isPending ? "Signing in…" : "Login to Console"}
-                </span>
+                <span>{loginMutation.isPending ? "Signing in…" : "Login to Console"}</span>
                 <span class="material-symbols-outlined text-[18px]">login</span>
               </button>
             </div>
@@ -232,7 +224,7 @@ export default function LoginPage() {
               Don't have an account?{" "}
               <A
                 href="/register"
-                class="text-primary hover:text-primary/80 hover:underline font-bold transition-colors"
+                class="text-primary hover:text-primary/80 font-bold transition-colors hover:underline"
               >
                 Register
               </A>
@@ -244,7 +236,7 @@ export default function LoginPage() {
                 setForgotEmail(email());
                 setError("");
               }}
-              class="text-outline hover:text-primary transition-colors bg-transparent border-0 cursor-pointer"
+              class="text-outline hover:text-primary cursor-pointer border-0 bg-transparent transition-colors"
             >
               Forgot password?
             </button>
@@ -254,44 +246,37 @@ export default function LoginPage() {
             ssoConfig={ssoConfigQuery.data}
             isBusy={isBusy()}
             onSsoSuccess={handleSsoSuccess}
-            onSsoError={(msg) => setError(msg)}
+            onSsoError={msg => setError(msg)}
           />
 
-          <div class="mt-6 pt-5 border-t border-outline-variant/15">
-            <div class="flex items-center justify-center gap-6 text-[10px] text-outline font-medium">
+          <div class="border-outline-variant/15 mt-6 border-t pt-5">
+            <div class="text-outline flex items-center justify-center gap-6 text-[10px] font-medium">
               <a
-                class="hover:text-primary transition-colors flex items-center gap-1.5"
+                class="hover:text-primary flex items-center gap-1.5 transition-colors"
                 href="https://www.nonaconfig.com/support"
                 target="_blank"
               >
-                <span class="material-symbols-outlined text-[15px]">
-                  contact_support
-                </span>
+                <span class="material-symbols-outlined text-[15px]">contact_support</span>
                 Support
               </a>
               <a
-                class="hover:text-primary transition-colors flex items-center gap-1.5"
+                class="hover:text-primary flex items-center gap-1.5 transition-colors"
                 href="https://www.nonaconfig.com/docs"
                 target="_blank"
               >
-                <span class="material-symbols-outlined text-[15px]">
-                  terminal
-                </span>
+                <span class="material-symbols-outlined text-[15px]">terminal</span>
                 API Docs
               </a>
             </div>
           </div>
         </AuthCard>
       </Show>
-    </AuthLayout>
+    </>
   );
 }
 
 function getErrorMessage(caught: unknown, fallback: string) {
-  if (
-    caught instanceof ApiRequestError &&
-    caught.code === "sso_user_not_registered"
-  ) {
+  if (caught instanceof ApiRequestError && caught.code === "sso_user_not_registered") {
     return "This account is not registered in the app. Ask an administrator to create your account before using SSO.";
   }
 

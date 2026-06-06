@@ -31,17 +31,12 @@ export const authStore = {
   },
 
   getToken(): string | null {
-    return (
-      localStorage.getItem("auth_token") ??
-      sessionStorage.getItem("auth_token")
-    );
+    return localStorage.getItem("auth_token") ?? sessionStorage.getItem("auth_token");
   },
 
   getSession(): AuthSession | null {
     try {
-      const raw =
-        localStorage.getItem("auth_session") ??
-        sessionStorage.getItem("auth_session");
+      const raw = localStorage.getItem("auth_session") ?? sessionStorage.getItem("auth_session");
       if (raw) return JSON.parse(raw) as AuthSession;
     } catch {
       // corrupted storage — treat as logged out
@@ -86,13 +81,5 @@ export const authStore = {
   handleUnauthorized(): void {
     this.clearSession();
     window.location.href = "/login";
-  },
+  }
 };
-
-// Listen for unauthorized events dispatched by the API client.
-// Using a custom event keeps shared/api/client.ts free of entity-layer imports.
-if (typeof window !== "undefined") {
-  window.addEventListener("auth:unauthorized", () =>
-    authStore.handleUnauthorized(),
-  );
-}

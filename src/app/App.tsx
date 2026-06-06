@@ -1,67 +1,106 @@
-import { type Component, lazy, Suspense } from "solid-js";
-import { Router, Route, Navigate } from "@solidjs/router";
-import { Dynamic } from "solid-js/web";
-import { QueryClientProvider } from "@tanstack/solid-query";
-import { queryClient } from "./query-client";
-import { authService } from "../entities/auth/api/auth.service";
-// Import authStore to activate the auth:unauthorized event listener (side-effect import)
-import "../entities/auth/model/store";
-import { ToastProvider } from "../shared/ui/toast";
-import { RouteLoader } from "../shared/ui/Skeleton";
-import "./App.css"; // intentionally empty — styles live in src/index.css
+import { createEventListener } from "@solid-primitives/event-listener";
 import { MetaProvider, Title } from "@solidjs/meta";
+import { Navigate, Route, Router, useLocation } from "@solidjs/router";
+import { QueryClientProvider } from "@tanstack/solid-query";
+import { type JSX, lazy, onMount, Show, Suspense } from "solid-js";
+import { authService } from "../entities/auth/api/auth.service";
+import { authStore } from "../entities/auth/model/store";
+import { RouteLoader } from "../shared/ui/Skeleton";
+import { ToastProvider } from "../shared/ui/toast";
+import { queryClient } from "./query-client";
 
-// Lazy load pages
-const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage"));
-const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
-const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
-const InvitePage = lazy(() => import("../pages/auth/InvitePage"));
-const ProjectsPage = lazy(() => import("../pages/projects/ProjectsPage"));
-const ProjectPage = lazy(() => import("../pages/projects/ProjectPage"));
-const UsersPage = lazy(() => import("../pages/users/UsersPage"));
-const UserPage = lazy(() => import("../pages/users/UserPage"));
-const AuditLogsPage = lazy(() => import("../pages/audit-logs/AuditLogsPage"));
+export default function App(): JSX.Element {
+  onMount(() => {
+    if (window) {
+      // Listen for unauthorized events dispatched by the API client.
+      // Using a custom event keeps shared/api/client.ts free of entity-layer imports.
+      createEventListener(window, "auth:unauthorized", () => authStore.handleUnauthorized());
+    }
+  });
 
-// Protected Route Component
-const ProtectedRoute: Component<{ component: Component }> = (props) => {
-  if (!authService.isAuthenticated()) {
-    return <Navigate href="/login" />;
-  }
-  return <Dynamic component={props.component} />;
-};
-
-// Public Route Component (redirect to dashboard if already authenticated)
-const PublicRoute: Component<{ component: Component }> = (props) => {
-  if (authService.isAuthenticated()) {
-    return <Navigate href="/projects" />;
-  }
-  return <Dynamic component={props.component} />;
-};
-
-const App: Component = () => {
   return (
     <MetaProvider>
-    <Title>Nona Config Admin</Title>
+      <Title>Nona Config Admin</Title>
       <QueryClientProvider client={queryClient}>
-          <ToastProvider>
-            <Suspense fallback={<RouteLoader />}>
+        <ToastProvider>
+          <Suspense
+            fallback={
+              <>
+                <RouteLoader />
+              </>
+            }
+          >
             <Router>
               <Route path="/" component={() => <Navigate href="/projects" />} />
-              <Route path="/login" component={() => <PublicRoute component={LoginPage} />} />
-              <Route path="/register" component={() => <PublicRoute component={RegisterPage} />} />
-              <Route path="/invite/:token" component={InvitePage} />
-              <Route path="/dashboard" component={() => <ProtectedRoute component={DashboardPage} />} />
-              <Route path="/projects" component={() => <ProtectedRoute component={ProjectsPage} />} />
-              <Route path="/projects/:slug" component={() => <ProtectedRoute component={ProjectPage} />} />
-              <Route path="/users" component={() => <ProtectedRoute component={UsersPage} />} />
-              <Route path="/user" component={() => <ProtectedRoute component={UserPage} />} />
-              <Route path="/audit-logs" component={() => <ProtectedRoute component={AuditLogsPage} />} />
+
+              <Route component={PublicRoute}>
+                <Route path="/login" component={lazy(() => import("../pages/auth/LoginPage"))} />
+                <Route
+                  path="/register"
+                  component={lazy(() => import("../pages/auth/RegisterPage"))}
+                />
+              </Route>
+
+              <Route
+                path="/invite/:token"
+                component={lazy(() => import("../pages/auth/InvitePage"))}
+              />
+
+              <Route component={ProtectedRoute}>
+                <Route
+                  path="/dashboard"
+                  component={lazy(() => import("../pages/dashboard/DashboardPage"))}
+                />
+                <Route
+                  path="/projects"
+                  component={lazy(() => import("../pages/projects/ProjectsPage"))}
+                />
+                <Route
+                  path="/projects/:slug"
+                  component={lazy(() => import("../pages/projects/ProjectPage"))}
+                />
+                <Route path="/users" component={lazy(() => import("../pages/users/UsersPage"))} />
+                <Route path="/user" component={lazy(() => import("../pages/users/UserPage"))} />
+                <Route
+                  path="/audit-logs"
+                  component={lazy(() => import("../pages/audit-logs/AuditLogsPage"))}
+                />
+              </Route>
             </Router>
-            </Suspense>
-          </ToastProvider>
+          </Suspense>
+        </ToastProvider>
       </QueryClientProvider>
     </MetaProvider>
   );
-};
+}
 
-export default App
+const AppLayout = lazy(() =>
+  import("../widgets/app-shell/AppLayout").then(module => ({ default: module.AppLayout }))
+);
+
+// Protected route layout
+function ProtectedRoute(props: { children?: JSX.Element }) {
+  const location = useLocation();
+
+  return (
+    <Show
+      when={authService.isAuthenticated()}
+      fallback={<Navigate href={`/login?redirect=${encodeURIComponent(location.pathname)}`} />}
+    >
+      <AppLayout>{props.children}</AppLayout>
+    </Show>
+  );
+}
+
+const AuthLayout = lazy(() =>
+  import("../widgets/auth-shell/AuthLayout").then(module => ({ default: module.AuthLayout }))
+);
+
+// Public route layout (redirect to dashboard if already authenticated)
+function PublicRoute(props: { children?: JSX.Element }) {
+  return (
+    <Show when={!authService.isAuthenticated()} fallback={<Navigate href="/projects" />}>
+      <AuthLayout>{props.children}</AuthLayout>
+    </Show>
+  );
+}

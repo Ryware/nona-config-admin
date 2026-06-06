@@ -1,23 +1,22 @@
-import { createSignal, createEffect, Show } from "solid-js";
 import { Title } from "@solidjs/meta";
-import { useNavigate, useLocation } from "@solidjs/router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
-import { AppLayout } from "../../widgets/app-shell/AppLayout";
-import { useToast } from "../../shared/ui/toast";
-import { userService } from "../../entities/user/api/user.service";
-import type { UpdateUserRequest } from "../../entities/user/api/user.service";
+import { useLocation, useNavigate } from "@solidjs/router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
+import { createEffect, createSignal, Show } from "solid-js";
 import { projectService } from "../../entities/project/api/project.service";
 import { projectKeys } from "../../entities/project/queries/keys";
+import type { UpdateUserRequest } from "../../entities/user/api/user.service";
+import { userService } from "../../entities/user/api/user.service";
 import { userKeys } from "../../entities/user/queries/keys";
-import type { CreateUserRequest, CreateUserResponse, ProjectAccess } from "../../types";
 import { MSG } from "../../shared/lib/messages";
+import { useToast } from "../../shared/ui/toast";
+import type { CreateUserRequest, CreateUserResponse, ProjectAccess } from "../../types";
 
-import { UserStepProgress } from "./components/UserStepProgress";
-import { UserInviteLink } from "./components/UserInviteLink";
-import { UserIdentityForm } from "./components/UserIdentityForm";
-import { UserRoleSelector } from "./components/UserRoleSelector";
-import { UserProjectScope } from "./components/UserProjectScope";
 import { UserFormSkeleton } from "./components/UserFormSkeleton";
+import { UserIdentityForm } from "./components/UserIdentityForm";
+import { UserInviteLink } from "./components/UserInviteLink";
+import { UserProjectScope } from "./components/UserProjectScope";
+import { UserRoleSelector } from "./components/UserRoleSelector";
+import { UserStepProgress } from "./components/UserStepProgress";
 
 export default function UserPage() {
   const navigate = useNavigate();
@@ -38,12 +37,12 @@ export default function UserPage() {
   const userQuery = useQuery(() => ({
     queryKey: userKeys.detail(String(userId())),
     queryFn: () => userService.getById(userId()!),
-    enabled: isEditMode(),
+    enabled: isEditMode()
   }));
 
   const projectsQuery = useQuery(() => ({
     queryKey: projectKeys.list(),
-    queryFn: () => projectService.getAll(),
+    queryFn: () => projectService.getAll()
   }));
 
   createEffect(() => {
@@ -52,7 +51,7 @@ export default function UserPage() {
       setRole(userQuery.data.role as "editor" | "viewer");
       setName(userQuery.data.name);
       setSelectedProjects(
-        new Set<string>((userQuery.data.projects ?? []).map((p: ProjectAccess) => p.projectName)),
+        new Set<string>((userQuery.data.projects ?? []).map((p: ProjectAccess) => p.projectName))
       );
     }
   });
@@ -66,7 +65,7 @@ export default function UserPage() {
       const projectsToAdd = [...selectedProjects()];
       if (projectsToAdd.length > 0) {
         await Promise.allSettled(
-          projectsToAdd.map((slug) => userService.addProject(newUserId, slug, defaultRole)),
+          projectsToAdd.map(slug => userService.addProject(newUserId, slug, defaultRole))
         );
       }
       queryClient.invalidateQueries({ queryKey: userKeys.list() });
@@ -74,7 +73,7 @@ export default function UserPage() {
       setCopyFeedback("");
       addToast(MSG.INVITE_GENERATED, "success");
     },
-    onError: (error: Error) => addToast(error.message || "Failed to invite member", "error"),
+    onError: (error: Error) => addToast(error.message || "Failed to invite member", "error")
   }));
 
   const updateMutation = useMutation(() => ({
@@ -83,22 +82,22 @@ export default function UserPage() {
     onSuccess: async () => {
       // Sync project scope changes
       const originalProjects = new Set<string>(
-        (userQuery.data?.projects ?? []).map((p: ProjectAccess) => p.projectName),
+        (userQuery.data?.projects ?? []).map((p: ProjectAccess) => p.projectName)
       );
       const current = selectedProjects();
       const defaultRole = userQuery.data?.scope ?? "viewer";
-      const toAdd = [...current].filter((s) => !originalProjects.has(s));
-      const toRemove = [...originalProjects].filter((s) => !current.has(s));
+      const toAdd = [...current].filter(s => !originalProjects.has(s));
+      const toRemove = [...originalProjects].filter(s => !current.has(s));
       await Promise.allSettled([
-        ...toAdd.map((slug) => userService.addProject(userId()!, slug, defaultRole)),
-        ...toRemove.map((slug) => userService.removeProject(userId()!, slug)),
+        ...toAdd.map(slug => userService.addProject(userId()!, slug, defaultRole)),
+        ...toRemove.map(slug => userService.removeProject(userId()!, slug))
       ]);
       queryClient.invalidateQueries({ queryKey: userKeys.list() });
       queryClient.invalidateQueries({ queryKey: userKeys.detail(String(userId())) });
       addToast(MSG.MEMBER_UPDATED, "success");
       navigate("/users");
     },
-    onError: (error: Error) => addToast(error.message || "Failed to update member", "error"),
+    onError: (error: Error) => addToast(error.message || "Failed to update member", "error")
   }));
 
   const handleSubmit = (e: Event) => {
@@ -107,16 +106,23 @@ export default function UserPage() {
       const updates: UpdateUserRequest = { name: name(), role: role() };
       updateMutation.mutate({ id: userId()!, updates });
     } else {
-      if (!name()) { addToast(MSG.NAME_REQUIRED, "error"); return; }
-      if (!email()) { addToast(MSG.EMAIL_REQUIRED, "error"); return; }
+      if (!name()) {
+        addToast(MSG.NAME_REQUIRED, "error");
+        return;
+      }
+      if (!email()) {
+        addToast(MSG.EMAIL_REQUIRED, "error");
+        return;
+      }
       createMutation.mutate({ name: name(), email: email(), role: role() });
     }
   };
 
   const toggleProject = (id: string) => {
-    setSelectedProjects((prev) => {
+    setSelectedProjects(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -140,42 +146,39 @@ export default function UserPage() {
   };
 
   return (
-    <AppLayout>
-      <Title>{(isEditMode() ? "Edit " + name() : "Invite Team Member") + " | Nona Config Admin"}</Title>
-      <div class="max-w-3xl mx-auto space-y-0">
-
+    <>
+      <Title>
+        {(isEditMode() ? "Edit " + name() : "Invite Team Member") + " | Nona Config Admin"}
+      </Title>
+      <div class="mx-auto max-w-3xl space-y-0">
         {/* Step progress bar */}
         <Show when={!isEditMode() && !createdInvite()}>
-          <UserStepProgress
-            name={name()}
-            email={email()}
-            role={role()}
-          />
+          <UserStepProgress name={name()} email={email()} role={role()} />
         </Show>
 
         {/* Back button */}
         <button
           onClick={() => navigate("/users")}
-          class="flex items-center gap-2 text-outline hover:text-primary mb-8 transition-colors bg-transparent border-0 cursor-pointer group text-[12px] font-medium"
+          class="text-outline hover:text-primary group mb-8 flex cursor-pointer items-center gap-2 border-0 bg-transparent text-[12px] font-medium transition-colors"
         >
-          <span class="material-symbols-outlined text-[16px] transition-transform group-hover:-translate-x-1">arrow_back</span>
+          <span class="material-symbols-outlined text-[16px] transition-transform group-hover:-translate-x-1">
+            arrow_back
+          </span>
           <span>Back to Team Overview</span>
         </button>
 
         {/* Page header */}
-        <div class="flex items-center gap-6 mb-12">
-          <div
-            class="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 bg-linear-to-br from-primary to-primary-container shadow-[0_0_20px_rgba(99,102,241,0.15)]"
-          >
+        <div class="mb-12 flex items-center gap-6">
+          <div class="from-primary to-primary-container flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-[0_0_20px_rgba(99,102,241,0.15)]">
             <span class="material-symbols-outlined text-on-primary text-2xl font-bold">
               {isEditMode() ? "manage_accounts" : "person_add"}
             </span>
           </div>
           <div>
-            <h1 class="font-headline text-3xl font-bold tracking-tight text-on-surface">
+            <h1 class="font-headline text-on-surface text-3xl font-bold tracking-tight">
               {isEditMode() ? "Edit Team Member" : "Invite Team Member"}
             </h1>
-            <p class="text-on-surface-variant text-sm mt-1 leading-relaxed">
+            <p class="text-on-surface-variant mt-1 text-sm leading-relaxed">
               {isEditMode()
                 ? "Update member identity and access level across your infrastructure."
                 : "Configure identity and access level for the new user across your infrastructure."}
@@ -183,15 +186,11 @@ export default function UserPage() {
           </div>
         </div>
 
-        <Show
-          when={!isEditMode() || !userQuery.isLoading}
-          fallback={<UserFormSkeleton />}
-        >
+        <Show when={!isEditMode() || !userQuery.isLoading} fallback={<UserFormSkeleton />}>
           <form onSubmit={handleSubmit}>
             <div class="grid grid-cols-1 gap-8">
-
               <Show when={createdInvite()}>
-                {(invite) => (
+                {invite => (
                   <UserInviteLink
                     email={invite().user.email}
                     invitationUrl={invitationUrl()}
@@ -212,14 +211,11 @@ export default function UserPage() {
               />
 
               {/* Step 02 — Role Assignment */}
-              <UserRoleSelector
-                role={role()}
-                onChange={setRole}
-              />
+              <UserRoleSelector role={role()} onChange={setRole} />
 
               {/* Step 03 — Project Scope */}
               <UserProjectScope
-                projects={projectsQuery.status === 'success' ? projectsQuery.data ?? [] : []}
+                projects={projectsQuery.status === "success" ? (projectsQuery.data ?? []) : []}
                 selectedProjects={selectedProjects()}
                 onToggleProject={toggleProject}
               />
@@ -229,16 +225,22 @@ export default function UserPage() {
                 <button
                   type="button"
                   onClick={() => navigate("/users")}
-                  class="px-5 py-2.5 text-[13px] font-medium text-outline hover:text-on-surface transition-colors bg-transparent border-0 cursor-pointer"
+                  class="text-outline hover:text-on-surface cursor-pointer border-0 bg-transparent px-5 py-2.5 text-[13px] font-medium transition-colors"
                 >
                   Cancel Invitation
                 </button>
                 <button
                   type="submit"
                   disabled={isPending()}
-                  class="flex items-center gap-2 px-6 py-2.5 bg-primary text-on-primary font-semibold text-[13px] rounded-lg active:scale-[0.98] transition-all hover:brightness-105 disabled:opacity-50 border-0 cursor-pointer"
+                  class="bg-primary text-on-primary flex cursor-pointer items-center gap-2 rounded-lg border-0 px-6 py-2.5 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
                 >
-                  <span>{isPending() ? "Processing…" : isEditMode() ? "Save Changes" : "Generate Invitation Link"}</span>
+                  <span>
+                    {isPending()
+                      ? "Processing…"
+                      : isEditMode()
+                        ? "Save Changes"
+                        : "Generate Invitation Link"}
+                  </span>
                   <span class="material-symbols-outlined text-base">
                     {isEditMode() ? "save" : "auto_awesome"}
                   </span>
@@ -248,6 +250,6 @@ export default function UserPage() {
           </form>
         </Show>
       </div>
-    </AppLayout>
+    </>
   );
 }
