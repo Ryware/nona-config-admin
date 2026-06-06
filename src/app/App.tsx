@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/solid-query";
 import { type JSX, lazy, onMount, Show, Suspense } from "solid-js";
 import { authService } from "../entities/auth/api/auth.service";
 import { authStore } from "../entities/auth/model/store";
+import { ThemeProvider } from "../shared/hooks/useTheme";
 import { RouteLoader } from "../shared/ui/Skeleton";
 import { ToastProvider } from "../shared/ui/toast";
 import { queryClient } from "./query-client";
@@ -20,56 +21,58 @@ export default function App(): JSX.Element {
 
   return (
     <MetaProvider>
-      <Title>Nona Config Admin</Title>
-      <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <Suspense
-            fallback={
-              <>
-                <RouteLoader />
-              </>
-            }
-          >
-            <Router>
-              <Route path="/" component={() => <Navigate href="/projects" />} />
+      <ThemeProvider>
+        <Title>Nona Config Admin</Title>
+        <QueryClientProvider client={queryClient}>
+          <ToastProvider>
+            <Suspense
+              fallback={
+                <>
+                  <RouteLoader />
+                </>
+              }
+            >
+              <Router>
+                <Route path="/" component={() => <Navigate href="/projects" />} />
 
-              <Route component={PublicRoute}>
-                <Route path="/login" component={lazy(() => import("../pages/auth/LoginPage"))} />
-                <Route
-                  path="/register"
-                  component={lazy(() => import("../pages/auth/RegisterPage"))}
-                />
-              </Route>
+                <Route component={PublicRoute}>
+                  <Route path="/login" component={lazy(() => import("../pages/auth/LoginPage"))} />
+                  <Route
+                    path="/register"
+                    component={lazy(() => import("../pages/auth/RegisterPage"))}
+                  />
+                </Route>
 
-              <Route
-                path="/invite/:token"
-                component={lazy(() => import("../pages/auth/InvitePage"))}
-              />
+                <Route
+                  path="/invite/:token"
+                  component={lazy(() => import("../pages/auth/InvitePage"))}
+                />
 
-              <Route component={ProtectedRoute}>
-                <Route
-                  path="/dashboard"
-                  component={lazy(() => import("../pages/dashboard/DashboardPage"))}
-                />
-                <Route
-                  path="/projects"
-                  component={lazy(() => import("../pages/projects/ProjectsPage"))}
-                />
-                <Route
-                  path="/projects/:slug"
-                  component={lazy(() => import("../pages/projects/ProjectPage"))}
-                />
-                <Route path="/users" component={lazy(() => import("../pages/users/UsersPage"))} />
-                <Route path="/user" component={lazy(() => import("../pages/users/UserPage"))} />
-                <Route
-                  path="/audit-logs"
-                  component={lazy(() => import("../pages/audit-logs/AuditLogsPage"))}
-                />
-              </Route>
-            </Router>
-          </Suspense>
-        </ToastProvider>
-      </QueryClientProvider>
+                <Route component={ProtectedRoute}>
+                  <Route
+                    path="/dashboard"
+                    component={lazy(() => import("../pages/dashboard/DashboardPage"))}
+                  />
+                  <Route
+                    path="/projects"
+                    component={lazy(() => import("../pages/projects/ProjectsPage"))}
+                  />
+                  <Route
+                    path="/projects/:slug"
+                    component={lazy(() => import("../pages/projects/ProjectPage"))}
+                  />
+                  <Route path="/users" component={lazy(() => import("../pages/users/UsersPage"))} />
+                  <Route path="/user" component={lazy(() => import("../pages/users/UserPage"))} />
+                  <Route
+                    path="/audit-logs"
+                    component={lazy(() => import("../pages/audit-logs/AuditLogsPage"))}
+                  />
+                </Route>
+              </Router>
+            </Suspense>
+          </ToastProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </MetaProvider>
   );
 }

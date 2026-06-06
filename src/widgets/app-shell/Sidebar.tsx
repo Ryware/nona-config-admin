@@ -47,7 +47,7 @@ export const Sidebar = (props: {
     } ${
       active
         ? "bg-primary/10 text-primary"
-        : "text-on-surface-variant hover:bg-white/4 hover:text-on-surface"
+        : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
     }`;
 
   const w = () => (props.collapsed ? "w-16" : "w-64");
@@ -63,7 +63,7 @@ export const Sidebar = (props: {
       </Show>
 
       <aside
-        class={`h-screen ${w()} fixed left-0 top-0 bg-surface-container-lowest border-r border-white/6 flex flex-col z-50 sidebar-transition lg:translate-x-0 ${
+        class={`h-screen ${w()} fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant/20 flex flex-col z-50 sidebar-transition lg:translate-x-0 ${
           props.isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -95,7 +95,7 @@ export const Sidebar = (props: {
           </A>
         </div>
 
-        <div class="mx-3 h-px bg-white/6" />
+        <div class="mx-3 h-px bg-outline-variant/20" />
 
         {/* Projects */}
         <div class={`pt-3 space-y-0.5 ${props.collapsed ? "px-2" : "px-2"}`}>
@@ -119,7 +119,7 @@ export const Sidebar = (props: {
             <Show when={!props.collapsed}>
               <span class="flex-1">Projects</span>
               <Show when={projectsQuery.isSuccess}>
-                <span class="text-[10px] font-mono text-outline/70 bg-white/6 px-1.5 py-0.5 rounded-md leading-none">
+                <span class="text-[10px] font-mono text-outline/70 bg-surface-container-high/60 px-1.5 py-0.5 rounded-md leading-none">
                   {projectsQuery.data!.length}
                 </span>
               </Show>
@@ -149,7 +149,7 @@ export const Sidebar = (props: {
                       class={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] font-medium truncate transition-all ${
                         isActive(`/projects/${project.urlSlug}`)
                           ? "text-primary bg-primary/8"
-                          : "text-outline/80 hover:text-on-surface hover:bg-white/4"
+                          : "text-outline/80 hover:text-on-surface hover:bg-surface-container-low"
                       }`}
                     >
                       <span
@@ -168,7 +168,7 @@ export const Sidebar = (props: {
           </Show>
         </div>
 
-        <div class="mx-3 h-px bg-white/6 mt-3" />
+        <div class="mx-3 h-px bg-outline-variant/20 mt-3" />
 
         {/* Management */}
         <nav
@@ -212,7 +212,7 @@ export const Sidebar = (props: {
           <button
             onClick={props.onToggleCollapse}
             title={props.collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            class={`hidden lg:flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-outline/60 hover:text-on-surface hover:bg-white/4 transition-all bg-transparent border-0 cursor-pointer ${
+            class={`hidden lg:flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-outline/60 hover:text-on-surface hover:bg-surface-container-low transition-all bg-transparent border-0 cursor-pointer ${
               props.collapsed ? "justify-center" : ""
             }`}
           >
@@ -229,7 +229,7 @@ export const Sidebar = (props: {
 
           {/* User card — expanded */}
           <Show when={authService.isAuthenticated() && !props.collapsed}>
-            <div class="rounded-xl border border-white/6 bg-white/3 flex items-center gap-3 p-3 hover:border-white/10 transition-all">
+            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-low flex items-center gap-3 p-3 hover:border-outline-variant/35 transition-all">
               <div class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center bg-primary/20 border border-primary/20">
                 <span class="text-[11px] font-headline font-bold text-primary">
                   {initials}

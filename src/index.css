@@ -7,6 +7,8 @@
 
 /* ── Obsidian Architect Design System ─────────────────────────────────── */
 :root {
+  --native-color-scheme: dark;
+
   /* Surface hierarchy (premium dark zinc) */
   --background:                  #09090b;
   --surface:                     #09090b;
@@ -83,6 +85,85 @@
   --surface-tint:                #6366f1;
 }
 
+:root[data-theme="light"] {
+  --native-color-scheme: light;
+
+  /* Surface hierarchy (clear daylight slate) */
+  --background:                  #f7f8fb;
+  --surface:                     #ffffff;
+  --surface-dim:                 #eef1f6;
+  --surface-container-lowest:    #ffffff;
+  --surface-container-low:       #f2f4f8;
+  --surface-container:           #e8ecf3;
+  --surface-container-high:      #dce2ea;
+  --surface-container-highest:   #cbd5e1;
+  --surface-bright:              #ffffff;
+  --surface-variant:             #e2e8f0;
+
+  /* Primary (electric indigo) */
+  --primary:                     #4f46e5;
+  --primary-fixed:               #312e81;
+  --primary-fixed-dim:           #4338ca;
+  --primary-container:           #eef2ff;
+  --on-primary:                  #ffffff;
+  --on-primary-container:        #312e81;
+  --on-primary-fixed:            #eef2ff;
+  --on-primary-fixed-variant:    #c7d2fe;
+  --inverse-primary:             #818cf8;
+
+  /* Secondary (emerald accents) */
+  --secondary:                   #059669;
+  --secondary-container:         #d1fae5;
+  --secondary-fixed:             #064e3b;
+  --secondary-fixed-dim:         #047857;
+  --on-secondary:                #ffffff;
+  --on-secondary-container:      #064e3b;
+  --on-secondary-fixed:          #d1fae5;
+  --on-secondary-fixed-variant:  #a7f3d0;
+
+  /* Tertiary */
+  --tertiary:                    #475569;
+  --tertiary-container:          #e2e8f0;
+  --tertiary-fixed:              #1e293b;
+  --tertiary-fixed-dim:          #334155;
+  --on-tertiary:                 #ffffff;
+  --on-tertiary-container:       #1e293b;
+  --on-tertiary-fixed:           #f8fafc;
+  --on-tertiary-fixed-variant:   #cbd5e1;
+
+  /* Warning */
+  --warning:                     #b45309;
+  --warning-container:           #fef3c7;
+  --on-warning:                  #ffffff;
+  --on-warning-container:        #78350f;
+
+  /* Success */
+  --success:                     #059669;
+  --success-container:           #d1fae5;
+  --on-success:                  #ffffff;
+  --on-success-container:        #064e3b;
+
+  /* Error */
+  --error:                       #dc2626;
+  --error-container:             #fee2e2;
+  --on-error:                    #ffffff;
+  --on-error-container:          #7f1d1d;
+
+  /* Surface text */
+  --on-background:               #111827;
+  --on-surface:                  #111827;
+  --on-surface-variant:          #475569;
+  --inverse-surface:             #18181b;
+  --inverse-on-surface:          #f8fafc;
+
+  /* Outline */
+  --outline:                     #64748b;
+  --outline-variant:             #cbd5e1;
+
+  /* Surface tint */
+  --surface-tint:                #4f46e5;
+}
+
 @theme inline {
   --color-background:                var(--background);
   --color-surface:                   var(--surface);
@@ -141,6 +222,10 @@ body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  color-scheme: var(--native-color-scheme);
 }
 
 .font-headline {
@@ -240,7 +325,7 @@ a {
 input[type="date"],
 input[type="datetime-local"],
 input[type="time"] {
-  color-scheme: dark;
+  color-scheme: var(--native-color-scheme);
 }
 
 /* Smooth scroll */
@@ -392,4 +477,3 @@ span.flatpickr-weekday {
   color: var(--outline-variant) !important;
   background: transparent !important;
 }
-

@@ -1,3 +1,4 @@
+import { ThemeToggle } from "../../shared/ui/ThemeToggle";
 import { Breadcrumbs } from "./Breadcrumbs";
 
 interface HeaderProps {
@@ -37,6 +38,8 @@ export function Header(props: HeaderProps) {
             ⌘K
           </kbd>
         </button>
+
+        <ThemeToggle />
 
         <div class="w-px h-5 bg-outline-variant/20" />
 
