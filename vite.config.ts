@@ -6,6 +6,17 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const proxyTarget = env.VITE_PROXY_TARGET
   const isAnalyze = env.ANALYZE === 'true'
+  const proxy = proxyTarget
+    ? Object.fromEntries(
+        ['/auth', '/admin', '/api', '/openapi', '/scalar'].map((route) => [
+          route,
+          {
+            target: proxyTarget,
+            changeOrigin: true,
+          },
+        ]),
+      )
+    : undefined
 
   return {
     plugins: [
@@ -24,25 +35,20 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    server: proxyTarget
-      ? {
-          host: '0.0.0.0',
-          proxy: {
-            '/proxy': {
-              target: proxyTarget,
-              changeOrigin: true,
-              rewrite: (path) => path.replace(/^\/proxy/, ''),
-            },
-          },
-        }
-      : undefined,
+    server: {
+      host: '0.0.0.0',
+      proxy,
+    },
+    preview: {
+      proxy,
+    },
     test: {
       environment: 'happy-dom',
       globals: true,
       exclude: ['**/node_modules/**', '**/dist/**', 'tests/**/*.visual.spec.ts'],
       setupFiles: ['./src/__tests__/setup.ts'],
       env: {
-        VITE_API_URL: 'http://localhost:5027',
+        VITE_API_BASE_URL: 'http://localhost:5027',
       },
       transformMode: { web: [/\.[jt]sx$/] },
       coverage: {

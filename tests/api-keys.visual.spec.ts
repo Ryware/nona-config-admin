@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => {
     localStorage.setItem("auth_token", "visual-test-token");
   });
 
-  await page.route("http://localhost:5027/**", async (route) => {
+  await page.route(/\/admin\/projects/, async (route) => {
     const request = route.request();
     const url = new URL(request.url());
     const path = url.pathname;
