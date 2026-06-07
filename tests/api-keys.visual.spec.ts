@@ -103,8 +103,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("project API key management is visually usable", async ({ page }) => {
-  await page.setViewportSize({ width: 1920, height: 1080 });
+test("project API key management is visually usable", async ({ page }, testInfo) => {
   await page.goto("/projects/my-app");
 
   await expect(page.getByTestId("project-detail-heading")).toBeVisible();
@@ -114,7 +113,7 @@ test("project API key management is visually usable", async ({ page }) => {
   await expect(page.getByTestId("environment-tab-production")).toBeVisible();
   await expect(page.getByTestId("parameter-key-API_URL")).toBeVisible();
 
-  await page.screenshot({ path: "test-results/api-keys-project-desktop.png", fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath("api-keys-project.png"), fullPage: true });
 
   await page.getByTestId("client-key-toggle-button").click();
   await expect(page.getByTestId("client-key-value")).toContainText(initialProject.clientApiKey);

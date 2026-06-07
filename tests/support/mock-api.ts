@@ -203,6 +203,19 @@ export async function mockAdminApi(page: Page) {
       return;
     }
 
+    if (request.method() === "POST" && path === "/auth/register") {
+      await response(route, {
+        success: true,
+        response: {
+          token: "visual-test-token",
+          username: "root@example.com",
+          role: "Admin"
+        },
+        error: null
+      });
+      return;
+    }
+
     if (request.method() === "POST" && path === "/auth/forgot-password") {
       await noContent(route);
       return;

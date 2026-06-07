@@ -52,6 +52,8 @@ export default function RegisterPage() {
         title="Admin Registration"
         description="Initialize the root administrator account"
         error={error()}
+        testId="register-card"
+        headingTestId="register-heading"
       >
         <form onSubmit={handleSubmit} class="space-y-5">
           <FormField
@@ -65,6 +67,7 @@ export default function RegisterPage() {
             autofocus
             autocomplete="username"
             leftIcon="alternate_email"
+            testId="register-email-input"
           />
 
           <div class="space-y-1.5">
@@ -78,6 +81,7 @@ export default function RegisterPage() {
               required
               autocomplete="new-password"
               leftIcon="key"
+              testId="register-password-input"
             />
             <PasswordStrengthMeter password={password()} />
           </div>
@@ -92,11 +96,13 @@ export default function RegisterPage() {
             required
             autocomplete="new-password"
             leftIcon="shield_lock"
+            testId="register-confirm-password-input"
           />
 
           <div class="pt-2">
             <button
               type="submit"
+              data-testid="register-submit-button"
               disabled={registerMutation.isPending}
               class="bg-primary text-on-primary flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-0 py-3.5 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
             >

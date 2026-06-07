@@ -7,7 +7,6 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("project parameter create, edit, and delete flow is usable", async ({ page }) => {
-  await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto("/projects/my-app");
 
   await expect(page.getByTestId("project-detail-heading")).toBeVisible();
