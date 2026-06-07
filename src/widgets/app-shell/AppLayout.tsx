@@ -1,42 +1,30 @@
 import { useLocation } from "@solidjs/router";
-import { createEffect, createSignal, type JSX, Show } from "solid-js";
+import { makePersisted } from "@solid-primitives/storage";
+import { createEffect, createSignal, on, type JSX, Show } from "solid-js";
 import { useKeyboardShortcut } from "../../shared/hooks/useKeyboardShortcut";
 import { CommandPalette } from "./CommandPalette";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 
-const getInitialCollapsed = (): boolean => {
-  try {
-    if (typeof window !== "undefined" && window.localStorage) {
-      return localStorage.getItem("sidebar_collapsed") === "true";
-    }
-  } catch {}
-  return false;
-};
-
 export function AppLayout(props: { children?: JSX.Element }): JSX.Element {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = createSignal(false);
-  const [collapsed, setCollapsed] = createSignal(getInitialCollapsed());
+  // eslint-disable-next-line solid/reactivity -- makePersisted intentionally wraps the signal.
+  const [collapsed, setCollapsed] = makePersisted(createSignal(false), {
+    deserialize: value => value === "true",
+    name: "sidebar_collapsed",
+    serialize: value => String(value)
+  });
   const [showPalette, setShowPalette] = createSignal(false);
 
   const sidebarWidth = () => (collapsed() ? "lg:ml-16" : "lg:ml-64");
 
   const toggleCollapse = () => {
-    const next = !collapsed();
-    setCollapsed(next);
-    try {
-      if (typeof window !== "undefined" && window.localStorage) {
-        localStorage.setItem("sidebar_collapsed", String(next));
-      }
-    } catch {}
+    setCollapsed(!collapsed());
   };
 
   // Close mobile sidebar on navigation
-  createEffect(() => {
-    location.pathname;
-    setIsSidebarOpen(false);
-  });
+  createEffect(on(() => location.pathname, () => setIsSidebarOpen(false)));
 
   // Setup Keyboard Shortcuts
   useKeyboardShortcut("k", () => setShowPalette(v => !v), {

@@ -1,3 +1,4 @@
+import { createTimer } from "@solid-primitives/timer";
 import { createContext, useContext, For, type ParentComponent } from "solid-js";
 import { createStore } from "solid-js/store";
 
@@ -11,7 +12,6 @@ export interface Toast {
 }
 
 interface ToastContextValue {
-  toasts: Toast[];
   addToast: (message: string, type?: ToastType, duration?: number) => void;
   removeToast: (id: string) => void;
 }
@@ -31,9 +31,6 @@ export const ToastProvider: ParentComponent = (props) => {
       ...toasts,
       { id, message, type, duration },
     ]);
-    if (duration > 0) {
-      setTimeout(() => removeToast(id), duration);
-    }
   };
 
   const removeToast = (id: string) => {
@@ -41,9 +38,7 @@ export const ToastProvider: ParentComponent = (props) => {
   };
 
   return (
-    <ToastContext.Provider
-      value={{ toasts: state.toasts, addToast, removeToast }}
-    >
+    <ToastContext.Provider value={{ addToast, removeToast }}>
       {props.children}
       <ToastContainer toasts={state.toasts} removeToast={removeToast} />
     </ToastContext.Provider>
@@ -77,24 +72,37 @@ const ToastContainer: ParentComponent<{
   return (
     <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2" role="status" aria-live="polite">
       <For each={props.toasts}>
-        {(toast) => (
-          <div
-            class={`flex items-center gap-3 rounded-xl px-4 py-3 shadow-xl max-w-sm ${toastStyles[toast.type]} animate-in`}
-          >
-            <span class="material-symbols-outlined text-[18px] shrink-0">
-              {toastIcons[toast.type]}
-            </span>
-            <span class="text-[13px] flex-1">{toast.message}</span>
-            <button
-              onClick={() => props.removeToast(toast.id)}
-              aria-label="Dismiss notification"
-              class="shrink-0 text-current opacity-60 hover:opacity-100 transition-opacity bg-transparent border-0 cursor-pointer"
-            >
-              <span class="material-symbols-outlined text-[16px]">close</span>
-            </button>
-          </div>
-        )}
+        {(toast) => <ToastItem toast={toast} removeToast={props.removeToast} />}
       </For>
+    </div>
+  );
+};
+
+const ToastItem = (props: {
+  toast: Toast;
+  removeToast: (id: string) => void;
+}) => {
+  createTimer(
+    () => props.removeToast(props.toast.id),
+    () => (props.toast.duration && props.toast.duration > 0 ? props.toast.duration : false),
+    setTimeout
+  );
+
+  return (
+    <div
+      class={`flex items-center gap-3 rounded-xl px-4 py-3 shadow-xl max-w-sm ${toastStyles[props.toast.type]} animate-in`}
+    >
+      <span class="material-symbols-outlined text-[18px] shrink-0">
+        {toastIcons[props.toast.type]}
+      </span>
+      <span class="text-[13px] flex-1">{props.toast.message}</span>
+      <button
+        onClick={() => props.removeToast(props.toast.id)}
+        aria-label="Dismiss notification"
+        class="shrink-0 text-current opacity-60 hover:opacity-100 transition-opacity bg-transparent border-0 cursor-pointer"
+      >
+        <span class="material-symbols-outlined text-[16px]">close</span>
+      </button>
     </div>
   );
 };

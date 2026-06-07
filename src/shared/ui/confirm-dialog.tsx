@@ -1,5 +1,6 @@
+import { createEventListener } from "@solid-primitives/event-listener";
 import type { JSXElement } from "solid-js";
-import { Show, onCleanup, onMount } from "solid-js";
+import { Show } from "solid-js";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -46,8 +47,7 @@ export const ConfirmDialog = (props: ConfirmDialogProps) => {
     if (e.key === "Enter" && !props.isLoading) props.onConfirm();
   };
 
-  onMount(() => document.addEventListener("keydown", handleKey));
-  onCleanup(() => document.removeEventListener("keydown", handleKey));
+  createEventListener(document, "keydown", handleKey);
 
   return (
     <Show when={props.open}>
@@ -86,7 +86,7 @@ export const ConfirmDialog = (props: ConfirmDialogProps) => {
           {/* Actions */}
           <div class="flex gap-3">
             <button
-              onClick={props.onConfirm}
+              onClick={() => props.onConfirm()}
               disabled={props.isLoading}
               class={`flex-1 py-2.5 rounded-lg font-semibold text-[13px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer border-0 ${v().btnClass}`}
             >
@@ -100,7 +100,7 @@ export const ConfirmDialog = (props: ConfirmDialogProps) => {
                 : (props.confirmLabel ?? "Confirm")}
             </button>
             <button
-              onClick={props.onCancel}
+              onClick={() => props.onCancel()}
               disabled={props.isLoading}
               class="flex-1 py-2.5 rounded-lg font-semibold text-on-surface-variant text-[13px] bg-surface-container-high hover:bg-surface-bright transition-all cursor-pointer border-0 disabled:opacity-50"
             >
