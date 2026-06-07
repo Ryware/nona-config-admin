@@ -1,12 +1,23 @@
-import { createSignal, createEffect, Show, For } from "solid-js";
+import { writeClipboard } from "@solid-primitives/clipboard";
 import { Title } from "@solidjs/meta";
-import { useNavigate, useLocation } from "@solidjs/router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
-import { AppLayout } from "../../components/layout/AppLayout";
-import { useToast } from "../../components/ui/toast";
-import { userService, type UpdateUserRequest } from "../../services/user.service";
-import { projectService } from "../../services/project.service";
-import type { CreateUserRequest, CreateUserResponse } from "../../types";
+import { useLocation, useNavigate } from "@solidjs/router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
+import { createEffect, createSignal, Show } from "solid-js";
+import { projectService } from "../../entities/project/api/project.service";
+import { projectKeys } from "../../entities/project/queries/keys";
+import type { UpdateUserRequest } from "../../entities/user/api/user.service";
+import { userService } from "../../entities/user/api/user.service";
+import { userKeys } from "../../entities/user/queries/keys";
+import { MSG } from "../../shared/lib/messages";
+import { useToast } from "../../shared/ui/toast";
+import type { CreateUserRequest, CreateUserResponse, ProjectAccess } from "../../types";
+
+import { UserFormSkeleton } from "./components/UserFormSkeleton";
+import { UserIdentityForm } from "./components/UserIdentityForm";
+import { UserInviteLink } from "./components/UserInviteLink";
+import { UserProjectScope } from "./components/UserProjectScope";
+import { UserRoleSelector } from "./components/UserRoleSelector";
+import { UserStepProgress } from "./components/UserStepProgress";
 
 export default function UserPage() {
   const navigate = useNavigate();
@@ -25,14 +36,14 @@ export default function UserPage() {
   const isEditMode = () => !!userId();
 
   const userQuery = useQuery(() => ({
-    queryKey: ["user", userId()],
+    queryKey: userKeys.detail(String(userId())),
     queryFn: () => userService.getById(userId()!),
-    enabled: isEditMode(),
+    enabled: isEditMode()
   }));
 
   const projectsQuery = useQuery(() => ({
-    queryKey: ["projects"],
-    queryFn: () => projectService.getAll(),
+    queryKey: projectKeys.list(),
+    queryFn: () => projectService.getAll()
   }));
 
   createEffect(() => {
@@ -40,30 +51,54 @@ export default function UserPage() {
       setEmail(userQuery.data.email);
       setRole(userQuery.data.role as "editor" | "viewer");
       setName(userQuery.data.name);
+      setSelectedProjects(
+        new Set<string>((userQuery.data.projects ?? []).map((p: ProjectAccess) => p.projectName))
+      );
     }
   });
 
   const createMutation = useMutation(() => ({
     mutationFn: (data: CreateUserRequest) => userService.create(data),
-    onSuccess: (response: CreateUserResponse) => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+    onSuccess: async (response: CreateUserResponse) => {
+      // Assign selected projects to the newly created user
+      const newUserId = String(response.user.id);
+      const defaultRole = role();
+      const projectsToAdd = [...selectedProjects()];
+      if (projectsToAdd.length > 0) {
+        await Promise.allSettled(
+          projectsToAdd.map(slug => userService.addProject(newUserId, slug, defaultRole))
+        );
+      }
+      queryClient.invalidateQueries({ queryKey: userKeys.list() });
       setCreatedInvite(response);
       setCopyFeedback("");
-      addToast("Invitation link generated", "success");
+      addToast(MSG.INVITE_GENERATED, "success");
     },
-    onError: (error: Error) => addToast(error.message || "Failed to invite member", "error"),
+    onError: (error: Error) => addToast(error.message || "Failed to invite member", "error")
   }));
 
   const updateMutation = useMutation(() => ({
     mutationFn: (data: { id: string; updates: UpdateUserRequest }) =>
       userService.update(data.id, data.updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["user", userId()] });
-      addToast("Member updated successfully", "success");
+    onSuccess: async () => {
+      // Sync project scope changes
+      const originalProjects = new Set<string>(
+        (userQuery.data?.projects ?? []).map((p: ProjectAccess) => p.projectName)
+      );
+      const current = selectedProjects();
+      const defaultRole = userQuery.data?.scope ?? "viewer";
+      const toAdd = [...current].filter(s => !originalProjects.has(s));
+      const toRemove = [...originalProjects].filter(s => !current.has(s));
+      await Promise.allSettled([
+        ...toAdd.map(slug => userService.addProject(userId()!, slug, defaultRole)),
+        ...toRemove.map(slug => userService.removeProject(userId()!, slug))
+      ]);
+      queryClient.invalidateQueries({ queryKey: userKeys.list() });
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(String(userId())) });
+      addToast(MSG.MEMBER_UPDATED, "success");
       navigate("/users");
     },
-    onError: (error: Error) => addToast(error.message || "Failed to update member", "error"),
+    onError: (error: Error) => addToast(error.message || "Failed to update member", "error")
   }));
 
   const handleSubmit = (e: Event) => {
@@ -72,16 +107,23 @@ export default function UserPage() {
       const updates: UpdateUserRequest = { name: name(), role: role() };
       updateMutation.mutate({ id: userId()!, updates });
     } else {
-      if (!name()) { addToast("Name is required", "error"); return; }
-      if (!email()) { addToast("Email is required", "error"); return; }
+      if (!name()) {
+        addToast(MSG.NAME_REQUIRED, "error");
+        return;
+      }
+      if (!email()) {
+        addToast(MSG.EMAIL_REQUIRED, "error");
+        return;
+      }
       createMutation.mutate({ name: name(), email: email(), role: role() });
     }
   };
 
   const toggleProject = (id: string) => {
-    setSelectedProjects((prev) => {
+    setSelectedProjects(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -95,59 +137,52 @@ export default function UserPage() {
 
   const copyInvitationUrl = async () => {
     try {
-      await navigator.clipboard.writeText(invitationUrl());
+      await writeClipboard(invitationUrl());
       setCopyFeedback("Invitation link copied");
-      addToast("Invitation link copied", "success");
+      addToast(MSG.INVITE_COPIED, "success");
     } catch {
       setCopyFeedback("Copy failed. You can still copy the URL manually.");
-      addToast("Failed to copy invitation link", "error");
+      addToast(MSG.INVITE_COPY_FAILED, "error");
     }
   };
 
-  const ROLE_CARDS = [
-    {
-      value: "editor" as const,
-      icon: "shield_person",
-      label: "Editor",
-      desc: "Full access to modify projects, manage team members, and view billing logs.",
-    },
-    {
-      value: "viewer" as const,
-      icon: "visibility",
-      label: "Viewer",
-      desc: "Read-only access to configurations and logs. Cannot modify environment variables.",
-    },
-  ];
-
   return (
-    <AppLayout>
-      <Title>{(isEditMode() ? "Edit " + name() : "Invite Team Member") + " | Nona Config Admin"}</Title>
-      <div class="max-w-4xl mx-auto space-y-0">
+    <>
+      <Title>
+        {(isEditMode() ? "Edit " + name() : "Invite Team Member") + " | Nona Config Admin"}
+      </Title>
+      <div class="mx-auto max-w-3xl space-y-0">
+        {/* Step progress bar */}
+        <Show when={!isEditMode() && !createdInvite()}>
+          <UserStepProgress name={name()} email={email()} role={role()} />
+        </Show>
 
         {/* Back button */}
         <button
           onClick={() => navigate("/users")}
-          class="flex items-center gap-2 text-on-surface-variant hover:text-primary mb-8 transition-colors bg-transparent border-0 cursor-pointer group"
+          class="text-outline hover:text-primary group mb-8 flex cursor-pointer items-center gap-2 border-0 bg-transparent text-[12px] font-medium transition-colors"
         >
-          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-          <span class="text-xs font-bold uppercase tracking-wider">Back to Team Overview</span>
+          <span class="material-symbols-outlined text-[16px] transition-transform group-hover:-translate-x-1">
+            arrow_back
+          </span>
+          <span>Back to Team Overview</span>
         </button>
 
         {/* Page header */}
-        <div class="flex items-center gap-6 mb-12">
-          <div
-            class="w-16 h-16 rounded-xl flex items-center justify-center shadow-xl shrink-0"
-            style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%); box-shadow: 0 20px 40px rgba(164,201,255,0.1);"
-          >
-            <span class="material-symbols-outlined text-on-primary text-3xl">
+        <div class="mb-12 flex items-center gap-6">
+          <div class="from-primary to-primary-container flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-[0_0_20px_rgba(99,102,241,0.15)]">
+            <span class="material-symbols-outlined text-on-primary text-2xl font-bold">
               {isEditMode() ? "manage_accounts" : "person_add"}
             </span>
           </div>
           <div>
-            <h1 class="font-headline text-3xl font-bold tracking-tight text-on-surface">
+            <h1
+              data-testid="invite-heading"
+              class="font-headline text-on-surface text-3xl font-bold tracking-tight"
+            >
               {isEditMode() ? "Edit Team Member" : "Invite Team Member"}
             </h1>
-            <p class="text-on-surface-variant mt-1">
+            <p class="text-on-surface-variant mt-1 text-sm leading-relaxed">
               {isEditMode()
                 ? "Update member identity and access level across your infrastructure."
                 : "Configure identity and access level for the new user across your infrastructure."}
@@ -155,207 +190,64 @@ export default function UserPage() {
           </div>
         </div>
 
-        <Show
-          when={!isEditMode() || !userQuery.isLoading}
-          fallback={<div class="p-12 text-center text-outline">Loading member data…</div>}
-        >
+        <Show when={!isEditMode() || !userQuery.isLoading} fallback={<UserFormSkeleton />}>
           <form onSubmit={handleSubmit}>
-            <div class="grid grid-cols-1 gap-10">
-
+            <div class="grid grid-cols-1 gap-8">
               <Show when={createdInvite()}>
-                {(invite) => (
-                  <section class="bg-[#0c1b33] p-8 rounded-xl border border-primary/20 shadow-sm space-y-6">
-                    <div class="flex items-center gap-3">
-                      <span class="text-xs font-mono bg-primary/10 px-2 py-0.5 rounded text-primary border border-primary/20">READY</span>
-                      <h3 class="font-headline font-bold text-lg text-on-surface">Invitation Link</h3>
-                    </div>
-                    <p class="text-sm text-on-surface-variant">
-                      Send this link to <span class="text-on-surface font-medium">{invite().user.email}</span>. It can be used once to create a password or finish sign-in with SSO.
-                    </p>
-                    <div class="flex flex-col gap-3 md:flex-row">
-                      <input
-                        type="text"
-                        readOnly
-                        value={invitationUrl()}
-                        class="flex-1 bg-surface-container-highest border border-outline-variant/20 text-on-surface px-4 py-3 rounded outline-none font-mono text-[13px]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => void copyInvitationUrl()}
-                        class="px-5 py-3 rounded text-sm font-bold text-on-primary border-0 cursor-pointer"
-                        style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%);"
-                      >
-                        Copy Link
-                      </button>
-                    </div>
-                    <Show when={copyFeedback()}>
-                      <p class="text-xs text-primary">{copyFeedback()}</p>
-                    </Show>
-                    <div class="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={() => navigate("/users")}
-                        class="px-5 py-3 rounded text-sm font-bold border border-outline-variant/20 bg-surface-container-low text-on-surface cursor-pointer"
-                      >
-                        Back to Team Overview
-                      </button>
-                    </div>
-                  </section>
+                {invite => (
+                  <UserInviteLink
+                    email={invite().user.email}
+                    invitationUrl={invitationUrl()}
+                    copyFeedback={copyFeedback()}
+                    onCopy={copyInvitationUrl}
+                    onBack={() => navigate("/users")}
+                  />
                 )}
               </Show>
 
               {/* Step 01 — Invitee Identity */}
-              <section class="bg-surface-container-low p-8 rounded-xl border border-outline-variant/10 shadow-sm space-y-8">
-                <div class="flex items-center gap-3">
-                  <span class="text-xs font-mono bg-primary/10 px-2 py-0.5 rounded text-primary border border-primary/20">01</span>
-                  <h3 class="font-headline font-bold text-lg text-on-surface">Invitee Identity</h3>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div class="space-y-2">
-                    <label class="block text-[0.6875rem] font-label text-on-surface-variant uppercase tracking-wider">
-                      Full Name or Alias
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. John Smith"
-                      value={name()}
-                      onInput={(e) => setName(e.currentTarget.value)}
-                      required={!isEditMode()}
-                      class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:border-b-primary focus:ring-0 text-on-surface px-4 py-3 transition-all placeholder:text-outline/40 outline-none"
-                    />
-                  </div>
-                  <div class="space-y-2">
-                    <label class="block text-[0.6875rem] font-label text-on-surface-variant uppercase tracking-wider">
-                      Email Address <span class="text-primary">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      placeholder="alex@company.com"
-                      value={email()}
-                      onInput={(e) => setEmail(e.currentTarget.value)}
-                      required
-                      autofocus={!isEditMode()}
-                      class="w-full bg-surface-container-highest border-none border-b-2 border-b-outline-variant/30 focus:border-b-primary focus:ring-0 text-on-surface px-4 py-3 transition-all placeholder:text-outline/40 outline-none"
-                    />
-                  </div>
-                </div>
-              </section>
+              <UserIdentityForm
+                name={name()}
+                email={email()}
+                isEditMode={isEditMode()}
+                onNameChange={setName}
+                onEmailChange={setEmail}
+              />
 
               {/* Step 02 — Role Assignment */}
-              <section class="bg-surface-container-low p-8 rounded-xl border border-outline-variant/10 shadow-sm space-y-8">
-                <div class="flex items-center gap-3">
-                  <span class="text-xs font-mono bg-primary/10 px-2 py-0.5 rounded text-primary border border-primary/20">02</span>
-                  <h3 class="font-headline font-bold text-lg text-on-surface">Role Assignment</h3>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <For each={ROLE_CARDS}>
-                    {(card) => {
-                      const isSelected = () => role() === card.value;
-                      return (
-                        <div
-                          onClick={() => setRole(card.value)}
-                          class={`p-6 rounded-lg border-2 transition-all h-full cursor-pointer select-none ${isSelected()
-                              ? "border-primary bg-primary/5"
-                              : "bg-surface-container-highest border-transparent hover:border-outline-variant/50"
-                            }`}
-                        >
-                          <div class="flex items-start justify-between mb-4">
-                            <span
-                              class={`material-symbols-outlined text-2xl ${isSelected() ? "text-primary" : "text-on-surface-variant"}`}
-                            >
-                              {card.icon}
-                            </span>
-                            {/* Radio indicator */}
-                            <div
-                              class={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected() ? "border-primary bg-primary" : "border-outline-variant"
-                                }`}
-                            >
-                              <Show when={isSelected()}>
-                                <div class="w-2 h-2 bg-on-primary rounded-full"></div>
-                              </Show>
-                            </div>
-                          </div>
-                          <div class="font-headline font-bold text-on-surface text-lg">{card.label}</div>
-                          <p class="text-xs text-on-surface-variant mt-2 leading-relaxed">{card.desc}</p>
-                        </div>
-                      );
-                    }}
-                  </For>
-                </div>
-              </section>
+              <UserRoleSelector role={role()} onChange={setRole} />
 
               {/* Step 03 — Project Scope */}
-              <section class="bg-surface-container-low p-8 rounded-xl border border-outline-variant/10 shadow-sm space-y-8">
-                <div class="flex items-center gap-3">
-                  <span class="text-xs font-mono bg-primary/10 px-2 py-0.5 rounded text-primary border border-primary/20">03</span>
-                  <h3 class="font-headline font-bold text-lg text-on-surface">Project Scope</h3>
-                </div>
-                <div class="bg-surface-container-lowest rounded-lg border border-outline-variant/10 overflow-hidden">
-                  <div class="grid grid-cols-2 px-6 py-4 bg-surface-container-highest/30 border-b border-outline-variant/10 text-[0.6875rem] font-label text-outline uppercase tracking-widest">
-                    <span>Active Projects</span>
-                    <span class="text-right">Access Level</span>
-                  </div>
-                  <Show when={(projectsQuery.data?.length ?? 0) === 0}>
-                    <div class="px-6 py-8 text-center text-outline text-sm">No projects found</div>
-                  </Show>
-                  <div class="divide-y divide-outline-variant/10">
-                    <For each={projectsQuery.data ?? []}>
-                      {(project) => {
-                        const isGiven = () => selectedProjects().has(project.id);
-                        return (
-                          <div
-                            class="grid grid-cols-2 px-6 py-4 items-center hover:bg-surface-container-highest/20 transition-colors cursor-pointer"
-                            onClick={() => toggleProject(project.id)}
-                          >
-                            <div class="flex items-center gap-3">
-                              <input
-                                type="checkbox"
-                                checked={isGiven()}
-                                onChange={() => toggleProject(project.id)}
-                                onClick={(e) => e.stopPropagation()}
-                                class="w-4 h-4 bg-surface-container-highest border-outline-variant text-primary rounded-sm cursor-pointer accent-primary"
-                              />
-                              <span class="text-sm font-mono text-on-surface font-medium">{project.urlSlug}</span>
-                            </div>
-                            <div class="text-right">
-                              <Show
-                                when={isGiven()}
-                                fallback={
-                                  <span class="text-[0.625rem] px-2 py-0.5 bg-surface-variant text-outline rounded-full uppercase font-bold tracking-tighter border border-outline-variant/10">
-                                    None
-                                  </span>
-                                }
-                              >
-                                <span class="text-[0.625rem] px-2 py-0.5 bg-primary/10 text-primary rounded-full uppercase font-bold tracking-tighter border border-primary/20">
-                                  Inherited
-                                </span>
-                              </Show>
-                            </div>
-                          </div>
-                        );
-                      }}
-                    </For>
-                  </div>
-                </div>
-              </section>
+              <UserProjectScope
+                projects={projectsQuery.status === "success" ? (projectsQuery.data ?? []) : []}
+                selectedProjects={selectedProjects()}
+                onToggleProject={toggleProject}
+              />
 
               {/* Footer actions */}
               <div class="flex items-center justify-between pt-4 pb-8">
                 <button
+                  data-testid="invite-cancel-button"
                   type="button"
                   onClick={() => navigate("/users")}
-                  class="px-6 py-3 text-sm font-bold text-on-surface-variant hover:text-on-surface transition-colors bg-transparent border-0 cursor-pointer"
+                  class="text-outline hover:text-on-surface cursor-pointer border-0 bg-transparent px-5 py-2.5 text-[13px] font-medium transition-colors"
                 >
                   Cancel Invitation
                 </button>
                 <button
+                  data-testid="invite-submit-button"
                   type="submit"
                   disabled={isPending()}
-                  class="flex items-center gap-3 px-10 py-3.5 text-on-primary font-bold text-sm rounded-sm active:scale-95 transition-all shadow-lg disabled:opacity-50 border-0 cursor-pointer"
-                  style="background: linear-gradient(135deg, #a4c9ff 0%, #60a5fa 100%); box-shadow: 0 4px 24px rgba(164,201,255,0.2);"
+                  class="bg-primary text-on-primary flex cursor-pointer items-center gap-2 rounded-lg border-0 px-6 py-2.5 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
                 >
-                  <span>{isPending() ? "Processing…" : isEditMode() ? "Save Changes" : "Generate Invitation Link"}</span>
-                  <span class="material-symbols-outlined text-lg">
+                  <span>
+                    {isPending()
+                      ? "Processing…"
+                      : isEditMode()
+                        ? "Save Changes"
+                        : "Generate Invitation Link"}
+                  </span>
+                  <span class="material-symbols-outlined text-base">
                     {isEditMode() ? "save" : "auto_awesome"}
                   </span>
                 </button>
@@ -364,6 +256,6 @@ export default function UserPage() {
           </form>
         </Show>
       </div>
-    </AppLayout>
+    </>
   );
 }

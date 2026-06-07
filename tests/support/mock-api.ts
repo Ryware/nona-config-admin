@@ -1,0 +1,399 @@
+import type { Page, Route } from "@playwright/test";
+
+type Project = {
+  id: string;
+  urlSlug: string;
+  name: string;
+  description?: string;
+  serverApiKey: string | null;
+  clientApiKey: string | null;
+  environments: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ConfigEntry = {
+  project: string;
+  environment: string;
+  key: string;
+  value: string;
+  contentType: "string" | "number" | "boolean" | "json";
+  scope: "client" | "server" | "all";
+  createdAt: string;
+  updatedAt: string;
+};
+
+type User = {
+  id: string;
+  email: string;
+  isAdmin: boolean;
+  role: string;
+  name: string;
+  projects?: { projectName: string; role: string }[];
+  createdAt: string;
+  updatedAt?: string;
+};
+
+type AuditLog = {
+  id: string;
+  actor: string;
+  actorIsSystem: boolean;
+  action: string;
+  target: string;
+  project: string | null;
+  environment: string | null;
+  createdAt: string;
+};
+
+const now = "2026-06-07T03:00:00Z";
+
+export const testProjects: Project[] = [
+  {
+    id: "proj-1",
+    urlSlug: "my-app",
+    name: "my-app",
+    description: "Main application config",
+    serverApiKey: "srv_" + "A".repeat(24),
+    clientApiKey: "cli_" + "B".repeat(24),
+    environments: ["production", "staging"],
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: now
+  },
+  {
+    id: "proj-2",
+    urlSlug: "billing-api",
+    name: "billing-api",
+    description: "Billing service flags",
+    serverApiKey: "srv_" + "E".repeat(24),
+    clientApiKey: "cli_" + "F".repeat(24),
+    environments: ["production"],
+    createdAt: "2024-02-01T00:00:00Z",
+    updatedAt: "2026-06-06T12:00:00Z"
+  }
+];
+
+const testUsers: User[] = [
+  {
+    id: "user-1",
+    email: "admin@example.com",
+    isAdmin: true,
+    role: "admin",
+    name: "Avery Admin",
+    projects: [],
+    createdAt: "2024-01-01T00:00:00Z"
+  },
+  {
+    id: "user-2",
+    email: "editor@example.com",
+    isAdmin: false,
+    role: "editor",
+    name: "Evan Editor",
+    projects: [{ projectName: "my-app", role: "editor" }],
+    createdAt: "2024-01-02T00:00:00Z"
+  },
+  {
+    id: "user-3",
+    email: "viewer@example.com",
+    isAdmin: false,
+    role: "viewer",
+    name: "Vera Viewer",
+    projects: [{ projectName: "billing-api", role: "viewer" }],
+    createdAt: "2024-01-03T00:00:00Z"
+  }
+];
+
+const auditLogs: AuditLog[] = [
+  {
+    id: "audit-1",
+    actor: "admin@example.com",
+    actorIsSystem: false,
+    action: "created_project",
+    target: "my-app",
+    project: "my-app",
+    environment: null,
+    createdAt: "2026-06-07T02:35:00Z"
+  },
+  {
+    id: "audit-2",
+    actor: "editor@example.com",
+    actorIsSystem: false,
+    action: "updated_config_entry",
+    target: "API_URL",
+    project: "my-app",
+    environment: "production",
+    createdAt: "2026-06-07T02:40:00Z"
+  },
+  {
+    id: "audit-3",
+    actor: "system",
+    actorIsSystem: true,
+    action: "auto_scaling",
+    target: "worker-pool",
+    project: "billing-api",
+    environment: "staging",
+    createdAt: "2026-06-07T02:45:00Z"
+  }
+];
+
+function slugifyProjectName(name: string) {
+  return name.trim().toLowerCase().replace(/\s+/g, "-");
+}
+
+function response(route: Route, body: unknown, status = 200) {
+  return route.fulfill({
+    status,
+    contentType: "application/json",
+    body: JSON.stringify(body)
+  });
+}
+
+function noContent(route: Route) {
+  return route.fulfill({ status: 204 });
+}
+
+export async function signIn(page: Page) {
+  await page.addInitScript(() => {
+    localStorage.setItem("auth_token", "visual-test-token");
+    localStorage.setItem(
+      "auth_session",
+      JSON.stringify({ email: "admin@example.com", role: "Admin" })
+    );
+  });
+}
+
+export async function mockAdminApi(page: Page) {
+  let projects = testProjects.map(project => ({ ...project }));
+  let users = testUsers.map(user => ({
+    ...user,
+    projects: user.projects ? [...user.projects] : []
+  }));
+  let configEntries: ConfigEntry[] = [
+    {
+      project: "my-app",
+      environment: "production",
+      key: "API_URL",
+      value: "https://api.example.com",
+      contentType: "string",
+      scope: "all",
+      createdAt: "2024-01-01T00:00:00Z",
+      updatedAt: "2024-01-01T00:00:00Z"
+    }
+  ];
+
+  await page.route(/\/auth\//, async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+
+    if (request.method() === "GET" && path === "/auth/first-time") {
+      await response(route, false);
+      return;
+    }
+
+    if (request.method() === "GET" && path === "/auth/sso/config") {
+      await response(route, { google: { enabled: false }, microsoft: { enabled: false } });
+      return;
+    }
+
+    if (request.method() === "POST" && path === "/auth/login") {
+      await response(route, {
+        token: "visual-test-token",
+        username: "admin@example.com",
+        role: "Admin"
+      });
+      return;
+    }
+
+    if (request.method() === "POST" && path === "/auth/register") {
+      await response(route, {
+        success: true,
+        response: {
+          token: "visual-test-token",
+          username: "root@example.com",
+          role: "Admin"
+        },
+        error: null
+      });
+      return;
+    }
+
+    if (request.method() === "POST" && path === "/auth/forgot-password") {
+      await noContent(route);
+      return;
+    }
+
+    await response(route, { error: "Auth route not mocked" }, 404);
+  });
+
+  await page.route(/\/admin\//, async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    const method = request.method();
+
+    if (method === "GET" && path === "/admin/dashboard/counts") {
+      await response(route, {
+        projects: projects.length,
+        configEntries: configEntries.length,
+        users: users.length
+      });
+      return;
+    }
+
+    if (method === "GET" && path === "/admin/projects") {
+      await response(route, projects);
+      return;
+    }
+
+    if (method === "POST" && path === "/admin/projects") {
+      const body = JSON.parse(request.postData() || "{}") as { name: string; description?: string };
+      const slug = slugifyProjectName(body.name);
+      const project: Project = {
+        id: `proj-${projects.length + 1}`,
+        urlSlug: slug,
+        name: body.name,
+        description: body.description,
+        serverApiKey: "srv_" + "N".repeat(24),
+        clientApiKey: "cli_" + "N".repeat(24),
+        environments: ["production"],
+        createdAt: now,
+        updatedAt: now
+      };
+      projects = [...projects, project];
+      await response(route, project, 201);
+      return;
+    }
+
+    const projectMatch = path.match(/^\/admin\/projects\/([^/]+)$/);
+    if (method === "DELETE" && projectMatch) {
+      const projectName = decodeURIComponent(projectMatch[1]);
+      projects = projects.filter(
+        project => project.name !== projectName && project.urlSlug !== projectName
+      );
+      await noContent(route);
+      return;
+    }
+
+    if (method === "POST" && path === "/admin/projects/my-app/reroll-keys") {
+      const body = JSON.parse(request.postData() || "{}") as { keyType?: "Server" | "Client" };
+      projects = projects.map(project =>
+        project.urlSlug === "my-app"
+          ? {
+              ...project,
+              serverApiKey:
+                body.keyType === "Server" ? "srv_" + "C".repeat(24) : project.serverApiKey,
+              clientApiKey:
+                body.keyType === "Client" ? "cli_" + "D".repeat(24) : project.clientApiKey,
+              updatedAt: now
+            }
+          : project
+      );
+      await response(
+        route,
+        projects.find(project => project.urlSlug === "my-app")
+      );
+      return;
+    }
+
+    if (method === "GET" && path === "/admin/projects/my-app/environments") {
+      await response(route, [
+        {
+          project: "my-app",
+          name: "production",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: now
+        },
+        { project: "my-app", name: "staging", createdAt: "2024-01-01T00:00:00Z", updatedAt: now }
+      ]);
+      return;
+    }
+
+    if (
+      method === "GET" &&
+      path === "/admin/projects/my-app/environments/production/config-entries"
+    ) {
+      await response(route, configEntries);
+      return;
+    }
+
+    const configMatch = path.match(
+      /^\/admin\/projects\/my-app\/environments\/production\/config-entries\/([^/]+)$/
+    );
+    if (configMatch) {
+      const key = decodeURIComponent(configMatch[1]);
+
+      if (method === "PUT") {
+        const body = JSON.parse(request.postData() || "{}") as Partial<ConfigEntry>;
+        const existing = configEntries.find(entry => entry.key === key);
+        const entry: ConfigEntry = {
+          project: "my-app",
+          environment: "production",
+          key,
+          value: String(body.value ?? existing?.value ?? ""),
+          contentType: body.contentType ?? existing?.contentType ?? "string",
+          scope: body.scope ?? existing?.scope ?? "all",
+          createdAt: existing?.createdAt ?? now,
+          updatedAt: now
+        };
+        configEntries = existing
+          ? configEntries.map(item => (item.key === key ? entry : item))
+          : [...configEntries, entry];
+        await response(route, entry);
+        return;
+      }
+
+      if (method === "DELETE") {
+        configEntries = configEntries.filter(entry => entry.key !== key);
+        await noContent(route);
+        return;
+      }
+    }
+
+    if (method === "GET" && path === "/admin/users") {
+      await response(route, users);
+      return;
+    }
+
+    if (method === "POST" && path === "/admin/users") {
+      const body = JSON.parse(request.postData() || "{}") as {
+        name: string;
+        email: string;
+        role?: string;
+      };
+      const user: User = {
+        id: `user-${users.length + 1}`,
+        email: body.email,
+        isAdmin: false,
+        role: body.role ?? "viewer",
+        name: body.name,
+        projects: [],
+        createdAt: now
+      };
+      users = [...users, user];
+      await response(route, { user, invitationToken: "invite-token-123" }, 201);
+      return;
+    }
+
+    const userProjectMatch = path.match(/^\/admin\/users\/([^/]+)\/projects\/([^/]+)$/);
+    if (method === "PUT" && userProjectMatch) {
+      await response(route, {
+        projectName: decodeURIComponent(userProjectMatch[2]),
+        role: "editor"
+      });
+      return;
+    }
+
+    const userMatch = path.match(/^\/admin\/users\/([^/]+)$/);
+    if (method === "DELETE" && userMatch) {
+      const id = decodeURIComponent(userMatch[1]);
+      users = users.filter(user => user.id !== id);
+      await noContent(route);
+      return;
+    }
+
+    if (method === "GET" && path === "/admin/audit-logs") {
+      await response(route, auditLogs);
+      return;
+    }
+
+    await response(route, { error: `Admin route not mocked: ${method} ${path}` }, 404);
+  });
+}

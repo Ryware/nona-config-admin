@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../mocks/server';
-import { authService } from '../../../services/auth.service';
+import { authService } from '../../../entities/auth/api/auth.service';
 import { mockToken } from '../../mocks/data';
 
 const BASE = 'http://localhost:5027';
@@ -112,16 +112,14 @@ describe('authService', () => {
   });
 
   describe('requestPasswordReset / resetPassword', () => {
-    it('throws not implemented error for requestPasswordReset', async () => {
-      await expect(authService.requestPasswordReset({ email: 'x@x.com' })).rejects.toThrow(
-        'not yet implemented',
-      );
+    it('successfully calls requestPasswordReset', async () => {
+      await expect(authService.requestPasswordReset({ email: 'x@x.com' })).resolves.toBeUndefined();
     });
 
     it('throws not implemented error for resetPassword', async () => {
       await expect(
         authService.resetPassword({ token: 'tok', newPassword: 'pw' }),
-      ).rejects.toThrow('not yet implemented');
+      ).rejects.toThrow('Password reset functionality is not yet implemented');
     });
   });
 });

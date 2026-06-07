@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../mocks/server';
-import { ApiClient, ApiRequestError } from '../../../services/api-client';
+import type { ApiRequestError } from '../../../shared/api/client';
+import { ApiClient } from '../../../shared/api/client';
 
 const BASE = 'http://localhost:5027';
 
@@ -107,10 +108,10 @@ describe('ApiClient', () => {
   });
 
   describe('401 redirect behaviour', () => {
-    it('redirects to /login and clears token on 401 for non-allowlisted endpoints', async () => {
+    it('dispatches auth:unauthorized on 401 for non-allowlisted endpoints', async () => {
       localStorage.setItem('auth_token', 'expired-token');
-      const mockLocation = { href: '' } as Location;
-      vi.spyOn(window, 'location', 'get').mockReturnValue(mockLocation);
+      const unauthorizedSpy = vi.fn();
+      window.addEventListener('auth:unauthorized', unauthorizedSpy);
 
       server.use(
         http.get(`${BASE}/admin/projects`, () =>
@@ -119,8 +120,9 @@ describe('ApiClient', () => {
       );
 
       await expect(client.get('/admin/projects')).rejects.toThrow();
-      expect(localStorage.getItem('auth_token')).toBeNull();
-      expect(mockLocation.href).toBe('/login');
+      expect(unauthorizedSpy).toHaveBeenCalledTimes(1);
+
+      window.removeEventListener('auth:unauthorized', unauthorizedSpy);
     });
 
     it('does NOT redirect for allowlisted endpoint /auth/login on 401', async () => {
