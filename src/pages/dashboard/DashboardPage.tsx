@@ -15,11 +15,15 @@ interface StatCardProps {
   icon: string;
   value: number | undefined;
   isLoading: boolean;
+  testId?: string;
 }
 
 function StatCard(props: StatCardProps) {
   return (
-    <div class="bg-surface-container-low border-outline-variant/15 flex flex-col gap-4 rounded-2xl border p-6 shadow-sm">
+    <div
+      data-testid={props.testId}
+      class="bg-surface-container-low border-outline-variant/15 flex flex-col gap-4 rounded-2xl border p-6 shadow-sm"
+    >
       <div class="flex items-center justify-between">
         <span class="text-on-surface-variant text-[11px] font-medium tracking-[0.05em] uppercase">
           {props.label}
@@ -49,7 +53,10 @@ export default function DashboardPage() {
       <Title>Dashboard | Nona Config Admin</Title>
       <div class="animate-page-enter space-y-6">
         <div class="space-y-1.5">
-          <h2 class="font-headline text-on-surface text-[17px] font-bold tracking-tight">
+          <h2
+            data-testid="dashboard-heading"
+            class="font-headline text-on-surface text-[17px] font-bold tracking-tight"
+          >
             Dashboard
           </h2>
           <p class="text-on-surface-variant text-[12.5px]">System overview at a glance</p>
@@ -68,18 +75,21 @@ export default function DashboardPage() {
             icon="folder"
             value={countsQuery.status === "success" ? countsQuery.data?.projects : undefined}
             isLoading={countsQuery.isLoading}
+            testId="dashboard-stat-projects"
           />
           <StatCard
             label="Config Entries"
             icon="settings"
             value={countsQuery.status === "success" ? countsQuery.data?.configEntries : undefined}
             isLoading={countsQuery.isLoading}
+            testId="dashboard-stat-config-entries"
           />
           <StatCard
             label="Team Members"
             icon="group"
             value={countsQuery.status === "success" ? countsQuery.data?.users : undefined}
             isLoading={countsQuery.isLoading}
+            testId="dashboard-stat-team-members"
           />
         </div>
 
@@ -88,6 +98,7 @@ export default function DashboardPage() {
           <h3 class="font-headline text-on-surface/90 text-[14px] font-bold">Quick Actions</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <a
+              data-testid="dashboard-manage-projects-link"
               href="/projects"
               class="bg-surface-container-low border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 group flex cursor-pointer items-center gap-4 rounded-2xl border p-5 text-current no-underline transition-all"
             >
@@ -109,6 +120,7 @@ export default function DashboardPage() {
             </a>
 
             <a
+              data-testid="dashboard-team-management-link"
               href="/users"
               class="bg-surface-container-low border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 group flex cursor-pointer items-center gap-4 rounded-2xl border p-5 text-current no-underline transition-all"
             >
@@ -128,6 +140,7 @@ export default function DashboardPage() {
             </a>
 
             <a
+              data-testid="dashboard-audit-logs-link"
               href="/audit-logs"
               class="bg-surface-container-low border-outline-variant/15 hover:bg-surface-container-high hover:border-primary/30 group flex cursor-pointer items-center gap-4 rounded-2xl border p-5 text-current no-underline transition-all"
             >

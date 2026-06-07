@@ -10,9 +10,10 @@ interface UsersFiltersProps {
 
 export function UsersFilters(props: UsersFiltersProps) {
   return (
-    <div class="flex flex-col sm:flex-row gap-3">
-      <div class="flex-1 max-w-sm">
+    <div class="flex flex-col gap-3 sm:flex-row">
+      <div class="max-w-sm flex-1">
         <Input
+          data-testid="team-search-input"
           type="text"
           placeholder="Search by name or email…"
           value={props.search}
@@ -32,7 +33,7 @@ export function UsersFilters(props: UsersFiltersProps) {
             { value: "all", label: "All Roles" },
             { value: "admin", label: "Admin" },
             { value: "editor", label: "Editor" },
-            { value: "viewer", label: "Viewer" },
+            { value: "viewer", label: "Viewer" }
           ]}
         />
       </div>

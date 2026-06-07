@@ -1,6 +1,6 @@
+import { writeClipboard } from "@solid-primitives/clipboard";
 import { Title } from "@solidjs/meta";
 import { useLocation, useNavigate } from "@solidjs/router";
-import { writeClipboard } from "@solid-primitives/clipboard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { createEffect, createSignal, Show } from "solid-js";
 import { projectService } from "../../entities/project/api/project.service";
@@ -176,7 +176,10 @@ export default function UserPage() {
             </span>
           </div>
           <div>
-            <h1 class="font-headline text-on-surface text-3xl font-bold tracking-tight">
+            <h1
+              data-testid="invite-heading"
+              class="font-headline text-on-surface text-3xl font-bold tracking-tight"
+            >
               {isEditMode() ? "Edit Team Member" : "Invite Team Member"}
             </h1>
             <p class="text-on-surface-variant mt-1 text-sm leading-relaxed">
@@ -224,6 +227,7 @@ export default function UserPage() {
               {/* Footer actions */}
               <div class="flex items-center justify-between pt-4 pb-8">
                 <button
+                  data-testid="invite-cancel-button"
                   type="button"
                   onClick={() => navigate("/users")}
                   class="text-outline hover:text-on-surface cursor-pointer border-0 bg-transparent px-5 py-2.5 text-[13px] font-medium transition-colors"
@@ -231,6 +235,7 @@ export default function UserPage() {
                   Cancel Invitation
                 </button>
                 <button
+                  data-testid="invite-submit-button"
                   type="submit"
                   disabled={isPending()}
                   class="bg-primary text-on-primary flex cursor-pointer items-center gap-2 rounded-lg border-0 px-6 py-2.5 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50"

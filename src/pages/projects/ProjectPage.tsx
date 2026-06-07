@@ -1,7 +1,7 @@
-import { Title } from "@solidjs/meta";
-import { useParams } from "@solidjs/router";
 import { writeClipboard } from "@solid-primitives/clipboard";
 import { createTimer } from "@solid-primitives/timer";
+import { Title } from "@solidjs/meta";
+import { useParams } from "@solidjs/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { Show, createEffect, createMemo, createSignal } from "solid-js";
 
@@ -54,7 +54,11 @@ export default function ProjectPage() {
   const [historyRevisions, setHistoryRevisions] = createSignal<ParamRevision[]>([]);
   const [showBulkImport, setShowBulkImport] = createSignal(false);
 
-  createTimer(() => setCopiedKey(null), () => (copiedKey() ? 1500 : false), setTimeout);
+  createTimer(
+    () => setCopiedKey(null),
+    () => (copiedKey() ? 1500 : false),
+    setTimeout
+  );
 
   const projectsQuery = useQuery(() => ({
     queryKey: projectKeys.list(),
@@ -457,6 +461,9 @@ export default function ProjectPage() {
           }
         }}
         onCancel={() => setConfirmDeleteEntry(null)}
+        testId="delete-parameter-dialog"
+        confirmTestId="delete-parameter-confirm-button"
+        cancelTestId="delete-parameter-cancel-button"
       />
 
       <ConfirmDialog
@@ -480,6 +487,9 @@ export default function ProjectPage() {
           }
         }}
         onCancel={() => setConfirmDeleteEnv(null)}
+        testId="delete-environment-dialog"
+        confirmTestId="delete-environment-confirm-button"
+        cancelTestId="delete-environment-cancel-button"
       />
     </>
   );

@@ -68,7 +68,10 @@ export default function ProjectsPage() {
         {/* Page header */}
         <div class="flex items-start justify-between gap-4 sm:items-center">
           <div class="space-y-1.5">
-            <h2 class="font-headline text-on-surface text-[17px] font-bold tracking-tight">
+            <h2
+              data-testid="projects-heading"
+              class="font-headline text-on-surface text-[17px] font-bold tracking-tight"
+            >
               Projects
             </h2>
             <ProjectsStats
@@ -78,6 +81,7 @@ export default function ProjectsPage() {
             />
           </div>
           <button
+            data-testid="projects-new-button"
             onClick={() => setShowCreate(!showCreate())}
             class="bg-primary text-on-primary flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98]"
           >
@@ -98,6 +102,7 @@ export default function ProjectsPage() {
         <Show when={projectsQuery.isSuccess && allProjects().length > 0}>
           <div class="max-w-sm">
             <Input
+              data-testid="projects-search-input"
               type="text"
               placeholder="Search projects…"
               value={search()}
@@ -146,6 +151,9 @@ export default function ProjectsPage() {
           onConfirm={() => deleteMutation.mutate(deleteTarget()!.name)}
           onCancel={() => setDeleteTarget(null)}
           variant="danger"
+          testId="delete-project-dialog"
+          confirmTestId="delete-project-confirm-button"
+          cancelTestId="delete-project-cancel-button"
         />
       </div>
     </>

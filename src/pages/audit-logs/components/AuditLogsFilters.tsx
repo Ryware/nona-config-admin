@@ -1,6 +1,6 @@
-import { onMount, onCleanup, createEffect, Show } from "solid-js";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
+import { createEffect, onCleanup, onMount, Show } from "solid-js";
 import { MIcon } from "../../../shared/ui/icons";
 import { Input } from "../../../shared/ui/input";
 import { Select } from "../../../shared/ui/select";
@@ -37,7 +37,7 @@ export function AuditLogsFilters(props: AuditLogsFiltersProps) {
           if (fpTo) {
             fpTo.set("minDate", dateStr || undefined);
           }
-        },
+        }
       });
     }
 
@@ -50,7 +50,7 @@ export function AuditLogsFilters(props: AuditLogsFiltersProps) {
           if (fpFrom) {
             fpFrom.set("maxDate", dateStr || undefined);
           }
-        },
+        }
       });
     }
   });
@@ -101,27 +101,28 @@ export function AuditLogsFilters(props: AuditLogsFiltersProps) {
   return (
     <div class="space-y-4">
       {/* Search and drop-down filters */}
-      <div class="flex items-center gap-4 flex-wrap">
+      <div class="flex flex-wrap items-center gap-4">
         <Input
+          data-testid="audit-search-input"
           type="text"
           placeholder="Filter audit trail..."
           value={props.search}
-          onInput={(e) => props.setSearch(e.currentTarget.value)}
-          class="w-56 h-10"
+          onInput={e => props.setSearch(e.currentTarget.value)}
+          class="h-10 w-56"
           leftIcon="search"
           wrapperStyle="w-auto"
         />
-        <span class="text-[11px] font-medium text-outline/70 shrink-0">Filters:</span>
+        <span class="text-outline/70 shrink-0 text-[11px] font-medium">Filters:</span>
 
         <div class="flex gap-2">
           {/* Action Type filter */}
           <div class="w-44">
             <Select
               value={props.filterAction === "all" ? "" : props.filterAction}
-              onChange={(val) => props.setFilterAction(val)}
+              onChange={val => props.setFilterAction(val)}
               placeholder="Action Type"
               class="h-10"
-              options={props.uniqueActions.map((action) => ({ value: action, label: action }))}
+              options={props.uniqueActions.map(action => ({ value: action, label: action }))}
             />
           </div>
 
@@ -129,17 +130,17 @@ export function AuditLogsFilters(props: AuditLogsFiltersProps) {
           <div class="w-44">
             <Select
               value={props.filterEnv === "all" ? "" : props.filterEnv}
-              onChange={(val) => props.setFilterEnv(val)}
+              onChange={val => props.setFilterEnv(val)}
               placeholder="Environment"
               class="h-10"
-              options={props.uniqueEnvs.map((env) => ({ value: env, label: env }))}
+              options={props.uniqueEnvs.map(env => ({ value: env, label: env }))}
             />
           </div>
         </div>
 
         <button
           onClick={() => props.clearAllFilters()}
-          class="text-[11px] text-outline hover:text-error transition-colors bg-transparent border-0 cursor-pointer flex items-center gap-1 font-medium"
+          class="text-outline hover:text-error flex cursor-pointer items-center gap-1 border-0 bg-transparent text-[11px] font-medium transition-colors"
         >
           <MIcon name="close" class="text-[14px]" />
           Clear
@@ -147,17 +148,20 @@ export function AuditLogsFilters(props: AuditLogsFiltersProps) {
       </div>
 
       {/* Date Range picker */}
-      <div class="flex items-center gap-3 flex-wrap">
-        <span class="text-[11px] font-medium text-outline/70 shrink-0">Date Range:</span>
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-outline/70 shrink-0 text-[11px] font-medium">Date Range:</span>
         <div class="relative flex items-center">
           <Input
             ref={fromInputRef}
             type="text"
             placeholder="From Date"
             value={props.dateFrom}
-            class="pl-3 pr-8 w-32 h-10 cursor-pointer"
+            class="h-10 w-32 cursor-pointer pr-8 pl-3"
           />
-          <MIcon name="calendar_today" class="absolute right-2.5 text-xs text-outline/70 pointer-events-none" />
+          <MIcon
+            name="calendar_today"
+            class="text-outline/70 pointer-events-none absolute right-2.5 text-xs"
+          />
         </div>
         <span class="text-outline text-[11px]">to</span>
         <div class="relative flex items-center">
@@ -166,14 +170,17 @@ export function AuditLogsFilters(props: AuditLogsFiltersProps) {
             type="text"
             placeholder="To Date"
             value={props.dateTo}
-            class="pl-3 pr-8 w-32 h-10 cursor-pointer"
+            class="h-10 w-32 cursor-pointer pr-8 pl-3"
           />
-          <MIcon name="calendar_today" class="absolute right-2.5 text-xs text-outline/70 pointer-events-none" />
+          <MIcon
+            name="calendar_today"
+            class="text-outline/70 pointer-events-none absolute right-2.5 text-xs"
+          />
         </div>
         <Show when={props.dateFrom || props.dateTo}>
           <button
             onClick={clearDates}
-            class="text-[11px] text-outline hover:text-error transition-colors bg-transparent border-0 cursor-pointer flex items-center gap-1 font-medium"
+            class="text-outline hover:text-error flex cursor-pointer items-center gap-1 border-0 bg-transparent text-[11px] font-medium transition-colors"
           >
             <MIcon name="close" class="text-[14px]" />
             Clear dates

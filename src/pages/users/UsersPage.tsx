@@ -63,7 +63,12 @@ export default function UsersPage() {
         {/* Page header */}
         <div class="flex items-start justify-between gap-4 sm:items-center">
           <div class="space-y-1.5">
-            <h2 class="font-headline text-on-surface text-[17px] font-bold tracking-tight">Team</h2>
+            <h2
+              data-testid="team-heading"
+              class="font-headline text-on-surface text-[17px] font-bold tracking-tight"
+            >
+              Team
+            </h2>
             <UsersStats
               totalMembers={users().length}
               editorsAdminsCount={editorsCount() + adminCount()}
@@ -71,6 +76,7 @@ export default function UsersPage() {
             />
           </div>
           <button
+            data-testid="team-invite-button"
             onClick={() => navigate("/user")}
             class="bg-primary text-on-primary flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98]"
           >
@@ -127,6 +133,9 @@ export default function UsersPage() {
         isLoading={deleteMutation.isPending}
         onConfirm={() => deleteMutation.mutate(deleteTarget()!.id)}
         onCancel={() => setDeleteTarget(null)}
+        testId="remove-member-dialog"
+        confirmTestId="remove-member-confirm-button"
+        cancelTestId="remove-member-cancel-button"
       />
     </>
   );

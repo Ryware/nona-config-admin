@@ -1,8 +1,8 @@
 import { Show } from "solid-js";
 import { Input } from "../../shared/ui/input";
+import type { ConfigEntry, CreateConfigEntryRequest, Environment } from "../../types";
 import { ProjectParamCreateForm } from "../project-param-edit/ProjectParamCreateForm";
 import { ProjectParamsTable } from "./ProjectParamsTable";
-import type { ConfigEntry, CreateConfigEntryRequest, Environment } from "../../types";
 
 interface ProjectParamsTabProps {
   activeEnvName: string;
@@ -17,8 +17,8 @@ interface ProjectParamsTabProps {
   onSubmitCreate: (data: {
     key: string;
     value: string;
-    contentType: CreateConfigEntryRequest['contentType'];
-    scope: CreateConfigEntryRequest['scope'];
+    contentType: CreateConfigEntryRequest["contentType"];
+    scope: CreateConfigEntryRequest["scope"];
     displayName: string;
     description: string;
   }) => void;
@@ -27,26 +27,29 @@ interface ProjectParamsTabProps {
   onDeleteEntry: (key: string) => void;
   copiedKey: string | null;
   onCopyValue: (key: string, value: string) => void;
-  getParamMeta: (proj: string, env: string, key: string) => { displayName: string; description: string };
+  getParamMeta: (
+    proj: string,
+    env: string,
+    key: string
+  ) => { displayName: string; description: string };
 }
 
 export function ProjectParamsTab(props: ProjectParamsTabProps) {
   return (
     <div class="space-y-4">
       {/* Section header */}
-      <div class="flex items-center justify-between gap-4 flex-wrap">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-outline font-headline flex items-center gap-2">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p class="text-outline font-headline flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase">
           <span>Parameters</span>
           <Show when={props.activeEnvName}>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
-              {props.environments
-                .find((e) => e.name === props.activeEnvName)
-                ?.name?.toUpperCase()}
+            <span class="bg-primary/10 text-primary border-primary/20 inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase">
+              {props.environments.find(e => e.name === props.activeEnvName)?.name?.toUpperCase()}
             </span>
           </Show>
         </p>
         <Show when={props.activeEnvName && props.filteredConfig.length > 0}>
           <Input
+            data-testid="parameters-search-input"
             type="text"
             placeholder="Search parameters…"
             value={props.paramSearch}
@@ -62,7 +65,7 @@ export function ProjectParamsTab(props: ProjectParamsTabProps) {
 
       {/* No env selected */}
       <Show when={!props.activeEnvName}>
-        <div class="bg-surface-container-low border border-outline-variant/15 rounded-2xl p-10 text-center text-on-surface-variant text-sm shadow-sm">
+        <div class="bg-surface-container-low border-outline-variant/15 text-on-surface-variant rounded-2xl border p-10 text-center text-sm shadow-sm">
           Select an environment above to view its parameters
         </div>
       </Show>
@@ -93,14 +96,8 @@ export function ProjectParamsTab(props: ProjectParamsTabProps) {
       </Show>
 
       {/* Empty state */}
-      <Show
-        when={
-          props.activeEnvName &&
-          !props.isLoading &&
-          props.filteredConfig.length === 0
-        }
-      >
-        <div class="bg-surface-container-low border border-outline-variant/15 rounded-2xl p-10 text-center text-on-surface-variant text-sm shadow-sm">
+      <Show when={props.activeEnvName && !props.isLoading && props.filteredConfig.length === 0}>
+        <div class="bg-surface-container-low border-outline-variant/15 text-on-surface-variant rounded-2xl border p-10 text-center text-sm shadow-sm">
           No parameters yet for this environment
         </div>
       </Show>

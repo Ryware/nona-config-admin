@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
-import type { User } from "../../../types";
 import { MIcon } from "../../../shared/ui/icons";
+import type { User } from "../../../types";
 
 interface UsersTableProps {
   isLoading: boolean;
@@ -13,61 +13,95 @@ interface UsersTableProps {
 
 function roleMeta(role: string) {
   if (role === "admin")
-    return { label: "Admin", class: "bg-primary/10 text-primary border border-primary/20", icon: "admin_panel_settings" };
+    return {
+      label: "Admin",
+      class: "bg-primary/10 text-primary border border-primary/20",
+      icon: "admin_panel_settings"
+    };
   if (role === "editor")
-    return { label: "Editor", class: "bg-secondary/15 text-secondary border border-secondary/20", icon: "edit" };
-  return { label: "Viewer", class: "bg-surface-container-high text-outline border border-outline-variant/15", icon: "visibility" };
+    return {
+      label: "Editor",
+      class: "bg-secondary/15 text-secondary border border-secondary/20",
+      icon: "edit"
+    };
+  return {
+    label: "Viewer",
+    class: "bg-surface-container-high text-outline border border-outline-variant/15",
+    icon: "visibility"
+  };
 }
 
 export function UsersTable(props: UsersTableProps) {
   return (
     <>
-      <div class="bg-surface-container-low rounded-xl border border-outline-variant/15 overflow-hidden">
+      <div class="bg-surface-container-low border-outline-variant/15 overflow-hidden rounded-xl border">
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+          <table class="w-full border-collapse text-left">
             <thead>
-              <tr class="border-b border-outline-variant/15 bg-surface-container-lowest/50">
-                <th class="py-3 px-6 text-[11px] font-medium text-outline uppercase tracking-[0.05em]">Member</th>
-                <th class="py-3 px-6 text-[11px] font-medium text-outline uppercase tracking-[0.05em]">System Role</th>
-                <th class="py-3 px-6 text-[11px] font-medium text-outline uppercase tracking-[0.05em]">Project Scope</th>
-                <th class="py-3 px-6 text-[11px] font-medium text-outline uppercase tracking-[0.05em] text-right w-24">Actions</th>
+              <tr class="border-outline-variant/15 bg-surface-container-lowest/50 border-b">
+                <th class="text-outline px-6 py-3 text-[11px] font-medium tracking-[0.05em] uppercase">
+                  Member
+                </th>
+                <th class="text-outline px-6 py-3 text-[11px] font-medium tracking-[0.05em] uppercase">
+                  System Role
+                </th>
+                <th class="text-outline px-6 py-3 text-[11px] font-medium tracking-[0.05em] uppercase">
+                  Project Scope
+                </th>
+                <th class="text-outline w-24 px-6 py-3 text-right text-[11px] font-medium tracking-[0.05em] uppercase">
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-outline-variant/10">
+            <tbody class="divide-outline-variant/10 divide-y">
               <Show when={props.isLoading}>
                 <For each={[1, 2, 3, 4, 5]}>
                   {() => (
-                    <tr class="border-b border-outline-variant/10">
-                      <td class="py-4 px-6">
+                    <tr class="border-outline-variant/10 border-b">
+                      <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
-                          <div class="skeleton w-9 h-9 rounded-full" />
+                          <div class="skeleton h-9 w-9 rounded-full" />
                           <div class="space-y-1.5">
                             <div class="skeleton h-3.5 w-28 rounded" />
                             <div class="skeleton h-3 w-36 rounded" />
                           </div>
                         </div>
                       </td>
-                      <td class="py-4 px-6"><div class="skeleton h-5 w-16 rounded-full" /></td>
-                      <td class="py-4 px-6"><div class="skeleton h-4 w-24 rounded" /></td>
-                      <td class="py-4 px-6" />
+                      <td class="px-6 py-4">
+                        <div class="skeleton h-5 w-16 rounded-full" />
+                      </td>
+                      <td class="px-6 py-4">
+                        <div class="skeleton h-4 w-24 rounded" />
+                      </td>
+                      <td class="px-6 py-4" />
                     </tr>
                   )}
                 </For>
               </Show>
 
-              <Show when={!props.isLoading && props.filteredUsers.length === 0 && props.totalUsersCount === 0}>
+              <Show
+                when={
+                  !props.isLoading &&
+                  props.filteredUsers.length === 0 &&
+                  props.totalUsersCount === 0
+                }
+              >
                 <tr>
                   <td colspan="4" class="py-16 text-center">
-                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/5 mb-4">
-                      <MIcon name="group_add" class="text-3xl text-primary/60" />
+                    <div class="bg-primary/5 mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl">
+                      <MIcon name="group_add" class="text-primary/60 text-3xl" />
                     </div>
-                    <p class="text-on-surface text-[14px] font-headline font-bold mb-1">No team members yet</p>
-                    <p class="text-on-surface-variant text-[13px] mb-4">Invite your first team member to get started.</p>
+                    <p class="text-on-surface font-headline mb-1 text-[14px] font-bold">
+                      No team members yet
+                    </p>
+                    <p class="text-on-surface-variant mb-4 text-[13px]">
+                      Invite your first team member to get started.
+                    </p>
                     <Show when={props.onInvite}>
                       <button
                         type="button"
                         onClick={() => props.onInvite?.()}
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold bg-primary text-on-primary text-[13px] transition-all active:scale-[0.98] hover:brightness-105 cursor-pointer border-0"
+                        class="bg-primary text-on-primary inline-flex cursor-pointer items-center gap-2 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98]"
                       >
                         <MIcon name="person_add" class="text-[17px]" />
                         Invite Member
@@ -77,9 +111,13 @@ export function UsersTable(props: UsersTableProps) {
                 </tr>
               </Show>
 
-              <Show when={!props.isLoading && props.filteredUsers.length === 0 && props.totalUsersCount > 0}>
+              <Show
+                when={
+                  !props.isLoading && props.filteredUsers.length === 0 && props.totalUsersCount > 0
+                }
+              >
                 <tr>
-                  <td colspan="4" class="py-10 text-center text-on-surface-variant text-sm">
+                  <td colspan="4" class="text-on-surface-variant py-10 text-center text-sm">
                     No members match your search
                   </td>
                 </tr>
@@ -94,37 +132,45 @@ export function UsersTable(props: UsersTableProps) {
                     const rm = roleMeta(user.role);
                     return (
                       <tr
+                        data-testid={`team-row-${user.id}`}
                         onClick={() => props.onEdit(user)}
-                        class="group hover:bg-surface-container-high/40 transition-colors cursor-pointer"
+                        class="group hover:bg-surface-container-high/40 cursor-pointer transition-colors"
                       >
-                        <td class="py-4 px-6">
+                        <td class="px-6 py-4">
                           <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-full flex items-center justify-center font-headline font-bold text-xs shrink-0 bg-primary/10 text-primary border border-primary/20">
+                            <div class="font-headline bg-primary/10 text-primary border-primary/20 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-xs font-bold">
                               {initials}
                             </div>
                             <div>
-                              <div class="font-headline font-semibold text-on-surface text-sm">{user.name || "Pending Invite"}</div>
-                              <div class="text-[11.5px] text-outline font-mono mt-0.5">{user.email}</div>
+                              <div class="font-headline text-on-surface text-sm font-semibold">
+                                {user.name || "Pending Invite"}
+                              </div>
+                              <div class="text-outline mt-0.5 font-mono text-[11.5px]">
+                                {user.email}
+                              </div>
                             </div>
                           </div>
                         </td>
-                        <td class="py-4 px-6">
-                          <span class={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium ${rm.class}`}>
+                        <td class="px-6 py-4">
+                          <span
+                            class={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${rm.class}`}
+                          >
                             {rm.label}
                           </span>
                         </td>
-                        <td class="py-4 px-6">
-                          <div class="flex items-center gap-1.5 text-on-surface-variant text-sm">
-                            <span class="material-symbols-outlined text-[16px] text-outline">
+                        <td class="px-6 py-4">
+                          <div class="text-on-surface-variant flex items-center gap-1.5 text-sm">
+                            <span class="material-symbols-outlined text-outline text-[16px]">
                               {user.role === "admin" ? "public" : "lock_person"}
                             </span>
                             <span>{user.role === "admin" ? "Global Access" : "Scoped Access"}</span>
                           </div>
                         </td>
-                        <td class="py-4 px-6 text-right" onClick={(e) => e.stopPropagation()}>
+                        <td class="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                           <button
+                            data-testid={`team-remove-${user.id}`}
                             onClick={() => props.onDelete(user)}
-                            class="opacity-40 group-hover:opacity-100 focus:opacity-100 transition-opacity text-outline hover:text-error bg-transparent border-0 cursor-pointer p-1.5 rounded-lg hover:bg-error/10"
+                            class="text-outline hover:text-error hover:bg-error/10 cursor-pointer rounded-lg border-0 bg-transparent p-1.5 opacity-40 transition-opacity group-hover:opacity-100 focus:opacity-100"
                             title={`Remove ${user.name || user.email}`}
                             aria-label={`Remove ${user.name || user.email}`}
                           >

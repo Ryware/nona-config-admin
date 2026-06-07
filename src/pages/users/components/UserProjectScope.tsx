@@ -9,49 +9,55 @@ interface UserProjectScopeProps {
 
 export function UserProjectScope(props: UserProjectScopeProps) {
   return (
-    <section class="bg-surface-container-low p-8 rounded-xl border border-outline-variant/15 shadow-sm space-y-6">
+    <section class="bg-surface-container-low border-outline-variant/15 space-y-6 rounded-xl border p-8 shadow-sm">
       <div class="flex items-center gap-3">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center bg-primary/10 border border-primary/20 text-primary font-mono text-xs font-bold shadow-[0_0_12px_rgba(99,102,241,0.15)] shrink-0">03</div>
-        <h3 class="font-headline font-bold text-lg text-on-surface">Project Scope</h3>
+        <div class="bg-primary/10 border-primary/20 text-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full border font-mono text-xs font-bold shadow-[0_0_12px_rgba(99,102,241,0.15)]">
+          03
+        </div>
+        <h3 class="font-headline text-on-surface text-lg font-bold">Project Scope</h3>
       </div>
-      <div class="bg-surface-container-low border border-outline-variant/15 rounded-xl overflow-hidden">
-        <div class="grid grid-cols-2 px-6 py-3.5 bg-surface-container-low border-b border-outline-variant/15 text-[10px] uppercase tracking-widest text-outline font-bold">
+      <div class="bg-surface-container-low border-outline-variant/15 overflow-hidden rounded-xl border">
+        <div class="bg-surface-container-low border-outline-variant/15 text-outline grid grid-cols-2 border-b px-6 py-3.5 text-[10px] font-bold tracking-widest uppercase">
           <span>Active Projects</span>
           <span class="text-right">Access Level</span>
         </div>
         <Show when={props.projects.length === 0}>
-          <div class="px-6 py-8 text-center text-outline text-sm">No projects found</div>
+          <div class="text-outline px-6 py-8 text-center text-sm">No projects found</div>
         </Show>
-        <div class="divide-y divide-outline-variant/10">
+        <div class="divide-outline-variant/10 divide-y">
           <For each={props.projects}>
-            {(project) => {
+            {project => {
               const isGiven = () => props.selectedProjects.has(project.urlSlug);
               return (
                 <div
-                  class="grid grid-cols-2 px-6 py-4 items-center hover:bg-surface-container-high/40 transition-colors cursor-pointer border-b border-outline-variant/10 last:border-b-0"
+                  data-testid={`invite-project-row-${project.urlSlug}`}
+                  class="hover:bg-surface-container-high/40 border-outline-variant/10 grid cursor-pointer grid-cols-2 items-center border-b px-6 py-4 transition-colors last:border-b-0"
                   onClick={() => props.onToggleProject(project.urlSlug)}
                 >
                   <div class="flex items-center gap-3">
                     <input
+                      data-testid={`invite-project-${project.urlSlug}`}
                       type="checkbox"
                       checked={isGiven()}
                       onChange={() => props.onToggleProject(project.urlSlug)}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                       aria-label={`Toggle access for project ${project.name || project.urlSlug}`}
-                      class="w-4 h-4 bg-surface-container-low border border-outline-variant/20 rounded focus:ring-1 focus:ring-primary/30 text-primary cursor-pointer accent-primary"
+                      class="bg-surface-container-low border-outline-variant/20 focus:ring-primary/30 text-primary accent-primary h-4 w-4 cursor-pointer rounded border focus:ring-1"
                     />
-                    <span class="text-sm font-mono text-on-surface font-semibold">{project.urlSlug}</span>
+                    <span class="text-on-surface font-mono text-sm font-semibold">
+                      {project.urlSlug}
+                    </span>
                   </div>
                   <div class="text-right">
                     <Show
                       when={isGiven()}
                       fallback={
-                        <span class="text-[9px] px-2.5 py-0.5 bg-surface-container-high text-outline rounded-full uppercase font-bold tracking-wider border border-outline-variant/15">
+                        <span class="bg-surface-container-high text-outline border-outline-variant/15 rounded-full border px-2.5 py-0.5 text-[9px] font-bold tracking-wider uppercase">
                           None
                         </span>
                       }
                     >
-                      <span class="text-[9px] px-2.5 py-0.5 bg-primary/10 text-primary rounded-full uppercase font-bold tracking-wider border border-primary/20">
+                      <span class="bg-primary/10 text-primary border-primary/20 rounded-full border px-2.5 py-0.5 text-[9px] font-bold tracking-wider uppercase">
                         Inherited
                       </span>
                     </Show>

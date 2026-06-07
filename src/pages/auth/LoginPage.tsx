@@ -97,11 +97,16 @@ export default function LoginPage() {
       <Show
         when={!showForgot()}
         fallback={
-          <AuthCard title="Reset Password" error={error()}>
+          <AuthCard
+            title="Reset Password"
+            error={error()}
+            testId="forgot-card"
+            headingTestId="forgot-heading"
+          >
             <Show
               when={!forgotSent()}
               fallback={
-                <div class="space-y-4 py-2 text-center">
+                <div data-testid="forgot-sent-state" class="space-y-4 py-2 text-center">
                   <span class="material-symbols-outlined text-primary text-[40px]">
                     mark_email_read
                   </span>
@@ -111,6 +116,7 @@ export default function LoginPage() {
                     sent.
                   </p>
                   <button
+                    data-testid="forgot-back-to-login-button"
                     onClick={() => {
                       setShowForgot(false);
                       setForgotSent(false);
@@ -137,9 +143,11 @@ export default function LoginPage() {
                   required
                   autofocus
                   leftIcon="alternate_email"
+                  testId="forgot-email-input"
                 />
                 <div class="flex items-center gap-3 pt-1">
                   <button
+                    data-testid="forgot-cancel-button"
                     type="button"
                     onClick={() => {
                       setShowForgot(false);
@@ -150,6 +158,7 @@ export default function LoginPage() {
                     Cancel
                   </button>
                   <button
+                    data-testid="forgot-submit-button"
                     type="submit"
                     disabled={forgotMutation.isPending || !forgotEmail()}
                     class="bg-primary text-on-primary flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border-0 py-3 text-[13px] font-bold transition-all hover:brightness-105 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
@@ -162,7 +171,12 @@ export default function LoginPage() {
           </AuthCard>
         }
       >
-        <AuthCard title="Welcome Back" error={error()}>
+        <AuthCard
+          title="Welcome Back"
+          error={error()}
+          testId="login-card"
+          headingTestId="login-heading"
+        >
           <form onSubmit={handleSubmit} class="space-y-5">
             <FormField
               id="email"
@@ -175,6 +189,7 @@ export default function LoginPage() {
               autofocus
               autocomplete="email"
               leftIcon="alternate_email"
+              testId="login-email-input"
             />
             <FormField
               id="password"
@@ -186,6 +201,7 @@ export default function LoginPage() {
               required
               autocomplete="current-password"
               leftIcon="key"
+              testId="login-password-input"
             />
             <div class="pt-2">
               <label class="group mb-4 flex w-fit cursor-pointer items-center gap-2.5">
@@ -209,6 +225,7 @@ export default function LoginPage() {
                 </span>
               </label>
               <button
+                data-testid="login-submit-button"
                 type="submit"
                 disabled={isBusy()}
                 class="bg-primary text-on-primary flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-0 py-3.5 text-xs font-bold tracking-wider uppercase shadow-md transition-all hover:brightness-105 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
@@ -230,6 +247,7 @@ export default function LoginPage() {
               </A>
             </span>
             <button
+              data-testid="forgot-open-button"
               type="button"
               onClick={() => {
                 setShowForgot(true);

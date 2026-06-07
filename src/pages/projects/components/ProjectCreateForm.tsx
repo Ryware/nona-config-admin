@@ -1,6 +1,6 @@
 import { createSignal, Show } from "solid-js";
-import { FormField } from "../../../widgets/auth-shell/FormField";
 import { MIcon } from "../../../shared/ui/icons";
+import { FormField } from "../../../widgets/auth-shell/FormField";
 
 interface ProjectCreateFormProps {
   onCancel: () => void;
@@ -34,9 +34,14 @@ export function ProjectCreateForm(props: ProjectCreateFormProps) {
   };
 
   return (
-    <div class="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/15 shadow-sm animate-fade-in">
-      <h3 class="text-xs font-headline font-bold text-on-surface uppercase tracking-wider mb-6">New Project</h3>
-      <form onSubmit={handleSubmit} class="grid md:grid-cols-2 gap-6">
+    <div
+      data-testid="project-create-form"
+      class="bg-surface-container-low border-outline-variant/15 animate-fade-in rounded-2xl border p-6 shadow-sm"
+    >
+      <h3 class="font-headline text-on-surface mb-6 text-xs font-bold tracking-wider uppercase">
+        New Project
+      </h3>
+      <form onSubmit={handleSubmit} class="grid gap-6 md:grid-cols-2">
         <div>
           <FormField
             id="project-name"
@@ -50,10 +55,13 @@ export function ProjectCreateForm(props: ProjectCreateFormProps) {
             }}
             required
             leftIcon="folder"
+            testId="project-name-input"
           />
-          <p class="mt-2 text-[10px] text-outline font-medium uppercase tracking-wider">Use letters, numbers, and hyphens only.</p>
+          <p class="text-outline mt-2 text-[10px] font-medium tracking-wider uppercase">
+            Use letters, numbers, and hyphens only.
+          </p>
           <Show when={createError()}>
-            <p class="mt-2 text-[11px] font-bold text-error">{createError()}</p>
+            <p class="text-error mt-2 text-[11px] font-bold">{createError()}</p>
           </Show>
         </div>
         <FormField
@@ -66,20 +74,23 @@ export function ProjectCreateForm(props: ProjectCreateFormProps) {
             setDescription(e.currentTarget.value)
           }
           leftIcon="notes"
+          testId="project-description-input"
         />
-        <div class="md:col-span-2 flex gap-3">
+        <div class="flex gap-3 md:col-span-2">
           <button
+            data-testid="project-create-submit-button"
             type="submit"
             disabled={props.isPending}
-            class="px-6 py-2.5 rounded-lg font-bold bg-primary text-on-primary text-xs uppercase tracking-wider transition-all active:scale-[0.98] hover:brightness-105 disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-md border-0"
+            class="bg-primary text-on-primary flex cursor-pointer items-center gap-2 rounded-lg border-0 px-6 py-2.5 text-xs font-bold tracking-wider uppercase shadow-md transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
           >
             <MIcon name="add" class="text-[16px]" />
             {props.isPending ? "Creating…" : "Create Project"}
           </button>
           <button
+            data-testid="project-create-cancel-button"
             type="button"
             onClick={() => props.onCancel()}
-            class="px-6 py-2.5 rounded-lg font-bold text-on-surface-variant text-xs uppercase tracking-wider bg-surface-container-high hover:bg-surface-bright transition-all cursor-pointer border-0"
+            class="text-on-surface-variant bg-surface-container-high hover:bg-surface-bright cursor-pointer rounded-lg border-0 px-6 py-2.5 text-xs font-bold tracking-wider uppercase transition-all"
           >
             Cancel
           </button>

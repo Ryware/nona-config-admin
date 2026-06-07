@@ -1,10 +1,10 @@
-import { createSignal, createEffect, createMemo, Show, For } from "solid-js";
 import type { JSX } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
+import type { ParamRevision } from "../../entities/project/api/metadata.service";
+import { MIcon } from "../../shared/ui/icons";
 import { Input } from "../../shared/ui/input";
 import { Select } from "../../shared/ui/select";
 import { VisualJsonEditor } from "../../shared/ui/visual-json-editor";
-import { MIcon } from "../../shared/ui/icons";
-import type { ParamRevision } from "../../entities/project/api/metadata.service";
 import type { ConfigEntry } from "../../types";
 
 export type { ParamRevision };
@@ -32,22 +32,20 @@ interface FieldRowProps {
 function FieldRow(props: FieldRowProps): JSX.Element {
   return (
     <div class="flex items-start gap-3 py-1">
-      <span class="text-[11px] font-medium text-outline w-24 shrink-0 pt-px leading-snug">
+      <span class="text-outline w-24 shrink-0 pt-px text-[11px] leading-snug font-medium">
         {props.label}
       </span>
       <span
-        class={`text-[12px] flex-1 leading-relaxed min-w-0 break-all ${props.mono ? "font-mono" : ""} ${
+        class={`min-w-0 flex-1 text-[12px] leading-relaxed break-all ${props.mono ? "font-mono" : ""} ${
           props.changed ? "text-on-surface" : "text-on-surface-variant/50"
         }`}
       >
-        {props.value ? props.value : <span class="italic text-outline/40">–</span>}
+        {props.value ? props.value : <span class="text-outline/40 italic">–</span>}
       </span>
       <Show when={props.changed}>
         <span
-          class={`text-[9px] font-medium shrink-0 px-1.5 py-0.5 rounded-full mt-0.5 ${
-            props.initial
-              ? "bg-secondary/10 text-secondary"
-              : "bg-primary/10 text-primary"
+          class={`mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${
+            props.initial ? "bg-secondary/10 text-secondary" : "bg-primary/10 text-primary"
           }`}
         >
           {props.initial ? "initial" : "changed"}
@@ -102,7 +100,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
     props.onSaveSettings({
       value: editVal().trim(),
       displayName: editDisplayName().trim(),
-      description: editDescription().trim(),
+      description: editDescription().trim()
     });
   };
 
@@ -116,21 +114,28 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
             {/* Backdrop */}
             <div
               onClick={() => props.onClose()}
-              class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity"
+              class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity"
             />
 
             {/* Drawer Panel */}
-            <div class="fixed top-0 right-0 h-screen w-full max-w-md bg-surface-container-low border-l border-outline-variant/15 rounded-l-2xl p-6 z-50 shadow-2xl flex flex-col animate-in">
-
+            <div
+              data-testid="parameter-edit-drawer"
+              class="bg-surface-container-low border-outline-variant/15 animate-in fixed top-0 right-0 z-50 flex h-screen w-full max-w-md flex-col rounded-l-2xl border-l p-6 shadow-2xl"
+            >
               {/* Header */}
-              <div class="flex items-center justify-between pb-4 border-b border-outline-variant/15 mb-4">
+              <div class="border-outline-variant/15 mb-4 flex items-center justify-between border-b pb-4">
                 <div>
-                  <h3 class="text-base font-headline font-bold text-on-surface">Edit Parameter</h3>
-                  <p class="text-[11px] font-mono text-outline mt-0.5">{entry.key}</p>
+                  <h3
+                    data-testid="parameter-edit-heading"
+                    class="font-headline text-on-surface text-base font-bold"
+                  >
+                    Edit Parameter
+                  </h3>
+                  <p class="text-outline mt-0.5 font-mono text-[11px]">{entry.key}</p>
                 </div>
                 <button
                   onClick={() => props.onClose()}
-                  class="text-outline hover:text-on-surface bg-transparent border-0 cursor-pointer p-1.5 rounded-lg hover:bg-surface-container-high/60 flex items-center justify-center transition-colors"
+                  class="text-outline hover:text-on-surface hover:bg-surface-container-high/60 flex cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent p-1.5 transition-colors"
                   aria-label="Close"
                 >
                   <MIcon name="close" />
@@ -138,11 +143,11 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
               </div>
 
               {/* Tabs */}
-              <div class="flex gap-1 bg-surface-container/60 p-1 rounded-xl mb-5">
+              <div class="bg-surface-container/60 mb-5 flex gap-1 rounded-xl p-1">
                 <button
                   type="button"
                   onClick={() => setActiveDrawerTab("settings")}
-                  class={`flex-1 py-1.5 rounded-lg text-[12px] font-medium transition-all border-0 cursor-pointer ${
+                  class={`flex-1 cursor-pointer rounded-lg border-0 py-1.5 text-[12px] font-medium transition-all ${
                     activeDrawerTab() === "settings"
                       ? "bg-primary text-on-primary"
                       : "text-outline hover:text-on-surface bg-transparent"
@@ -153,7 +158,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                 <button
                   type="button"
                   onClick={() => setActiveDrawerTab("history")}
-                  class={`flex-1 py-1.5 rounded-lg text-[12px] font-medium transition-all border-0 cursor-pointer ${
+                  class={`flex-1 cursor-pointer rounded-lg border-0 py-1.5 text-[12px] font-medium transition-all ${
                     activeDrawerTab() === "history"
                       ? "bg-primary text-on-primary"
                       : "text-outline hover:text-on-surface bg-transparent"
@@ -165,24 +170,22 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
 
               {/* Scrollable content */}
               <div class="flex-1 overflow-y-auto pr-1 pl-1">
-
                 {/* ── Settings tab ─────────────────────────────── */}
                 <Show when={activeDrawerTab() === "settings"}>
                   <div class="space-y-5">
-
                     {/* Environment */}
                     <div class="flex items-center justify-between py-1">
-                      <span class="text-[11px] font-medium text-outline tracking-[0.05em]">
+                      <span class="text-outline text-[11px] font-medium tracking-[0.05em]">
                         Environment
                       </span>
-                      <span class="text-[11px] font-mono bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 rounded-full">
+                      <span class="bg-primary/10 text-primary border-primary/20 rounded-full border px-2.5 py-0.5 font-mono text-[11px]">
                         {props.activeEnvName}
                       </span>
                     </div>
 
                     {/* Friendly name */}
                     <div class="space-y-2">
-                      <label class="block text-[11px] font-medium text-on-surface-variant tracking-[0.05em]">
+                      <label class="text-on-surface-variant block text-[11px] font-medium tracking-[0.05em]">
                         Friendly name
                       </label>
                       <Input
@@ -193,12 +196,13 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                         }
                         placeholder="Friendly name"
                         leftIcon="label"
+                        data-testid="parameter-edit-display-name-input"
                       />
                     </div>
 
                     {/* Description */}
                     <div class="space-y-2">
-                      <label class="block text-[11px] font-medium text-on-surface-variant tracking-[0.05em]">
+                      <label class="text-on-surface-variant block text-[11px] font-medium tracking-[0.05em]">
                         Description
                       </label>
                       <textarea
@@ -208,17 +212,18 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                         }
                         rows={3}
                         maxLength={500}
-                        class="w-full resize-none bg-surface-container-lowest border border-outline-variant/20 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-2.5 text-[13px] text-on-surface placeholder:text-outline/60 transition-all outline-none hover:border-outline-variant/30"
+                        class="bg-surface-container-lowest border-outline-variant/20 focus:border-primary focus:ring-primary/20 text-on-surface placeholder:text-outline/60 hover:border-outline-variant/30 w-full resize-none rounded-xl border px-4 py-2.5 text-[13px] transition-all outline-none focus:ring-2"
                         placeholder="Describe what this setting controls..."
+                        data-testid="parameter-edit-description-input"
                       />
                     </div>
 
                     {/* Datatype */}
                     <div class="space-y-2">
-                      <label class="block text-[11px] font-medium text-on-surface-variant tracking-[0.05em]">
+                      <label class="text-on-surface-variant block text-[11px] font-medium tracking-[0.05em]">
                         Datatype
                       </label>
-                      <div class="inline-flex items-center gap-1.5 text-[11px] font-mono text-primary bg-primary/5 border border-primary/15 px-3 py-1.5 rounded-lg">
+                      <div class="text-primary bg-primary/5 border-primary/15 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-mono text-[11px]">
                         <MIcon name="data_object" class="text-[14px]" />
                         {entry.contentType}
                       </div>
@@ -226,16 +231,16 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
 
                     {/* Value */}
                     <div class="space-y-2">
-                      <label class="block text-[11px] font-medium text-on-surface-variant tracking-[0.05em]">
+                      <label class="text-on-surface-variant block text-[11px] font-medium tracking-[0.05em]">
                         Value
                       </label>
                       <Show when={entry.contentType === "boolean"}>
                         <Select
                           value={editVal()}
-                          onChange={(val) => setEditVal(val)}
+                          onChange={val => setEditVal(val)}
                           options={[
                             { value: "true", label: "True / Active" },
-                            { value: "false", label: "False / Inactive" },
+                            { value: "false", label: "False / Inactive" }
                           ]}
                         />
                       </Show>
@@ -264,17 +269,20 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                             setEditVal(e.currentTarget.value)
                           }
                           leftIcon="text_fields"
+                          data-testid="parameter-edit-value-input"
                         />
                       </Show>
                     </div>
 
                     {/* Production warning */}
                     <Show when={isProd()}>
-                      <div class="p-4 rounded-xl border border-error/25 bg-error/5 flex items-start gap-3">
-                        <MIcon name="warning" class="text-error text-[18px] shrink-0 mt-0.5" />
+                      <div class="border-error/25 bg-error/5 flex items-start gap-3 rounded-xl border p-4">
+                        <MIcon name="warning" class="text-error mt-0.5 shrink-0 text-[18px]" />
                         <div>
-                          <p class="text-[12px] font-semibold text-error mb-1">Production environment</p>
-                          <p class="text-[11px] text-on-surface-variant leading-relaxed">
+                          <p class="text-error mb-1 text-[12px] font-semibold">
+                            Production environment
+                          </p>
+                          <p class="text-on-surface-variant text-[11px] leading-relaxed">
                             Changes apply immediately to live servers.
                           </p>
                         </div>
@@ -286,18 +294,18 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                 {/* ── History tab ───────────────────────────────── */}
                 <Show when={activeDrawerTab() === "history"}>
                   <div>
-                    <p class="text-[11px] font-medium text-outline tracking-[0.05em] mb-5">
+                    <p class="text-outline mb-5 text-[11px] font-medium tracking-[0.05em]">
                       Revision timeline
                     </p>
                     <Show
                       when={props.historyRevisions.length > 0}
                       fallback={
-                        <div class="text-center py-12 text-[12px] text-outline">
+                        <div class="text-outline py-12 text-center text-[12px]">
                           No revision history.
                         </div>
                       }
                     >
-                      <div class="relative pl-5 border-l border-outline-variant/20 space-y-7">
+                      <div class="border-outline-variant/20 relative space-y-7 border-l pl-5">
                         <For each={props.historyRevisions}>
                           {(rev, index) => {
                             const changes = createMemo(() => {
@@ -307,33 +315,33 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                                     isInitial: false,
                                     value: rev.value !== prev.value,
                                     displayName: rev.displayName !== prev.displayName,
-                                    description: rev.description !== prev.description,
+                                    description: rev.description !== prev.description
                                   }
                                 : {
                                     isInitial: true,
                                     value: true,
                                     displayName: !!rev.displayName,
-                                    description: !!rev.description,
+                                    description: !!rev.description
                                   };
                             });
 
                             return (
                               <div class="relative">
                                 {/* Timeline dot */}
-                                <div class="absolute -left-6.25 top-1.5 w-2 h-2 rounded-full bg-primary/70 ring-2 ring-surface-container-low" />
+                                <div class="bg-primary/70 ring-surface-container-low absolute top-1.5 -left-6.25 h-2 w-2 rounded-full ring-2" />
 
                                 {/* Actor + timestamp */}
-                                <div class="flex items-baseline justify-between mb-3 gap-2">
-                                  <span class="text-[13px] font-medium text-on-surface truncate">
+                                <div class="mb-3 flex items-baseline justify-between gap-2">
+                                  <span class="text-on-surface truncate text-[13px] font-medium">
                                     {rev.actor}
                                   </span>
-                                  <span class="text-[10px] font-mono text-outline shrink-0">
+                                  <span class="text-outline shrink-0 font-mono text-[10px]">
                                     {fmtRevDate(rev.timestamp)}
                                   </span>
                                 </div>
 
                                 {/* Field rows */}
-                                <div class="space-y-0 divide-y divide-outline-variant/8">
+                                <div class="divide-outline-variant/8 space-y-0 divide-y">
                                   <Show when={rev.displayName !== undefined}>
                                     <FieldRow
                                       label="Friendly name"
@@ -364,7 +372,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                                   <button
                                     type="button"
                                     onClick={() => props.onRestoreRevision(rev)}
-                                    class="flex items-center gap-1.5 text-[12px] font-medium text-primary hover:text-primary-container transition-colors cursor-pointer bg-transparent border-0 px-0"
+                                    class="text-primary hover:text-primary-container flex cursor-pointer items-center gap-1.5 border-0 bg-transparent px-0 text-[12px] font-medium transition-colors"
                                   >
                                     <MIcon name="history" class="text-[14px]" />
                                     Restore this revision
@@ -384,30 +392,32 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
               <Show
                 when={activeDrawerTab() === "settings"}
                 fallback={
-                  <div class="pt-4 border-t border-outline-variant/15 mt-4">
+                  <div class="border-outline-variant/15 mt-4 border-t pt-4">
                     <button
                       type="button"
                       onClick={() => props.onClose()}
-                      class="w-full py-2.5 rounded-xl text-[13px] font-medium text-on-surface-variant bg-surface-container-high hover:bg-surface-container-highest transition-colors border-0 cursor-pointer"
+                      class="text-on-surface-variant bg-surface-container-high hover:bg-surface-container-highest w-full cursor-pointer rounded-xl border-0 py-2.5 text-[13px] font-medium transition-colors"
                     >
                       Close
                     </button>
                   </div>
                 }
               >
-                <div class="pt-4 border-t border-outline-variant/15 flex gap-3 mt-4">
+                <div class="border-outline-variant/15 mt-4 flex gap-3 border-t pt-4">
                   <button
+                    data-testid="parameter-edit-cancel-button"
                     type="button"
                     onClick={() => props.onClose()}
-                    class="flex-1 py-2.5 rounded-xl text-[13px] font-medium text-on-surface-variant bg-surface-container-high hover:bg-surface-container-highest transition-colors border-0 cursor-pointer"
+                    class="text-on-surface-variant bg-surface-container-high hover:bg-surface-container-highest flex-1 cursor-pointer rounded-xl border-0 py-2.5 text-[13px] font-medium transition-colors"
                   >
                     Cancel
                   </button>
                   <button
+                    data-testid="parameter-edit-save-button"
                     type="button"
                     onClick={handleSave}
                     disabled={props.isSaving || isEditInvalid()}
-                    class="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-primary text-on-primary hover:brightness-110 transition-all disabled:opacity-40 border-0 cursor-pointer"
+                    class="bg-primary text-on-primary flex-1 cursor-pointer rounded-xl border-0 py-2.5 text-[13px] font-semibold transition-all hover:brightness-110 disabled:opacity-40"
                   >
                     {props.isSaving ? "Saving…" : "Save"}
                   </button>

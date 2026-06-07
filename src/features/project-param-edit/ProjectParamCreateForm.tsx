@@ -1,8 +1,8 @@
 import { createSignal, Show } from "solid-js";
-import { FormField } from "../../widgets/auth-shell/FormField";
 import { Input } from "../../shared/ui/input";
 import { Select } from "../../shared/ui/select";
 import { VisualJsonEditor } from "../../shared/ui/visual-json-editor";
+import { FormField } from "../../widgets/auth-shell/FormField";
 
 interface ProjectParamCreateFormProps {
   onCancel: () => void;
@@ -56,16 +56,17 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
       contentType: cfgType(),
       scope: "all",
       displayName: cfgDisplayName().trim(),
-      description: cfgDescription().trim(),
+      description: cfgDescription().trim()
     });
   };
 
   return (
     <form
+      data-testid="parameter-create-form"
       onSubmit={handleSubmit}
-      class="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/15 mb-4 space-y-4 animate-fade-in"
+      class="bg-surface-container-low border-outline-variant/15 animate-fade-in mb-4 space-y-4 rounded-2xl border p-6"
     >
-      <div class="grid md:grid-cols-2 gap-4">
+      <div class="grid gap-4 md:grid-cols-2">
         <div class="space-y-4">
           <div>
             <FormField
@@ -81,10 +82,11 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
               required
               autofocus
               leftIcon="code"
+              testId="parameter-key-input"
             />
           </div>
           <div>
-            <label class="block text-[11px] font-medium text-on-surface-variant tracking-[0.05em] mb-1.5">
+            <label class="text-on-surface-variant mb-1.5 block text-[11px] font-medium tracking-[0.05em]">
               Datatype
             </label>
             <Select
@@ -108,6 +110,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
               onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
                 setCfgDisplayName(e.currentTarget.value)
               }
+              testId="parameter-display-name-input"
             />
           </div>
           <div>
@@ -121,6 +124,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
                 setCfgDescription(e.currentTarget.value)
               }
               maxLength={500}
+              testId="parameter-description-input"
             />
           </div>
         </div>
@@ -129,7 +133,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
       <div>
         <label
           for="config-entry-value"
-          class="block text-[11px] font-medium text-on-surface-variant tracking-[0.05em] mb-1.5"
+          class="text-on-surface-variant mb-1.5 block text-[11px] font-medium tracking-[0.05em]"
         >
           Value
         </label>
@@ -141,12 +145,13 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
             placeholder="Select status..."
             options={[
               { value: "true", label: "True / Active" },
-              { value: "false", label: "False / Inactive" },
+              { value: "false", label: "False / Inactive" }
             ]}
           />
         </Show>
         <Show when={cfgType() === "number"}>
           <Input
+            data-testid="parameter-value-input"
             id="config-entry-value"
             type="number"
             value={cfgValue()}
@@ -162,6 +167,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
         </Show>
         <Show when={cfgType() === "string"}>
           <Input
+            data-testid="parameter-value-input"
             id="config-entry-value"
             type="text"
             value={cfgValue()}
@@ -176,16 +182,18 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
 
       <div class="flex justify-end gap-3 pt-2">
         <button
+          data-testid="parameter-create-cancel-button"
           type="button"
           onClick={() => props.onCancel()}
-          class="px-4 py-2.5 rounded-lg font-semibold text-on-surface-variant text-[13px] bg-surface-container-high hover:bg-surface-bright transition-all border-0 cursor-pointer"
+          class="text-on-surface-variant bg-surface-container-high hover:bg-surface-bright cursor-pointer rounded-lg border-0 px-4 py-2.5 text-[13px] font-semibold transition-all"
         >
           Cancel
         </button>
         <button
+          data-testid="parameter-create-submit-button"
           type="submit"
           disabled={props.isPending || isAddInvalid()}
-          class="px-4 py-2.5 rounded-lg font-semibold bg-primary text-on-primary text-[13px] hover:brightness-105 transition-all disabled:opacity-50 border-0 cursor-pointer"
+          class="bg-primary text-on-primary cursor-pointer rounded-lg border-0 px-4 py-2.5 text-[13px] font-semibold transition-all hover:brightness-105 disabled:opacity-50"
         >
           {props.isPending ? "Creating…" : "Add Parameter"}
         </button>
