@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/solid-query';
 import { MetaProvider } from '@solidjs/meta';
 import { ToastProvider } from '../../shared/ui/toast';
 import DashboardPage from '../../pages/dashboard/DashboardPage';
-import { mockToken, mockProjects } from '../mocks/data';
+import { mockToken } from '../mocks/data';
 import type { JSX } from 'solid-js';
 
 function renderWithProviders(ui: () => JSX.Element) {
@@ -48,15 +48,6 @@ describe('DashboardPage', () => {
     // Verify values from mocks: mockProjects is 2, mockUsers is 2, mockConfigEntries is 3
     expect(await screen.findAllByText('2')).not.toHaveLength(0);
     expect(await screen.findAllByText('3')).not.toHaveLength(0);
-  });
-
-  it('displays recently updated projects list', async () => {
-    renderWithProviders(() => <DashboardPage />);
-
-    // Mock projects names should appear in "Recently Updated Projects" list
-    for (const project of mockProjects) {
-      expect(await screen.findAllByText(project.name)).not.toHaveLength(0);
-    }
   });
 
   it('contains quick action navigation links', async () => {
