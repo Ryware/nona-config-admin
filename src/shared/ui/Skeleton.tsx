@@ -101,10 +101,10 @@ export function SkeletonCardGrid(props: SkeletonCardGridProps) {
 
   return (
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <For each={Array.from({ length: count() })}>
-        {(_, i) =>
+      <For each={Array.from({ length: count() }, (_, i) => i)}>
+        {(i) =>
           props.children ? (
-            props.children(i())
+            props.children(i)
           ) : (
             <div class="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/15 space-y-3">
               <div class="skeleton h-3 w-24 rounded" />

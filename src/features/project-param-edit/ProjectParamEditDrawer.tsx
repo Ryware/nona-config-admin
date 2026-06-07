@@ -1,15 +1,16 @@
-import { createSignal, createEffect, Show, For } from "solid-js";
+import { createSignal, createEffect, createMemo, Show, For } from "solid-js";
 import type { JSX } from "solid-js";
 import { Input } from "../../shared/ui/input";
 import { Select } from "../../shared/ui/select";
 import { VisualJsonEditor } from "../../shared/ui/visual-json-editor";
 import { MIcon } from "../../shared/ui/icons";
 import type { ParamRevision } from "../../entities/project/api/metadata.service";
+import type { ConfigEntry } from "../../types";
 
 export type { ParamRevision };
 
 interface ProjectParamEditDrawerProps {
-  entry: any; // ConfigEntry | null
+  entry: ConfigEntry | null;
   activeEnvName: string;
   initialDisplayName: string;
   initialDescription: string;
@@ -114,7 +115,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
           <>
             {/* Backdrop */}
             <div
-              onClick={props.onClose}
+              onClick={() => props.onClose()}
               class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity"
             />
 
@@ -128,7 +129,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                   <p class="text-[11px] font-mono text-outline mt-0.5">{entry.key}</p>
                 </div>
                 <button
-                  onClick={props.onClose}
+                  onClick={() => props.onClose()}
                   class="text-outline hover:text-on-surface bg-transparent border-0 cursor-pointer p-1.5 rounded-lg hover:bg-surface-container-high/60 flex items-center justify-center transition-colors"
                   aria-label="Close"
                 >
@@ -187,7 +188,9 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                       <Input
                         type="text"
                         value={editDisplayName()}
-                        onInput={(e: any) => setEditDisplayName(e.currentTarget.value)}
+                        onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+                          setEditDisplayName(e.currentTarget.value)
+                        }
                         placeholder="Friendly name"
                         leftIcon="label"
                       />
@@ -200,7 +203,9 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                       </label>
                       <textarea
                         value={editDescription()}
-                        onInput={(e: any) => setEditDescription(e.currentTarget.value)}
+                        onInput={(e: InputEvent & { currentTarget: HTMLTextAreaElement }) =>
+                          setEditDescription(e.currentTarget.value)
+                        }
                         rows={3}
                         maxLength={500}
                         class="w-full resize-none bg-surface-container-lowest border border-outline-variant/20 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-2.5 text-[13px] text-on-surface placeholder:text-outline/60 transition-all outline-none hover:border-outline-variant/30"
@@ -238,7 +243,9 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                         <Input
                           type="number"
                           value={editVal()}
-                          onInput={(e: any) => setEditVal(e.currentTarget.value)}
+                          onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+                            setEditVal(e.currentTarget.value)
+                          }
                           leftIcon="pin"
                         />
                       </Show>
@@ -253,7 +260,9 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                         <Input
                           type="text"
                           value={editVal()}
-                          onInput={(e: any) => setEditVal(e.currentTarget.value)}
+                          onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+                            setEditVal(e.currentTarget.value)
+                          }
                           leftIcon="text_fields"
                         />
                       </Show>
@@ -291,25 +300,22 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                       <div class="relative pl-5 border-l border-outline-variant/20 space-y-7">
                         <For each={props.historyRevisions}>
                           {(rev, index) => {
-                            const getChanges = () => {
+                            const changes = createMemo(() => {
                               const prev = props.historyRevisions[index() + 1];
-                              if (!prev) {
-                                return {
-                                  isInitial: true,
-                                  value: true,
-                                  displayName: !!rev.displayName,
-                                  description: !!rev.description,
-                                };
-                              }
-                              return {
-                                isInitial: false,
-                                value: rev.value !== prev.value,
-                                displayName: rev.displayName !== prev.displayName,
-                                description: rev.description !== prev.description,
-                              };
-                            };
-
-                            const changes = getChanges();
+                              return prev
+                                ? {
+                                    isInitial: false,
+                                    value: rev.value !== prev.value,
+                                    displayName: rev.displayName !== prev.displayName,
+                                    description: rev.description !== prev.description,
+                                  }
+                                : {
+                                    isInitial: true,
+                                    value: true,
+                                    displayName: !!rev.displayName,
+                                    description: !!rev.description,
+                                  };
+                            });
 
                             return (
                               <div class="relative">
@@ -332,23 +338,23 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                                     <FieldRow
                                       label="Friendly name"
                                       value={rev.displayName}
-                                      changed={changes.displayName}
-                                      initial={changes.isInitial}
+                                      changed={changes().displayName}
+                                      initial={changes().isInitial}
                                     />
                                   </Show>
                                   <Show when={rev.description !== undefined}>
                                     <FieldRow
                                       label="Description"
                                       value={rev.description}
-                                      changed={changes.description}
-                                      initial={changes.isInitial}
+                                      changed={changes().description}
+                                      initial={changes().isInitial}
                                     />
                                   </Show>
                                   <FieldRow
                                     label="Value"
                                     value={rev.value}
-                                    changed={changes.value}
-                                    initial={changes.isInitial}
+                                    changed={changes().value}
+                                    initial={changes().isInitial}
                                     mono
                                   />
                                 </div>
@@ -381,7 +387,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                   <div class="pt-4 border-t border-outline-variant/15 mt-4">
                     <button
                       type="button"
-                      onClick={props.onClose}
+                      onClick={() => props.onClose()}
                       class="w-full py-2.5 rounded-xl text-[13px] font-medium text-on-surface-variant bg-surface-container-high hover:bg-surface-container-highest transition-colors border-0 cursor-pointer"
                     >
                       Close
@@ -392,7 +398,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                 <div class="pt-4 border-t border-outline-variant/15 flex gap-3 mt-4">
                   <button
                     type="button"
-                    onClick={props.onClose}
+                    onClick={() => props.onClose()}
                     class="flex-1 py-2.5 rounded-xl text-[13px] font-medium text-on-surface-variant bg-surface-container-high hover:bg-surface-container-highest transition-colors border-0 cursor-pointer"
                   >
                     Cancel

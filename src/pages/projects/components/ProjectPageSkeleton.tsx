@@ -1,3 +1,5 @@
+import { For } from "solid-js";
+
 /** Skeleton matching the ProjectPage layout (header + API keys + environments + params table). */
 export function ProjectPageSkeleton() {
   return (
@@ -46,7 +48,8 @@ export function ProjectPageSkeleton() {
               </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant/10">
-              {[1, 2, 3, 4].map(() => (
+              <For each={[1, 2, 3, 4]}>
+                {() => (
                 <tr>
                   <td class="py-4 px-6"><div class="skeleton h-4 w-40 rounded" /></td>
                   <td class="py-4 px-6"><div class="skeleton h-4 w-32 rounded" /></td>
@@ -54,7 +57,8 @@ export function ProjectPageSkeleton() {
                   <td class="py-4 px-6"><div class="skeleton h-5 w-14 rounded-full" /></td>
                   <td class="py-4 px-6" />
                 </tr>
-              ))}
+                )}
+              </For>
             </tbody>
           </table>
         </div>

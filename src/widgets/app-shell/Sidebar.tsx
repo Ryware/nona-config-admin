@@ -77,7 +77,7 @@ export const Sidebar = (props: {
             <div class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center bg-primary/15 border border-primary/20 shadow-[0_0_12px_rgba(99,102,241,0.15)] group-hover:shadow-[0_0_20px_rgba(99,102,241,0.25)] transition-shadow duration-300">
               <span
                 class="material-symbols-outlined text-primary text-[18px]"
-                style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"
+                style={{"font-variation-settings":"'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"}}
               >
                 settings_input_component
               </span>
@@ -210,7 +210,7 @@ export const Sidebar = (props: {
         >
           {/* Collapse toggle (desktop only) */}
           <button
-            onClick={props.onToggleCollapse}
+            onClick={() => props.onToggleCollapse()}
             title={props.collapsed ? "Expand sidebar" : "Collapse sidebar"}
             class={`hidden lg:flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-outline/60 hover:text-on-surface hover:bg-surface-container-low transition-all bg-transparent border-0 cursor-pointer ${
               props.collapsed ? "justify-center" : ""

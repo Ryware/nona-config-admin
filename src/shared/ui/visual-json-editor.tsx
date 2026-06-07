@@ -152,8 +152,8 @@ export function VisualJsonEditor(props: VisualJsonEditorProps) {
       }
       JSON.parse(rawVal);
       setErrorMsg(null);
-    } catch (e: any) {
-      setErrorMsg(e.message || "Invalid JSON syntax");
+    } catch (caught) {
+      setErrorMsg(caught instanceof Error && caught.message ? caught.message : "Invalid JSON syntax");
     }
 
     const parsed = tryParseFlatJson(rawVal);
@@ -182,7 +182,7 @@ export function VisualJsonEditor(props: VisualJsonEditorProps) {
   // Compile items to JSON string and trigger onChange
   const updateFromItems = (newItems: JsonGridItem[]) => {
     setItems(newItems);
-    const obj: Record<string, any> = {};
+    const obj: Record<string, string | number | boolean> = {};
     for (const item of newItems) {
       if (!item.key.trim()) continue;
       if (item.type === "number") {
@@ -229,7 +229,7 @@ export function VisualJsonEditor(props: VisualJsonEditorProps) {
     updateFromItems(current);
   };
 
-  const handleRawChange = (e: any) => {
+  const handleRawChange = (e: InputEvent & { currentTarget: HTMLTextAreaElement }) => {
     props.onChange(e.currentTarget.value);
   };
 

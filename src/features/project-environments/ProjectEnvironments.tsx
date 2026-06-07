@@ -80,7 +80,9 @@ export function ProjectEnvironments(props: ProjectEnvironmentsProps) {
               type="text"
               placeholder="production"
               value={envName()}
-              onInput={(e: any) => setEnvName(e.currentTarget.value)}
+              onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+                setEnvName(e.currentTarget.value)
+              }
               required
               leftIcon="dns"
             />

@@ -25,7 +25,9 @@ export function UserIdentityForm(props: UserIdentityFormProps) {
             type="text"
             placeholder="e.g. John Smith"
             value={props.name}
-            onInput={(e: any) => props.onNameChange(e.currentTarget.value)}
+            onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+              props.onNameChange(e.currentTarget.value)
+            }
             required={!props.isEditMode}
             leftIcon="person"
           />
@@ -39,7 +41,9 @@ export function UserIdentityForm(props: UserIdentityFormProps) {
             type="email"
             placeholder="alex@company.com"
             value={props.email}
-            onInput={(e: any) => props.onEmailChange(e.currentTarget.value)}
+            onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+              props.onEmailChange(e.currentTarget.value)
+            }
             required
             autofocus={!props.isEditMode}
             leftIcon="alternate_email"

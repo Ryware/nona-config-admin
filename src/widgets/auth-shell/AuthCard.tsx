@@ -1,10 +1,10 @@
-import { type Component, Show } from "solid-js";
+import { type Component, type JSX, Show } from "solid-js";
 
 interface AuthCardProps {
   title: string;
   description?: string;
-  children: any;
-  footer?: any;
+  children: JSX.Element;
+  footer?: JSX.Element;
   error?: string;
 }
 
@@ -55,4 +55,3 @@ export const AuthCard: Component<AuthCardProps> = (props) => {
     </div>
   );
 };
-

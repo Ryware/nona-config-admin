@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { type JSX, Show } from "solid-js";
 import type { AuditEntry } from "../types";
 import { formatTimestamp, timeAgo } from "../utils";
 import { MIcon } from "../../../shared/ui/icons";
@@ -29,7 +29,7 @@ const KIND = {
   system: { icon: "settings", iconColor: "text-outline", label: "System" },
 };
 
-function MetaRow(props: { label: string; children: any; mono?: boolean }) {
+function MetaRow(props: { label: string; children: JSX.Element; mono?: boolean }) {
   return (
     <div class="flex items-start justify-between gap-4 py-2.5 border-b border-outline-variant/8 last:border-0">
       <span class="text-[12px] text-outline/70 shrink-0">{props.label}</span>
@@ -68,7 +68,7 @@ export function AuditLogDrawer(props: AuditLogDrawerProps) {
           <>
             {/* Backdrop */}
             <div
-              onClick={props.onClose}
+              onClick={() => props.onClose()}
               class="fixed inset-0 bg-black/70 backdrop-blur-sm z-200 transition-opacity mb-0"
             />
 
@@ -93,7 +93,7 @@ export function AuditLogDrawer(props: AuditLogDrawerProps) {
                   </div>
                 </div>
                 <button
-                  onClick={props.onClose}
+                  onClick={() => props.onClose()}
                   class="w-8 h-8 flex items-center justify-center text-outline hover:text-on-surface bg-transparent border-0 cursor-pointer rounded-lg hover:bg-surface-container-high transition-colors shrink-0"
                   aria-label="Close details"
                 >

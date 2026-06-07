@@ -12,7 +12,7 @@ export function Header(props: HeaderProps) {
     <header class="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-md border-b border-outline-variant/15 flex items-center h-14 px-5 md:px-7 gap-3 shrink-0">
       {/* Mobile hamburger menu */}
       <button
-        onClick={props.onMenuToggle}
+        onClick={() => props.onMenuToggle()}
         class="lg:hidden p-2 -ml-1 text-on-surface-variant hover:text-on-surface bg-transparent border-0 cursor-pointer flex items-center justify-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         aria-label="Toggle navigation menu"
       >
@@ -27,7 +27,7 @@ export function Header(props: HeaderProps) {
       {/* Action actions */}
       <div class="flex items-center gap-2 shrink-0">
         <button
-          onClick={props.onSearchClick}
+          onClick={() => props.onSearchClick()}
           class="flex items-center gap-2 h-8 px-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-outline hover:text-on-surface hover:border-outline-variant/40 transition-all cursor-pointer"
           title="Search (⌘K)"
           aria-label="Open search"

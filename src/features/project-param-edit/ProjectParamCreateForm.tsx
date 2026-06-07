@@ -75,7 +75,9 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
               placeholder="CONFIG_KEY"
               value={cfgKey()}
               onKeyDown={onKeyDownConfigKey}
-              onInput={(e: any) => setCfgKey(e.currentTarget.value)}
+              onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+                setCfgKey(e.currentTarget.value)
+              }
               required
               autofocus
               leftIcon="code"
@@ -103,7 +105,9 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
               type="text"
               placeholder="e.g. Mail Server Port"
               value={cfgDisplayName()}
-              onInput={(e: any) => setCfgDisplayName(e.currentTarget.value)}
+              onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+                setCfgDisplayName(e.currentTarget.value)
+              }
             />
           </div>
           <div>
@@ -113,7 +117,9 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
               type="text"
               placeholder="Explain what this configuration does..."
               value={cfgDescription()}
-              onInput={(e: any) => setCfgDescription(e.currentTarget.value)}
+              onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+                setCfgDescription(e.currentTarget.value)
+              }
               maxLength={500}
             />
           </div>
@@ -131,7 +137,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
           <Select
             id="config-entry-value"
             value={cfgValue()}
-            onChange={(val: any) => setCfgValue(val)}
+            onChange={setCfgValue}
             placeholder="Select status..."
             options={[
               { value: "true", label: "True / Active" },
@@ -144,7 +150,9 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
             id="config-entry-value"
             type="number"
             value={cfgValue()}
-            onInput={(e: any) => setCfgValue(e.currentTarget.value)}
+            onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+              setCfgValue(e.currentTarget.value)
+            }
             required
             placeholder="0"
           />
@@ -157,7 +165,9 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
             id="config-entry-value"
             type="text"
             value={cfgValue()}
-            onInput={(e: any) => setCfgValue(e.currentTarget.value)}
+            onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+              setCfgValue(e.currentTarget.value)
+            }
             required
             placeholder="Enter configuration value"
           />
@@ -167,7 +177,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
       <div class="flex justify-end gap-3 pt-2">
         <button
           type="button"
-          onClick={props.onCancel}
+          onClick={() => props.onCancel()}
           class="px-4 py-2.5 rounded-lg font-semibold text-on-surface-variant text-[13px] bg-surface-container-high hover:bg-surface-bright transition-all border-0 cursor-pointer"
         >
           Cancel

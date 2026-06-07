@@ -10,6 +10,7 @@ import {
   Trigger,
   Value,
 } from "@kobalte/core/select";
+import type { ComponentProps } from "solid-js";
 import { cn } from "../lib/utils";
 
 
@@ -27,6 +28,13 @@ interface SelectProps {
   disabled?: boolean;
   class?: string;
 }
+
+type KobalteSelectItemProps = ComponentProps<typeof Item>;
+type SelectItemProps = Omit<KobalteSelectItemProps, "item"> & {
+  item: KobalteSelectItemProps["item"] & {
+    rawValue: SelectOption;
+  };
+};
 
 export function Select(props: SelectProps) {
   const normalizedOptions = () =>
@@ -52,7 +60,7 @@ export function Select(props: SelectProps) {
       optionTextValue="label"
       disabled={props.disabled}
       placeholder={props.placeholder}
-      itemComponent={(itemProps: any) => (
+      itemComponent={(itemProps: SelectItemProps) => (
         <Item
           item={itemProps.item}
           class="flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-colors cursor-pointer outline-none select-none relative data-selected:bg-surface-container-high/60"

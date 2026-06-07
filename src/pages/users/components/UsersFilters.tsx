@@ -16,7 +16,9 @@ export function UsersFilters(props: UsersFiltersProps) {
           type="text"
           placeholder="Search by name or email…"
           value={props.search}
-          onInput={(e: any) => props.onSearchChange(e.currentTarget.value)}
+          onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+            props.onSearchChange(e.currentTarget.value)
+          }
           class="h-10"
           leftIcon="search"
         />

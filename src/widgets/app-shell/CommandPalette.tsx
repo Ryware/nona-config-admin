@@ -35,8 +35,8 @@ interface PaletteItemProps {
 function PaletteItem(props: PaletteItemProps) {
   return (
     <button
-      onClick={props.onClick}
-      onMouseEnter={props.onMouseEnter}
+      onClick={() => props.onClick()}
+      onMouseEnter={() => props.onMouseEnter()}
       class={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors cursor-pointer bg-transparent border-0 select-none ${
         props.isActive
           ? "bg-primary/10 text-primary"
@@ -178,8 +178,8 @@ export const CommandPalette = (props: CommandPaletteProps) => {
   return (
     <div
       class="fixed inset-0 z-100 flex items-start justify-center pt-[15vh] animate-backdrop-in"
-      style="background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);"
-      onClick={props.onClose}
+      style={{ "background": "rgba(0,0,0,0.75)", "backdrop-filter": "blur(6px)" }}
+      onClick={() => props.onClose()}
     >
       <div
         class="w-full max-w-lg mx-4 bg-surface-container-low border border-outline-variant/25 rounded-2xl shadow-2xl overflow-hidden animate-palette-in"

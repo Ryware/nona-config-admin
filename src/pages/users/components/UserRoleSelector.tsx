@@ -60,7 +60,7 @@ export function UserRoleSelector(props: UserRoleSelectorProps) {
                     }`}
                   >
                     <Show when={isSelected()}>
-                      <div class="w-1.5 h-1.5 bg-on-primary rounded-full"></div>
+                      <div class="w-1.5 h-1.5 bg-on-primary rounded-full" />
                     </Show>
                   </div>
                 </div>

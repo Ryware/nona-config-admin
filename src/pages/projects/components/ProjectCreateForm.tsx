@@ -44,7 +44,7 @@ export function ProjectCreateForm(props: ProjectCreateFormProps) {
             type="text"
             placeholder="my-project"
             value={name()}
-            onInput={(e: any) => {
+            onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) => {
               setName(e.currentTarget.value);
               if (createError()) setCreateError("");
             }}
@@ -62,7 +62,9 @@ export function ProjectCreateForm(props: ProjectCreateFormProps) {
           type="text"
           placeholder="Optional description"
           value={description()}
-          onInput={(e: any) => setDescription(e.currentTarget.value)}
+          onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+            setDescription(e.currentTarget.value)
+          }
           leftIcon="notes"
         />
         <div class="md:col-span-2 flex gap-3">
@@ -76,7 +78,7 @@ export function ProjectCreateForm(props: ProjectCreateFormProps) {
           </button>
           <button
             type="button"
-            onClick={props.onCancel}
+            onClick={() => props.onCancel()}
             class="px-6 py-2.5 rounded-lg font-bold text-on-surface-variant text-xs uppercase tracking-wider bg-surface-container-high hover:bg-surface-bright transition-all cursor-pointer border-0"
           >
             Cancel

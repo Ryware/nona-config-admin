@@ -101,7 +101,9 @@ export default function ProjectsPage() {
               type="text"
               placeholder="Search projects…"
               value={search()}
-              onInput={(e: any) => setSearch(e.currentTarget.value)}
+              onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
+                setSearch(e.currentTarget.value)
+              }
               leftIcon="search"
             />
           </div>

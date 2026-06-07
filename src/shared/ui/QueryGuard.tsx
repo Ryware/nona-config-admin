@@ -68,7 +68,7 @@ export function QueryErrorBanner(props: QueryErrorBannerProps) {
       <span class="text-error flex-1">{props.message}</span>
       <Show when={props.onRetry}>
         <button
-          onClick={props.onRetry}
+          onClick={() => props.onRetry?.()}
           class="flex items-center gap-1 px-3 py-1 rounded-lg text-[12px] font-medium bg-error/10 text-error hover:bg-error/20 transition-colors cursor-pointer border-0"
         >
           <MIcon name="refresh" class="text-[14px]" />

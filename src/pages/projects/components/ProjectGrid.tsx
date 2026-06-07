@@ -47,7 +47,7 @@ export function ProjectGrid(props: ProjectGridProps) {
               <p class="text-on-surface text-[14px] font-headline font-bold mb-1">No projects yet</p>
               <p class="text-on-surface-variant text-[13px] mb-6">Create your first project to start managing configuration.</p>
               <button
-                onClick={props.onCreateClick}
+                onClick={() => props.onCreateClick()}
                 class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold bg-primary text-on-primary text-[13px] hover:brightness-105 transition-all cursor-pointer border-0"
               >
                 <MIcon name="add" class="text-[17px]" />
@@ -116,7 +116,7 @@ export function ProjectGrid(props: ProjectGridProps) {
             </For>
 
             <button
-              onClick={props.onCreateClick}
+              onClick={() => props.onCreateClick()}
               class="bg-transparent border border-dashed border-outline-variant/20 rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-outline hover:border-primary/30 hover:text-primary hover:bg-primary/5 transition-all cursor-pointer min-h-37"
             >
               <MIcon name="add" class="text-2xl" />

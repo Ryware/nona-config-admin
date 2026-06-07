@@ -19,6 +19,12 @@ interface ProjectBulkImportProps {
   addToast: (msg: string, type: "success" | "error" | "info") => void;
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const errorMessage = (caught: unknown, fallback: string) =>
+  caught instanceof Error && caught.message ? caught.message : fallback;
+
 export function ProjectBulkImport(props: ProjectBulkImportProps) {
   const [dragActive, setDragActive] = createSignal(false);
   const [parsedImports, setParsedImports] = createSignal<ParsedImport[]>([]);
@@ -59,21 +65,30 @@ export function ProjectBulkImport(props: ProjectBulkImportProps) {
   }
 
   function parseJSONImport(text: string): Omit<ParsedImport, "alreadyExists" | "selected">[] {
-    const obj = JSON.parse(text);
+    const obj = JSON.parse(text) as unknown;
     const results: Omit<ParsedImport, "alreadyExists" | "selected">[] = [];
     
     if (Array.isArray(obj)) {
       for (const item of obj) {
-        if (item && typeof item === "object" && item.key) {
+        if (isRecord(item) && item.key) {
+          const contentType =
+            typeof item.contentType === "string" &&
+            ["string", "number", "boolean", "json"].includes(item.contentType)
+              ? item.contentType
+              : "string";
+          const scope =
+            typeof item.scope === "string" && ["client", "server", "all"].includes(item.scope)
+              ? item.scope
+              : "all";
           results.push({
             key: String(item.key).trim(),
             value: String(item.value ?? "").trim(),
-            contentType: ["string", "number", "boolean", "json"].includes(item.contentType) ? item.contentType : "string",
-            scope: ["client", "server", "all"].includes(item.scope) ? item.scope : "all",
+            contentType: contentType as ParsedImport["contentType"],
+            scope: scope as ParsedImport["scope"],
           });
         }
       }
-    } else if (obj && typeof obj === "object") {
+    } else if (isRecord(obj)) {
       for (const [k, v] of Object.entries(obj)) {
         let t: 'string' | 'number' | 'boolean' | 'json' = "string";
         let valStr = "";
@@ -114,8 +129,8 @@ export function ProjectBulkImport(props: ProjectBulkImportProps) {
 
       setParsedImports(finalItems);
       props.addToast(`Parsed ${finalItems.length} parameters successfully`, "success");
-    } catch (e: any) {
-      props.addToast("Failed to parse file: " + (e.message || "Invalid format"), "error");
+    } catch (caught) {
+      props.addToast(`Failed to parse file: ${errorMessage(caught, "Invalid format")}`, "error");
     }
   };
 
@@ -145,9 +160,9 @@ export function ProjectBulkImport(props: ProjectBulkImportProps) {
     }
   };
 
-  const handleFileChange = (e: any) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
+  const handleFileChange = (e: Event & { currentTarget: HTMLInputElement }) => {
+    if (e.currentTarget.files && e.currentTarget.files[0]) {
+      const file = e.currentTarget.files[0];
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
@@ -170,8 +185,8 @@ export function ProjectBulkImport(props: ProjectBulkImportProps) {
     try {
       await props.onImport(selected);
       setParsedImports([]);
-    } catch (e: any) {
-      props.addToast("Failed to import: " + (e.message || "API error"), "error");
+    } catch (caught) {
+      props.addToast(`Failed to import: ${errorMessage(caught, "API error")}`, "error");
     } finally {
       setImportLoading(false);
     }
@@ -182,7 +197,7 @@ export function ProjectBulkImport(props: ProjectBulkImportProps) {
       <div class="flex items-center justify-between pb-3 border-b border-outline-variant/10">
         <h3 class="text-[13px] font-semibold text-on-surface">Bulk Import Parameters</h3>
         <button
-          onClick={props.onCancel}
+          onClick={() => props.onCancel()}
           class="text-outline hover:text-on-surface bg-transparent border-0 cursor-pointer flex items-center justify-center p-1 rounded hover:bg-surface-container-high"
         >
           <MIcon name="close" class="text-[18px]" />
