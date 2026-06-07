@@ -1,5 +1,7 @@
 import { Title } from "@solidjs/meta";
 import { useParams } from "@solidjs/router";
+import { writeClipboard } from "@solid-primitives/clipboard";
+import { createTimer } from "@solid-primitives/timer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { Show, createEffect, createMemo, createSignal } from "solid-js";
 
@@ -52,6 +54,8 @@ export default function ProjectPage() {
   const [historyRevisions, setHistoryRevisions] = createSignal<ParamRevision[]>([]);
   const [showBulkImport, setShowBulkImport] = createSignal(false);
 
+  createTimer(() => setCopiedKey(null), () => (copiedKey() ? 1500 : false), setTimeout);
+
   const projectsQuery = useQuery(() => ({
     queryKey: projectKeys.list(),
     queryFn: () => projectService.getAll()
@@ -101,10 +105,9 @@ export default function ProjectPage() {
 
   const copyValue = async (key: string, value: string) => {
     try {
-      await navigator.clipboard.writeText(value);
+      await writeClipboard(value);
       setCopiedKey(key);
       addToast(MSG.COPIED, "success");
-      setTimeout(() => setCopiedKey(null), 1500);
     } catch {
       addToast(MSG.COPY_FAILED, "error");
     }

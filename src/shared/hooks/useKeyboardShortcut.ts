@@ -1,40 +1,36 @@
-import { onCleanup, onMount } from "solid-js";
+import { createShortcut } from "@solid-primitives/keyboard";
 
 interface ShortcutOptions {
   metaOrCtrl?: boolean;
 }
+
+const isEditableElement = (element: Element | null): boolean =>
+  !!element &&
+  (element.tagName === "INPUT" ||
+    element.tagName === "TEXTAREA" ||
+    element.getAttribute("contenteditable") === "true");
 
 export function useKeyboardShortcut(
   key: string,
   callback: (e: KeyboardEvent) => void,
   options?: ShortcutOptions
 ) {
-  const handleKeyDown = (e: KeyboardEvent) => {
-    const checkMetaOrCtrl = options?.metaOrCtrl ?? true;
-    const isMetaOrCtrlMatched = checkMetaOrCtrl ? (e.metaKey || e.ctrlKey) : true;
+  const handleShortcut = (event: KeyboardEvent | null) => {
+    if (!event) return;
 
-    if (isMetaOrCtrlMatched && e.key.toLowerCase() === key.toLowerCase()) {
-      const activeEl = document.activeElement;
-      const isInput =
-        activeEl &&
-        (activeEl.tagName === "INPUT" ||
-          activeEl.tagName === "TEXTAREA" ||
-          activeEl.getAttribute("contenteditable") === "true");
-
-      if (isInput) {
-        return;
-      }
-
-      e.preventDefault();
-      callback(e);
+    if (isEditableElement(document.activeElement)) {
+      return;
     }
+
+    event.preventDefault();
+    callback(event);
   };
 
-  onMount(() => {
-    document.addEventListener("keydown", handleKeyDown);
-  });
+  if (options?.metaOrCtrl ?? true) {
+    createShortcut(["Control", key], handleShortcut, { preventDefault: false, requireReset: true });
+    createShortcut(["Meta", key], handleShortcut, { preventDefault: false, requireReset: true });
+    return;
+  }
 
-  onCleanup(() => {
-    document.removeEventListener("keydown", handleKeyDown);
-  });
+  createShortcut([key], handleShortcut, { preventDefault: false, requireReset: true });
 }

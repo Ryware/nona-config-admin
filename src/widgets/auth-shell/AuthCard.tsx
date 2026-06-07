@@ -20,7 +20,7 @@ export const AuthCard: Component<AuthCardProps> = (props) => {
               class="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10 border border-primary/20 text-primary shadow-[0_0_15px_rgba(99,102,241,0.15)]"
             >
               <span class="material-symbols-outlined text-lg font-bold"
-                    style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;">terminal</span>
+                    style={{"font-variation-settings":"'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"}}>terminal</span>
             </div>
             <span class="font-headline font-bold text-xl tracking-tight text-on-surface">Nona Config</span>
           </div>

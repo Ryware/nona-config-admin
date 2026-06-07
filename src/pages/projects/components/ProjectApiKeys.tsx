@@ -16,8 +16,9 @@ export function ProjectApiKeys(props: ProjectApiKeysProps) {
   const { copy } = useClipboard();
 
   const handleCopy = async (value: string) => {
-    await copy(value);
-    props.onCopied("Copied to clipboard");
+    if (await copy(value)) {
+      props.onCopied("Copied to clipboard");
+    }
   };
 
   return (

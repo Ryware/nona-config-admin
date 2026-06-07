@@ -1,5 +1,6 @@
 import { Title } from "@solidjs/meta";
 import { useLocation, useNavigate } from "@solidjs/router";
+import { writeClipboard } from "@solid-primitives/clipboard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { createEffect, createSignal, Show } from "solid-js";
 import { projectService } from "../../entities/project/api/project.service";
@@ -136,7 +137,7 @@ export default function UserPage() {
 
   const copyInvitationUrl = async () => {
     try {
-      await navigator.clipboard.writeText(invitationUrl());
+      await writeClipboard(invitationUrl());
       setCopyFeedback("Invitation link copied");
       addToast(MSG.INVITE_COPIED, "success");
     } catch {

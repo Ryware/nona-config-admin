@@ -1,3 +1,5 @@
+import { writeClipboard } from "@solid-primitives/clipboard";
+import { createTimer } from "@solid-primitives/timer";
 import { createSignal } from "solid-js";
 
 /**
@@ -11,13 +13,16 @@ import { createSignal } from "solid-js";
 export function useClipboard(resetMs = 1500) {
   const [copied, setCopied] = createSignal<string | null>(null);
 
+  createTimer(() => setCopied(null), () => (copied() ? resetMs : false), setTimeout);
+
   const copy = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      await writeClipboard(text);
       setCopied(text);
-      setTimeout(() => setCopied(null), resetMs);
+      return true;
     } catch {
       // clipboard access denied — silently ignore (caller should handle UI)
+      return false;
     }
   };
 
