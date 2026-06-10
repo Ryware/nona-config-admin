@@ -5,15 +5,9 @@ export interface Project {
   urlSlug: string;
   name: string;
   description?: string;
-  serverApiKey: string | null;
-  clientApiKey: string | null;
   environments: string[];
   createdAt: string;
   updatedAt: string;
-}
-
-export interface RerollApiKeysRequest {
-  keyType: 'Server' | 'Client';
 }
 
 export interface CreateProjectRequest {
@@ -60,5 +54,22 @@ export interface CreateConfigEntryRequest {
 export interface UpdateConfigEntryRequest {
   value: string;
   contentType?: 'string' | 'number' | 'boolean' | 'json';
+  scope?: 'client' | 'server' | 'all';
+}
+
+export interface ApiKey {
+  id: string;
+  name: string;
+  key: string;
+  project: string;
+  environment: string | null;
+  scope: 'client' | 'server' | 'all';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateApiKeyRequest {
+  name: string;
+  environment?: string | null;
   scope?: 'client' | 'server' | 'all';
 }

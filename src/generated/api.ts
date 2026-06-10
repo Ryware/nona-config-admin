@@ -1310,84 +1310,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/projects/{projectId}/reroll-keys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    projectId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["RerollApiKeysRequest"];
-                    "text/json": components["schemas"]["RerollApiKeysRequest"];
-                    "application/*+json": components["schemas"]["RerollApiKeysRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ProjectDto"];
-                        "application/json": components["schemas"]["ProjectDto"];
-                        "text/json": components["schemas"]["ProjectDto"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
-                        "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
-                        "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
-                        "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/users": {
         parameters: {
             query?: never;
@@ -1911,8 +1833,6 @@ export interface components {
             id: number | string;
             name: string;
             urlSlug: null | string;
-            serverApiKey: null | string;
-            clientApiKey: null | string;
             environments: string[];
             /** Format: date-time */
             createdAt: string;
@@ -1925,9 +1845,6 @@ export interface components {
         };
         RequestPasswordResetCommand: {
             email: string;
-        };
-        RerollApiKeysRequest: {
-            keyType: string;
         };
         SsoLoginRequest: {
             idToken: string;

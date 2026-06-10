@@ -26,8 +26,6 @@
 //      id: number | string;
 //      name: string;
 //      urlSlug: null | string;
-//      serverApiKey: null | string;
-//      clientApiKey: null | string;
 //      environments: string[];
 //      createdAt: string;
 //      updatedAt: string;
@@ -63,17 +61,18 @@
 //  TODO: Add `enum` constraints to the OpenAPI spec for these fields
 
 // ---------------------------------------------------------------------------
-// OVERRIDE 3 — RerollApiKeysRequest.keyType uses broad `string`
+// OVERRIDE 3 — CreateApiKeyRequest.scope uses broad `string`
 // ---------------------------------------------------------------------------
 //
 //  Generated:
-//    RerollApiKeysRequest: { keyType: string; }
+//    CreateApiKeyRequest: { name: string; environment?: null | string; scope?: null | string; }
 //
-//  Client (src/entities/project/model/types.ts → RerollApiKeysRequest):
-//    keyType: 'Server' | 'Client';
+//  Client (src/entities/project/model/types.ts → CreateApiKeyRequest):
+//    scope?: 'client' | 'server' | 'all';
 //
-//  Reason: The spec omits the enum. Only two values are valid per backend code.
-//  TODO: Add `enum: [Server, Client]` to the OpenAPI spec
+//  Reason: The spec omits the enum. Scope values are parsed by backend API-key
+//  creation and mirrored from the config scope vocabulary.
+//  TODO: Add `enum: [client, server, all]` to the OpenAPI spec
 
 // ---------------------------------------------------------------------------
 // OVERRIDE 4 — UserDto.id and ProjectDto.id are typed as `number | string`

@@ -11,6 +11,7 @@ import type {
   CreateEnvironmentRequest,
   CreateConfigEntryRequest,
   UpdateConfigEntryRequest,
+  CreateApiKeyRequest,
 } from "../model/types";
 
 export const projectMutations = {
@@ -27,14 +28,24 @@ export const projectMutations = {
     mutationFn: (slug: string) => projectService.delete(slug),
   }),
 
-  rerollKeys: () => ({
+  createApiKey: () => ({
     mutationFn: ({
       projectId,
-      keyType,
+      data,
     }: {
       projectId: string;
-      keyType: "Server" | "Client";
-    }) => projectService.rerollKeys(projectId, keyType),
+      data: CreateApiKeyRequest;
+    }) => projectService.createApiKey(projectId, data),
+  }),
+
+  deleteApiKey: () => ({
+    mutationFn: ({
+      projectId,
+      apiKeyId,
+    }: {
+      projectId: string;
+      apiKeyId: string;
+    }) => projectService.deleteApiKey(projectId, apiKeyId),
   }),
 
   createEnvironment: () => ({

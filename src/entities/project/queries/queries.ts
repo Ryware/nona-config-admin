@@ -30,4 +30,10 @@ export const projectQueries = {
     queryFn: () => configEntryService.getAll(projectName, env),
     enabled: !!projectName && !!env,
   }),
+
+  apiKeys: (projectName: string, slug: string) => ({
+    queryKey: projectKeys.apiKeys(slug),
+    queryFn: () => projectService.listApiKeys(projectName),
+    enabled: !!projectName,
+  }),
 };

@@ -1,4 +1,4 @@
-import type { Project, Environment, ConfigEntry, User } from '../../types';
+import type { Project, Environment, ConfigEntry, User, ApiKey } from '../../types';
 
 export const mockProjects: Project[] = [
   {
@@ -6,8 +6,6 @@ export const mockProjects: Project[] = [
     urlSlug: 'my-app',
     name: 'my-app',
     description: 'Main application config',
-    serverApiKey: 'sk_test_1234567890abcdef',
-    clientApiKey: 'ck_test_1234567890abcdef',
     environments: ['production', 'staging'],
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
@@ -17,9 +15,30 @@ export const mockProjects: Project[] = [
     urlSlug: 'backend-api',
     name: 'backend-api',
     description: 'Backend API config',
-    serverApiKey: 'sk_test_abcdef1234567890',
-    clientApiKey: null,
     environments: ['production'],
+    createdAt: '2024-01-02T00:00:00Z',
+    updatedAt: '2024-01-02T00:00:00Z',
+  },
+];
+
+export const mockApiKeys: ApiKey[] = [
+  {
+    id: 'key-1',
+    name: 'Web Client',
+    key: 'ak_test_1234567890abcdef',
+    project: 'my-app',
+    environment: 'production',
+    scope: 'client',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'key-2',
+    name: 'Backend',
+    key: 'ak_test_abcdef1234567890',
+    project: 'my-app',
+    environment: null,
+    scope: 'server',
     createdAt: '2024-01-02T00:00:00Z',
     updatedAt: '2024-01-02T00:00:00Z',
   },

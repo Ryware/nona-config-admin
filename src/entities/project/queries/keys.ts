@@ -25,4 +25,7 @@ export const projectKeys = {
   /** Config entries for a specific environment */
   configEntries: (slug: string, env: string) =>
     [...projectKeys.detail(slug), "config-entries", env] as const,
+
+  /** Managed API keys for a project */
+  apiKeys: (slug: string) => [...projectKeys.detail(slug), "api-keys"] as const,
 } as const;

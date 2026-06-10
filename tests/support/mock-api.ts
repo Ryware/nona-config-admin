@@ -5,9 +5,18 @@ type Project = {
   urlSlug: string;
   name: string;
   description?: string;
-  serverApiKey: string | null;
-  clientApiKey: string | null;
   environments: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ApiKey = {
+  id: string;
+  name: string;
+  key: string;
+  project: string;
+  environment: string | null;
+  scope: "client" | "server" | "all";
   createdAt: string;
   updatedAt: string;
 };
@@ -53,8 +62,6 @@ export const testProjects: Project[] = [
     urlSlug: "my-app",
     name: "my-app",
     description: "Main application config",
-    serverApiKey: "srv_" + "A".repeat(24),
-    clientApiKey: "cli_" + "B".repeat(24),
     environments: ["production", "staging"],
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: now
@@ -64,8 +71,6 @@ export const testProjects: Project[] = [
     urlSlug: "billing-api",
     name: "billing-api",
     description: "Billing service flags",
-    serverApiKey: "srv_" + "E".repeat(24),
-    clientApiKey: "cli_" + "F".repeat(24),
     environments: ["production"],
     createdAt: "2024-02-01T00:00:00Z",
     updatedAt: "2026-06-06T12:00:00Z"
@@ -179,6 +184,28 @@ export async function mockAdminApi(page: Page) {
       updatedAt: "2024-01-01T00:00:00Z"
     }
   ];
+  let apiKeys: ApiKey[] = [
+    {
+      id: "key-1",
+      name: "Web Client",
+      key: "key_" + "A".repeat(24),
+      project: "my-app",
+      environment: "production",
+      scope: "client",
+      createdAt: "2024-01-01T00:00:00Z",
+      updatedAt: "2024-01-01T00:00:00Z"
+    },
+    {
+      id: "key-2",
+      name: "Backend",
+      key: "key_" + "B".repeat(24),
+      project: "my-app",
+      environment: null,
+      scope: "server",
+      createdAt: "2024-01-02T00:00:00Z",
+      updatedAt: "2024-01-02T00:00:00Z"
+    }
+  ];
 
   await page.route(/\/auth\//, async route => {
     const request = route.request();
@@ -251,8 +278,6 @@ export async function mockAdminApi(page: Page) {
         urlSlug: slug,
         name: body.name,
         description: body.description,
-        serverApiKey: "srv_" + "N".repeat(24),
-        clientApiKey: "cli_" + "N".repeat(24),
         environments: ["production"],
         createdAt: now,
         updatedAt: now
@@ -272,24 +297,37 @@ export async function mockAdminApi(page: Page) {
       return;
     }
 
-    if (method === "POST" && path === "/admin/projects/my-app/reroll-keys") {
-      const body = JSON.parse(request.postData() || "{}") as { keyType?: "Server" | "Client" };
-      projects = projects.map(project =>
-        project.urlSlug === "my-app"
-          ? {
-              ...project,
-              serverApiKey:
-                body.keyType === "Server" ? "srv_" + "C".repeat(24) : project.serverApiKey,
-              clientApiKey:
-                body.keyType === "Client" ? "cli_" + "D".repeat(24) : project.clientApiKey,
-              updatedAt: now
-            }
-          : project
-      );
-      await response(
-        route,
-        projects.find(project => project.urlSlug === "my-app")
-      );
+    if (method === "GET" && path === "/admin/projects/my-app/api-keys") {
+      await response(route, apiKeys.filter(apiKey => apiKey.project === "my-app"));
+      return;
+    }
+
+    if (method === "POST" && path === "/admin/projects/my-app/api-keys") {
+      const body = JSON.parse(request.postData() || "{}") as {
+        name?: string;
+        environment?: string | null;
+        scope?: "client" | "server" | "all";
+      };
+      const apiKey: ApiKey = {
+        id: `key-${apiKeys.length + 1}`,
+        name: body.name ?? "Untitled key",
+        key: "key_" + "N".repeat(24),
+        project: "my-app",
+        environment: body.environment ?? null,
+        scope: body.scope ?? "client",
+        createdAt: now,
+        updatedAt: now
+      };
+      apiKeys = [...apiKeys, apiKey];
+      await response(route, apiKey, 201);
+      return;
+    }
+
+    const apiKeyMatch = path.match(/^\/admin\/projects\/my-app\/api-keys\/([^/]+)$/);
+    if (method === "DELETE" && apiKeyMatch) {
+      const apiKeyId = decodeURIComponent(apiKeyMatch[1]);
+      apiKeys = apiKeys.filter(apiKey => apiKey.id !== apiKeyId);
+      await noContent(route);
       return;
     }
 

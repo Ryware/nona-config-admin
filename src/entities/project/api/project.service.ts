@@ -3,7 +3,8 @@ import type {
   Project,
   CreateProjectRequest,
   UpdateProjectRequest,
-  RerollApiKeysRequest,
+  ApiKey,
+  CreateApiKeyRequest,
 } from "../../../types";
 
 export const projectService = {
@@ -27,7 +28,15 @@ export const projectService = {
     return apiClient.delete(`/admin/projects/${slug}`);
   },
 
-  async rerollKeys(projectId: string, keyType: RerollApiKeysRequest['keyType']): Promise<Project> {
-    return apiClient.post<Project>(`/admin/projects/${projectId}/reroll-keys`, { keyType });
+  async listApiKeys(projectId: string): Promise<ApiKey[]> {
+    return apiClient.get<ApiKey[]>(`/admin/projects/${projectId}/api-keys`);
+  },
+
+  async createApiKey(projectId: string, data: CreateApiKeyRequest): Promise<ApiKey> {
+    return apiClient.post<ApiKey>(`/admin/projects/${projectId}/api-keys`, data);
+  },
+
+  async deleteApiKey(projectId: string, apiKeyId: string): Promise<void> {
+    return apiClient.delete(`/admin/projects/${projectId}/api-keys/${apiKeyId}`);
   },
 };

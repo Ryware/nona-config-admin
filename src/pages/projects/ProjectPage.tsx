@@ -32,6 +32,7 @@ import { MSG } from "../../shared/lib/messages";
 import type {
   ConfigEntry,
   CreateConfigEntryRequest,
+  CreateApiKeyRequest,
   CreateEnvironmentRequest,
   Project
 } from "../../types";
@@ -53,6 +54,7 @@ export default function ProjectPage() {
   const [editDescription, setEditDescription] = createSignal("");
   const [historyRevisions, setHistoryRevisions] = createSignal<ParamRevision[]>([]);
   const [showBulkImport, setShowBulkImport] = createSignal(false);
+  const [deletingApiKeyId, setDeletingApiKeyId] = createSignal<string | null>(null);
 
   createTimer(
     () => setCopiedKey(null),
@@ -90,6 +92,12 @@ export default function ProjectPage() {
     queryKey: projectKeys.configEntries(params.slug, activeEnvName()),
     queryFn: () => configEntryService.getAll(projectId(), activeEnvName()),
     enabled: !!project() && !!activeEnvName()
+  }));
+
+  const apiKeysQuery = useQuery(() => ({
+    queryKey: projectKeys.apiKeys(params.slug),
+    queryFn: () => projectService.listApiKeys(projectId()),
+    enabled: !!project()
   }));
 
   const filteredConfig = createMemo(() => {
@@ -314,15 +322,23 @@ export default function ProjectPage() {
     }
   };
 
-  // API key reroll mutation
-  const rerollKeysMutation = useMutation(() => ({
-    mutationFn: (keyType: "Server" | "Client") => projectService.rerollKeys(projectId(), keyType),
+  const createApiKeyMutation = useMutation(() => ({
+    mutationFn: (data: CreateApiKeyRequest) => projectService.createApiKey(projectId(), data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: projectKeys.detail(params.slug) });
-      queryClient.invalidateQueries({ queryKey: projectKeys.list() });
-      addToast(MSG.API_KEY_REGENERATED, "success");
+      queryClient.invalidateQueries({ queryKey: projectKeys.apiKeys(params.slug) });
+      addToast(MSG.API_KEY_CREATED, "success");
     },
-    onError: () => addToast(MSG.API_KEY_REGEN_FAILED, "error")
+    onError: () => addToast(MSG.API_KEY_CREATE_FAILED, "error")
+  }));
+
+  const deleteApiKeyMutation = useMutation(() => ({
+    mutationFn: (apiKeyId: string) => projectService.deleteApiKey(projectId(), apiKeyId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: projectKeys.apiKeys(params.slug) });
+      addToast(MSG.API_KEY_DELETED, "success");
+    },
+    onError: () => addToast(MSG.API_KEY_DELETE_FAILED, "error"),
+    onSettled: () => setDeletingApiKeyId(null)
   }));
 
   return (
@@ -350,9 +366,18 @@ export default function ProjectPage() {
 
           <Show when={project()}>
             <ProjectApiKeys
-              project={project()!}
-              isRolling={rerollKeysMutation.isPending}
-              onReroll={keyType => rerollKeysMutation.mutate(keyType)}
+              apiKeys={apiKeysQuery.status === "success" ? (apiKeysQuery.data ?? []) : []}
+              environments={
+                environmentsQuery.status === "success" ? (environmentsQuery.data ?? []) : []
+              }
+              isLoading={apiKeysQuery.isLoading}
+              isCreating={createApiKeyMutation.isPending}
+              deletingId={deletingApiKeyId()}
+              onCreate={data => createApiKeyMutation.mutate(data)}
+              onDelete={apiKeyId => {
+                setDeletingApiKeyId(apiKeyId);
+                deleteApiKeyMutation.mutate(apiKeyId);
+              }}
               onCopied={msg => addToast(msg, "success")}
             />
           </Show>

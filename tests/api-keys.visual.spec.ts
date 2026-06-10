@@ -5,12 +5,23 @@ const initialProject = {
   urlSlug: "my-app",
   name: "my-app",
   description: "Main application config",
-  serverApiKey: "srv_" + "A".repeat(24),
-  clientApiKey: "cli_" + "B".repeat(24),
   environments: ["production", "staging"],
   createdAt: "2024-01-01T00:00:00Z",
   updatedAt: "2024-01-01T00:00:00Z"
 };
+
+const initialApiKeys = [
+  {
+    id: "key-1",
+    name: "Web Client",
+    key: "key_" + "A".repeat(24),
+    project: "my-app",
+    environment: "production",
+    scope: "client",
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z"
+  }
+];
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -22,6 +33,7 @@ test.beforeEach(async ({ page }) => {
   });
 
   let project = { ...initialProject };
+  let apiKeys = initialApiKeys.map(apiKey => ({ ...apiKey }));
 
   await page.route(/\/admin\/projects/, async route => {
     const request = route.request();
@@ -57,18 +69,32 @@ test.beforeEach(async ({ page }) => {
       return;
     }
 
-    if (request.method() === "POST" && path === "/admin/projects/my-app/reroll-keys") {
-      const body = JSON.parse(request.postData() || "{}");
-      project = {
-        ...project,
-        serverApiKey: body.keyType === "Server" ? "srv_" + "C".repeat(24) : project.serverApiKey,
-        clientApiKey: body.keyType === "Client" ? "cli_" + "D".repeat(24) : project.clientApiKey,
-        updatedAt: "2024-01-03T00:00:00Z"
-      };
-
+    if (request.method() === "GET" && path === "/admin/projects/my-app/api-keys") {
       await route.fulfill({
         contentType: "application/json",
-        body: JSON.stringify(project)
+        body: JSON.stringify(apiKeys)
+      });
+      return;
+    }
+
+    if (request.method() === "POST" && path === "/admin/projects/my-app/api-keys") {
+      const body = JSON.parse(request.postData() || "{}");
+      const apiKey = {
+        id: `key-${apiKeys.length + 1}`,
+        name: body.name,
+        key: "key_" + "N".repeat(24),
+        project: "my-app",
+        environment: body.environment ?? null,
+        scope: body.scope ?? "client",
+        createdAt: "2024-01-03T00:00:00Z",
+        updatedAt: "2024-01-03T00:00:00Z"
+      };
+      apiKeys = [...apiKeys, apiKey];
+
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify(apiKey)
       });
       return;
     }
@@ -108,16 +134,16 @@ test("project API key management is visually usable", async ({ page }, testInfo)
 
   await expect(page.getByTestId("project-detail-heading")).toBeVisible();
   await expect(page.getByTestId("project-api-keys-heading")).toBeVisible();
-  await expect(page.getByTestId("server-key-label")).toBeVisible();
-  await expect(page.getByTestId("client-key-label")).toBeVisible();
+  await expect(page.getByText("Web Client")).toBeVisible();
   await expect(page.getByTestId("environment-tab-production")).toBeVisible();
   await expect(page.getByTestId("parameter-key-API_URL")).toBeVisible();
 
   await page.screenshot({ path: testInfo.outputPath("api-keys-project.png"), fullPage: true });
 
-  await page.getByTestId("client-key-toggle-button").click();
-  await expect(page.getByTestId("client-key-value")).toContainText(initialProject.clientApiKey);
+  await page.getByTestId("api-key-toggle-key-1").click();
+  await expect(page.getByTestId("api-key-value-key-1")).toContainText(initialApiKeys[0].key);
 
-  await page.getByTestId("client-key-reroll-button").click();
-  await expect(page.getByTestId("client-key-value")).toContainText("cli_" + "D".repeat(24));
+  await page.getByTestId("api-key-name-input").fill("Backend worker");
+  await page.getByTestId("api-key-create-button").click();
+  await expect(page.getByText("Backend worker")).toBeVisible();
 });

@@ -19,7 +19,6 @@ export type {
 
 export type {
   Project,
-  RerollApiKeysRequest,
   CreateProjectRequest,
   UpdateProjectRequest,
   Environment,
@@ -27,6 +26,8 @@ export type {
   ConfigEntry,
   CreateConfigEntryRequest,
   UpdateConfigEntryRequest,
+  ApiKey,
+  CreateApiKeyRequest,
 } from "../entities/project/model/types";
 
 export type {

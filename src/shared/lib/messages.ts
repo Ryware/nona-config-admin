@@ -24,8 +24,10 @@ export const MSG = {
   PROJECT_DELETE_FAILED: "Failed to delete project",
 
   // --- API Keys ---
-  API_KEY_REGENERATED: "API key regenerated",
-  API_KEY_REGEN_FAILED: "Failed to regenerate API key",
+  API_KEY_CREATED: "API key created",
+  API_KEY_CREATE_FAILED: "Failed to create API key",
+  API_KEY_DELETED: "API key deleted",
+  API_KEY_DELETE_FAILED: "Failed to delete API key",
   COPIED: "Copied to clipboard",
   COPY_FAILED: "Copy failed",
 
