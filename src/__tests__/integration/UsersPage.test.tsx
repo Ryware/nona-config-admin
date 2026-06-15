@@ -29,6 +29,8 @@ function renderWithProviders(ui: () => JSX.Element) {
 
 describe('UsersPage', () => {
   beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
     localStorage.setItem('auth_token', mockToken);
     vi.restoreAllMocks();
   });
@@ -96,6 +98,30 @@ describe('UsersPage', () => {
 
     await waitFor(() => {
       // Confirmation modal has unique text "from this instance?"
+      expect(screen.getByText(/from this instance/i)).toBeInTheDocument();
+    });
+  });
+
+  it('disables deletion for the current user', async () => {
+    localStorage.setItem('auth_session', JSON.stringify({ email: mockUsers[0].email, role: 'admin' }));
+
+    renderWithProviders(() => <UsersPage />);
+
+    const selfRemoveButton = await screen.findByTestId(`team-remove-${mockUsers[0].id}`);
+
+    expect(selfRemoveButton).toBeDisabled();
+    expect(selfRemoveButton).toHaveAccessibleName(/cannot remove your own account/i);
+  });
+
+  it('still allows deleting other users when the current user is listed', async () => {
+    localStorage.setItem('auth_session', JSON.stringify({ email: mockUsers[0].email, role: 'admin' }));
+
+    renderWithProviders(() => <UsersPage />);
+
+    const otherRemoveButton = await screen.findByTestId(`team-remove-${mockUsers[1].id}`);
+    fireEvent.click(otherRemoveButton);
+
+    await waitFor(() => {
       expect(screen.getByText(/from this instance/i)).toBeInTheDocument();
     });
   });

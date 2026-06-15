@@ -6,6 +6,7 @@ interface UsersTableProps {
   isLoading: boolean;
   totalUsersCount: number;
   filteredUsers: User[];
+  currentUserEmail?: string;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
   onInvite?: () => void;
@@ -130,6 +131,8 @@ export function UsersTable(props: UsersTableProps) {
                       ? user.name.slice(0, 2).toUpperCase()
                       : user.email.slice(0, 2).toUpperCase();
                     const rm = roleMeta(user.role);
+                    const isCurrentUser =
+                      props.currentUserEmail?.toLowerCase() === user.email.toLowerCase();
                     return (
                       <tr
                         data-testid={`team-row-${user.id}`}
@@ -169,10 +172,26 @@ export function UsersTable(props: UsersTableProps) {
                         <td class="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                           <button
                             data-testid={`team-remove-${user.id}`}
-                            onClick={() => props.onDelete(user)}
-                            class="text-outline hover:text-error hover:bg-error/10 cursor-pointer rounded-lg border-0 bg-transparent p-1.5 opacity-40 transition-opacity group-hover:opacity-100 focus:opacity-100"
-                            title={`Remove ${user.name || user.email}`}
-                            aria-label={`Remove ${user.name || user.email}`}
+                            type="button"
+                            disabled={isCurrentUser}
+                            onClick={() => {
+                              if (!isCurrentUser) props.onDelete(user);
+                            }}
+                            class={
+                              isCurrentUser
+                                ? "text-outline/35 cursor-not-allowed rounded-lg border-0 bg-transparent p-1.5 opacity-60"
+                                : "text-outline hover:text-error hover:bg-error/10 cursor-pointer rounded-lg border-0 bg-transparent p-1.5 opacity-40 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                            }
+                            title={
+                              isCurrentUser
+                                ? "You cannot remove your own account"
+                                : `Remove ${user.name || user.email}`
+                            }
+                            aria-label={
+                              isCurrentUser
+                                ? "You cannot remove your own account"
+                                : `Remove ${user.name || user.email}`
+                            }
                           >
                             <MIcon name="delete_outline" class="text-[18px]" />
                           </button>

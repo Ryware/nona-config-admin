@@ -2,6 +2,7 @@ import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { createMemo, createSignal, Show } from "solid-js";
+import { authStore } from "../../entities/auth/model/store";
 import { userService } from "../../entities/user/api/user.service";
 import { userKeys } from "../../entities/user/queries/keys";
 import { MSG } from "../../shared/lib/messages";
@@ -39,6 +40,7 @@ export default function UsersPage() {
   }));
 
   const users = () => (usersQuery.status === "success" ? (usersQuery.data ?? []) : []);
+  const currentUserEmail = () => authStore.getSession()?.email ?? "";
 
   const filteredUsers = createMemo(() => {
     const q = search().toLowerCase().trim();
@@ -106,6 +108,7 @@ export default function UsersPage() {
           isLoading={usersQuery.isLoading}
           totalUsersCount={users().length}
           filteredUsers={filteredUsers()}
+          currentUserEmail={currentUserEmail()}
           onEdit={user => navigate("/user", { state: { userId: user.id } })}
           onDelete={user => setDeleteTarget(user)}
           onInvite={() => navigate("/user")}
