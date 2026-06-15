@@ -43,10 +43,12 @@ export default function App(): JSX.Element {
                   />
                 </Route>
 
-                <Route
-                  path="/invite/:token"
-                  component={lazy(() => import("../pages/auth/InvitePage"))}
-                />
+                <Route component={InvitationRoute}>
+                  <Route
+                    path="/invite/:token"
+                    component={lazy(() => import("../pages/auth/InvitePage"))}
+                  />
+                </Route>
 
                 <Route component={ProtectedRoute}>
                   <Route
@@ -106,4 +108,8 @@ function PublicRoute(props: { children?: JSX.Element }) {
       <AuthLayout>{props.children}</AuthLayout>
     </Show>
   );
+}
+
+function InvitationRoute(props: { children?: JSX.Element }) {
+  return <AuthLayout>{props.children}</AuthLayout>;
 }
