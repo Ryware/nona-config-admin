@@ -9,6 +9,7 @@ interface ProjectParamsTableProps {
   filteredConfig: ConfigEntry[];
   onSelectEntry: (entry: ConfigEntry) => void;
   onDeleteEntry: (key: string) => void;
+  canManage: boolean;
   copiedKey: string | null;
   onCopyValue: (key: string, value: string) => void;
   getParamMeta: (
@@ -147,15 +148,17 @@ export function ProjectParamsTable(props: ProjectParamsTableProps) {
                         </span>
                       </td>
                       <td class="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
-                        <button
-                          data-testid={`parameter-delete-${entry.key}`}
-                          onClick={() => props.onDeleteEntry(entry.key)}
-                          class="text-outline hover:text-error hover:bg-error/10 cursor-pointer rounded-lg border-0 bg-transparent p-1.5 opacity-40 transition-opacity group-hover:opacity-100 focus:opacity-100"
-                          title={`Delete parameter ${entry.key}`}
-                          aria-label={`Delete parameter ${entry.key}`}
-                        >
-                          <MIcon name="delete_outline" class="text-[18px]" />
-                        </button>
+                        <Show when={props.canManage}>
+                          <button
+                            data-testid={`parameter-delete-${entry.key}`}
+                            onClick={() => props.onDeleteEntry(entry.key)}
+                            class="text-outline hover:text-error hover:bg-error/10 cursor-pointer rounded-lg border-0 bg-transparent p-1.5 opacity-40 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                            title={`Delete parameter ${entry.key}`}
+                            aria-label={`Delete parameter ${entry.key}`}
+                          >
+                            <MIcon name="delete_outline" class="text-[18px]" />
+                          </button>
+                        </Show>
                       </td>
                     </tr>
                   );

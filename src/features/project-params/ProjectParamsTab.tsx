@@ -25,6 +25,7 @@ interface ProjectParamsTabProps {
   isCreatePending: boolean;
   onSelectEntry: (entry: ConfigEntry) => void;
   onDeleteEntry: (key: string) => void;
+  canManage: boolean;
   copiedKey: string | null;
   onCopyValue: (key: string, value: string) => void;
   getParamMeta: (
@@ -71,7 +72,7 @@ export function ProjectParamsTab(props: ProjectParamsTabProps) {
       </Show>
 
       {/* New Parameter Form */}
-      <Show when={props.activeEnvName && props.showConfigForm}>
+      <Show when={props.canManage && props.activeEnvName && props.showConfigForm}>
         <ProjectParamCreateForm
           onCancel={props.onCancelCreate}
           onSubmit={props.onSubmitCreate}
@@ -88,6 +89,7 @@ export function ProjectParamsTab(props: ProjectParamsTabProps) {
           filteredConfig={props.filteredConfig}
           onSelectEntry={props.onSelectEntry}
           onDeleteEntry={props.onDeleteEntry}
+          canManage={props.canManage}
           copiedKey={props.copiedKey}
           onCopyValue={props.onCopyValue}
           getParamMeta={props.getParamMeta}

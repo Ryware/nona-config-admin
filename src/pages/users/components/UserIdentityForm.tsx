@@ -4,6 +4,7 @@ interface UserIdentityFormProps {
   name: string;
   email: string;
   isEditMode: boolean;
+  isEmailDisabled?: boolean;
   onNameChange: (val: string) => void;
   onEmailChange: (val: string) => void;
 }
@@ -54,6 +55,7 @@ export function UserIdentityForm(props: UserIdentityFormProps) {
             onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
               props.onEmailChange(e.currentTarget.value)
             }
+            disabled={props.isEmailDisabled}
             required
             autofocus={!props.isEditMode}
             leftIcon="alternate_email"

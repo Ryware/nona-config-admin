@@ -7,6 +7,7 @@ interface ProjectHeaderProps {
   showConfigForm: boolean;
   showBulkImport: boolean;
   showEnvForm: boolean;
+  canManageProject: boolean;
   onToggleEnvForm: () => void;
   onToggleBulkImport: () => void;
   onToggleConfigForm: () => void;
@@ -38,32 +39,34 @@ export function ProjectHeader(props: ProjectHeaderProps) {
             {props.project!.description || "No description provided."}
           </p>
         </div>
-        <div class="flex flex-wrap gap-2">
-          <button
-            data-testid="project-add-environment-button"
-            onClick={() => props.onToggleEnvForm()}
-            class="bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface flex cursor-pointer items-center gap-1.5 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all active:scale-[0.98]"
-          >
-            <MIcon name="add" class="text-[17px]" />
-            Add Environment
-          </button>
-          <button
-            data-testid="project-bulk-import-button"
-            onClick={() => props.onToggleBulkImport()}
-            class="bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface flex cursor-pointer items-center gap-1.5 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all active:scale-[0.98]"
-          >
-            <MIcon name="publish" class="text-[17px]" />
-            Bulk Import
-          </button>
-          <button
-            data-testid="project-add-parameter-button"
-            onClick={() => props.onToggleConfigForm()}
-            class="bg-primary text-on-primary flex cursor-pointer items-center gap-1.5 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98]"
-          >
-            <MIcon name="add" class="text-[17px]" />
-            Add Parameter
-          </button>
-        </div>
+        <Show when={props.canManageProject}>
+          <div class="flex flex-wrap gap-2">
+            <button
+              data-testid="project-add-environment-button"
+              onClick={() => props.onToggleEnvForm()}
+              class="bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface flex cursor-pointer items-center gap-1.5 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all active:scale-[0.98]"
+            >
+              <MIcon name="add" class="text-[17px]" />
+              Add Environment
+            </button>
+            <button
+              data-testid="project-bulk-import-button"
+              onClick={() => props.onToggleBulkImport()}
+              class="bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface flex cursor-pointer items-center gap-1.5 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all active:scale-[0.98]"
+            >
+              <MIcon name="publish" class="text-[17px]" />
+              Bulk Import
+            </button>
+            <button
+              data-testid="project-add-parameter-button"
+              onClick={() => props.onToggleConfigForm()}
+              class="bg-primary text-on-primary flex cursor-pointer items-center gap-1.5 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98]"
+            >
+              <MIcon name="add" class="text-[17px]" />
+              Add Parameter
+            </button>
+          </div>
+        </Show>
       </div>
     </Show>
   );

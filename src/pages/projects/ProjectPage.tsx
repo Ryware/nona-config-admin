@@ -21,12 +21,15 @@ import { ProjectHeader } from "./components/ProjectHeader";
 import { ProjectPageSkeleton } from "./components/ProjectPageSkeleton";
 
 import { authStore } from "../../entities/auth/model/store";
+import { canManageProjectResources } from "../../entities/auth/model/permissions";
 import type { ParamRevision } from "../../entities/project/api/metadata.service";
 import {
   autoFormatKey,
   localParamMetadataService
 } from "../../entities/project/api/metadata.service";
 import { projectKeys } from "../../entities/project/queries/keys";
+import { userService } from "../../entities/user/api/user.service";
+import { userKeys } from "../../entities/user/queries/keys";
 import { useEscapeKey } from "../../shared/hooks/useEscapeKey";
 import { MSG } from "../../shared/lib/messages";
 import type {
@@ -94,10 +97,20 @@ export default function ProjectPage() {
     enabled: !!project() && !!activeEnvName()
   }));
 
+  const usersQuery = useQuery(() => ({
+    queryKey: userKeys.list(),
+    queryFn: () => userService.getAll(),
+    enabled: !!project()
+  }));
+
+  const canManageProject = createMemo(() =>
+    canManageProjectResources(projectId(), usersQuery.status === "success" ? (usersQuery.data ?? []) : [])
+  );
+
   const apiKeysQuery = useQuery(() => ({
     queryKey: projectKeys.apiKeys(params.slug),
     queryFn: () => projectService.listApiKeys(projectId()),
-    enabled: !!project()
+    enabled: !!project() && canManageProject()
   }));
 
   const filteredConfig = createMemo(() => {
@@ -353,6 +366,7 @@ export default function ProjectPage() {
             showConfigForm={showConfigForm()}
             showBulkImport={showBulkImport()}
             showEnvForm={showEnvForm()}
+            canManageProject={canManageProject()}
             onToggleEnvForm={() => setShowEnvForm(!showEnvForm())}
             onToggleBulkImport={() => {
               setShowBulkImport(!showBulkImport());
@@ -364,7 +378,7 @@ export default function ProjectPage() {
             }}
           />
 
-          <Show when={project()}>
+          <Show when={project() && canManageProject()}>
             <ProjectApiKeys
               apiKeys={apiKeysQuery.status === "success" ? (apiKeysQuery.data ?? []) : []}
               environments={
@@ -373,6 +387,7 @@ export default function ProjectPage() {
               isLoading={apiKeysQuery.isLoading}
               isCreating={createApiKeyMutation.isPending}
               deletingId={deletingApiKeyId()}
+              canManage={canManageProject()}
               onCreate={data => createApiKeyMutation.mutate(data)}
               onDelete={apiKeyId => {
                 setDeletingApiKeyId(apiKeyId);
@@ -382,7 +397,7 @@ export default function ProjectPage() {
             />
           </Show>
 
-          <Show when={showBulkImport()}>
+          <Show when={canManageProject() && showBulkImport()}>
             <ProjectBulkImport
               onCancel={() => setShowBulkImport(false)}
               onImport={handleBulkImport}
@@ -405,6 +420,7 @@ export default function ProjectPage() {
             showEnvForm={showEnvForm()}
             setShowEnvForm={setShowEnvForm}
             createEnvPending={createEnvMutation.isPending}
+            canManage={canManageProject()}
           />
 
           <ProjectParamsTab
@@ -420,6 +436,7 @@ export default function ProjectPage() {
             showConfigForm={showConfigForm()}
             onCancelCreate={() => setShowConfigForm(false)}
             onSubmitCreate={data => {
+              if (!canManageProject()) return;
               localParamMetadataService.setMeta(projectId(), activeEnvName(), data.key, {
                 displayName: data.displayName,
                 description: data.description
@@ -435,6 +452,7 @@ export default function ProjectPage() {
             isCreatePending={createConfigMutation.isPending}
             onSelectEntry={handleOpenEditDrawer}
             onDeleteEntry={setConfirmDeleteEntry}
+            canManage={canManageProject()}
             copiedKey={copiedKey()}
             onCopyValue={copyValue}
             getParamMeta={(proj, env, key) => localParamMetadataService.getMeta(proj, env, key)}
@@ -447,6 +465,7 @@ export default function ProjectPage() {
             initialDescription={editDescription()}
             onClose={() => setEditingEntry(null)}
             onSaveSettings={data => {
+              if (!canManageProject()) return;
               setEditDisplayName(data.displayName);
               setEditDescription(data.description);
               updateConfigMutation.mutate({
@@ -459,6 +478,7 @@ export default function ProjectPage() {
               });
             }}
             isSaving={updateConfigMutation.isPending}
+            canManage={canManageProject()}
             historyRevisions={historyRevisions()}
             onRestoreRevision={handleRestoreRevision}
           />

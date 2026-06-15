@@ -8,7 +8,7 @@ import { projectKeys } from "../../entities/project/queries/keys";
 
 function getUser(): { email: string; role: string } {
   const session = authStore.getSession();
-  return { email: session?.email ?? "", role: session?.role ?? "" };
+  return { email: session?.email ?? "", role: session?.isAdmin ? "admin" : (session?.role ?? "") };
 }
 
 interface NavItemDef {

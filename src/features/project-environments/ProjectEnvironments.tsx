@@ -12,6 +12,7 @@ interface ProjectEnvironmentsProps {
   showEnvForm: boolean;
   setShowEnvForm: (v: boolean) => void;
   createEnvPending: boolean;
+  canManage: boolean;
 }
 
 export function ProjectEnvironments(props: ProjectEnvironmentsProps) {
@@ -51,19 +52,21 @@ export function ProjectEnvironments(props: ProjectEnvironmentsProps) {
                   }
                 >
                   <span class="max-w-50 truncate">{env.name}</span>
-                  <span
-                    data-testid={`environment-delete-${env.name}`}
-                    role="button"
-                    tabindex="0"
-                    onClick={e => {
-                      e.stopPropagation();
-                      props.onDeleteEnv(env.name);
-                    }}
-                    aria-label={`Delete environment ${env.name}`}
-                    class="text-outline hover:text-error ml-1 flex cursor-pointer items-center justify-center border-0 bg-transparent p-0 opacity-40 transition-opacity group-hover:opacity-100 focus:opacity-100"
-                  >
-                    <MIcon name="close" class="text-[14px]" />
-                  </span>
+                  <Show when={props.canManage}>
+                    <span
+                      data-testid={`environment-delete-${env.name}`}
+                      role="button"
+                      tabindex="0"
+                      onClick={e => {
+                        e.stopPropagation();
+                        props.onDeleteEnv(env.name);
+                      }}
+                      aria-label={`Delete environment ${env.name}`}
+                      class="text-outline hover:text-error ml-1 flex cursor-pointer items-center justify-center border-0 bg-transparent p-0 opacity-40 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                    >
+                      <MIcon name="close" class="text-[14px]" />
+                    </span>
+                  </Show>
                 </button>
               )}
             </For>
@@ -72,7 +75,7 @@ export function ProjectEnvironments(props: ProjectEnvironmentsProps) {
       </div>
 
       {/* Create env form */}
-      <Show when={props.showEnvForm}>
+      <Show when={props.canManage && props.showEnvForm}>
         <form
           onSubmit={handleSubmit}
           class="bg-surface-container-low border-outline-variant/15 animate-fade-in flex flex-col items-end gap-4 rounded-2xl border p-6 shadow-sm sm:flex-row"

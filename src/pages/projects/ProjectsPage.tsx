@@ -2,8 +2,12 @@ import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { createMemo, createSignal, Show } from "solid-js";
+import { canManageProjects, canManageProjectsFor } from "../../entities/auth/model/permissions";
+import { authStore } from "../../entities/auth/model/store";
 import { projectService } from "../../entities/project/api/project.service";
 import { projectKeys } from "../../entities/project/queries/keys";
+import { userService } from "../../entities/user/api/user.service";
+import { userKeys } from "../../entities/user/queries/keys";
 import { MSG } from "../../shared/lib/messages";
 import { ConfirmDialog } from "../../shared/ui/confirm-dialog";
 import { MIcon } from "../../shared/ui/icons";
@@ -23,10 +27,16 @@ export default function ProjectsPage() {
   const [showCreate, setShowCreate] = createSignal(false);
   const [deleteTarget, setDeleteTarget] = createSignal<Project | null>(null);
   const [search, setSearch] = createSignal("");
+  const sessionAllowsProjectManagement = canManageProjects();
 
   const projectsQuery = useQuery(() => ({
     queryKey: projectKeys.list(),
     queryFn: () => projectService.getAll()
+  }));
+
+  const usersQuery = useQuery(() => ({
+    queryKey: userKeys.list(),
+    queryFn: () => userService.getAll()
   }));
 
   const createMutation = useMutation(() => ({
@@ -50,6 +60,17 @@ export default function ProjectsPage() {
   }));
 
   const allProjects = () => (projectsQuery.status === "success" ? (projectsQuery.data ?? []) : []);
+  const currentUser = createMemo(() => {
+    const email = authStore.getSession()?.email?.toLowerCase() ?? "";
+    const users = usersQuery.status === "success" ? (usersQuery.data ?? []) : [];
+    return users.find(user => user.email.toLowerCase() === email);
+  });
+  const allowProjectManagement = createMemo(
+    () =>
+      usersQuery.status === "success"
+        ? canManageProjectsFor(currentUser())
+        : sessionAllowsProjectManagement
+  );
   const filteredProjects = createMemo(() => {
     const q = search().toLowerCase().trim();
     if (!q) return allProjects();
@@ -80,14 +101,16 @@ export default function ProjectsPage() {
               filteredCount={filteredProjects().length}
             />
           </div>
-          <button
-            data-testid="projects-new-button"
-            onClick={() => setShowCreate(!showCreate())}
-            class="bg-primary text-on-primary flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98]"
-          >
-            <MIcon name={showCreate() ? "close" : "add"} class="text-[17px]" />
-            {showCreate() ? "Cancel" : "New Project"}
-          </button>
+          <Show when={allowProjectManagement()}>
+            <button
+              data-testid="projects-new-button"
+              onClick={() => setShowCreate(!showCreate())}
+              class="bg-primary text-on-primary flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98]"
+            >
+              <MIcon name={showCreate() ? "close" : "add"} class="text-[17px]" />
+              {showCreate() ? "Cancel" : "New Project"}
+            </button>
+          </Show>
         </div>
 
         {/* Error banner */}
@@ -115,7 +138,7 @@ export default function ProjectsPage() {
         </Show>
 
         {/* Create form */}
-        <Show when={showCreate()}>
+        <Show when={allowProjectManagement() && showCreate()}>
           <ProjectCreateForm
             onCancel={() => setShowCreate(false)}
             onSubmit={data => createMutation.mutate(data)}
@@ -133,6 +156,8 @@ export default function ProjectsPage() {
           onNavigate={slug => navigate(`/projects/${slug}`)}
           onDeleteTarget={setDeleteTarget}
           onCreateClick={() => setShowCreate(true)}
+          canCreateProjects={allowProjectManagement()}
+          canDeleteProjects={allowProjectManagement()}
         />
 
         {/* Delete confirmation modal */}

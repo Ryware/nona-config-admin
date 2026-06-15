@@ -2,7 +2,13 @@ import { writeClipboard } from "@solid-primitives/clipboard";
 import { Title } from "@solidjs/meta";
 import { useLocation, useNavigate } from "@solidjs/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
-import { createEffect, createSignal, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, Show } from "solid-js";
+import {
+  canManageUsers,
+  canManageUsersFor,
+  isCurrentUser
+} from "../../entities/auth/model/permissions";
+import { authStore } from "../../entities/auth/model/store";
 import { projectService } from "../../entities/project/api/project.service";
 import { projectKeys } from "../../entities/project/queries/keys";
 import type { UpdateUserRequest } from "../../entities/user/api/user.service";
@@ -31,9 +37,15 @@ export default function UserPage() {
   const [selectedProjects, setSelectedProjects] = createSignal<Set<string>>(new Set());
   const [createdInvite, setCreatedInvite] = createSignal<CreateUserResponse | null>(null);
   const [copyFeedback, setCopyFeedback] = createSignal("");
+  const sessionAllowsUserManagement = canManageUsers();
 
   const userId = () => location.state?.userId;
   const isEditMode = () => !!userId();
+  const canEditCurrentPage = () => {
+    if (!isEditMode()) return allowUserManagement();
+    const user = userQuery.data;
+    return allowUserManagement() || (user ? isCurrentUser(user.email) : false);
+  };
 
   const userQuery = useQuery(() => ({
     queryKey: userKeys.detail(String(userId())),
@@ -45,6 +57,29 @@ export default function UserPage() {
     queryKey: projectKeys.list(),
     queryFn: () => projectService.getAll()
   }));
+
+  const usersQuery = useQuery(() => ({
+    queryKey: userKeys.list(),
+    queryFn: () => userService.getAll()
+  }));
+
+  const currentUser = createMemo(() => {
+    const email = authStore.getSession()?.email?.toLowerCase() ?? "";
+    const users = usersQuery.status === "success" ? (usersQuery.data ?? []) : [];
+    return users.find(user => user.email.toLowerCase() === email);
+  });
+
+  const allowUserManagement = createMemo(
+    () =>
+      usersQuery.status === "success"
+        ? canManageUsersFor(currentUser())
+        : sessionAllowsUserManagement
+  );
+  const canEditProjectScope = createMemo(
+    () => allowUserManagement() && role() === "viewer" && userQuery.data?.isAdmin !== true
+  );
+
+  const isEditLoading = () => isEditMode() && userQuery.isLoading;
 
   createEffect(() => {
     if (userQuery.data) {
@@ -62,11 +97,10 @@ export default function UserPage() {
     onSuccess: async (response: CreateUserResponse) => {
       // Assign selected projects to the newly created user
       const newUserId = String(response.user.id);
-      const defaultRole = role();
-      const projectsToAdd = [...selectedProjects()];
+      const projectsToAdd = role() === "viewer" ? [...selectedProjects()] : [];
       if (projectsToAdd.length > 0) {
         await Promise.allSettled(
-          projectsToAdd.map(slug => userService.addProject(newUserId, slug, defaultRole))
+          projectsToAdd.map(projectName => userService.addProject(newUserId, projectName, "viewer"))
         );
       }
       queryClient.invalidateQueries({ queryKey: userKeys.list() });
@@ -85,13 +119,20 @@ export default function UserPage() {
       const originalProjects = new Set<string>(
         (userQuery.data?.projects ?? []).map((p: ProjectAccess) => p.projectName)
       );
+      if (!canEditProjectScope()) {
+        queryClient.invalidateQueries({ queryKey: userKeys.list() });
+        queryClient.invalidateQueries({ queryKey: userKeys.detail(String(userId())) });
+        addToast(MSG.MEMBER_UPDATED, "success");
+        navigate("/users");
+        return;
+      }
+
       const current = selectedProjects();
-      const defaultRole = userQuery.data?.scope ?? "viewer";
       const toAdd = [...current].filter(s => !originalProjects.has(s));
       const toRemove = [...originalProjects].filter(s => !current.has(s));
       await Promise.allSettled([
-        ...toAdd.map(slug => userService.addProject(userId()!, slug, defaultRole)),
-        ...toRemove.map(slug => userService.removeProject(userId()!, slug))
+        ...toAdd.map(projectName => userService.addProject(userId()!, projectName, "viewer")),
+        ...toRemove.map(projectName => userService.removeProject(userId()!, projectName))
       ]);
       queryClient.invalidateQueries({ queryKey: userKeys.list() });
       queryClient.invalidateQueries({ queryKey: userKeys.detail(String(userId())) });
@@ -105,6 +146,10 @@ export default function UserPage() {
     e.preventDefault();
     if (isEditMode()) {
       const updates: UpdateUserRequest = { name: name(), role: role() };
+      if (!allowUserManagement()) {
+        updateMutation.mutate({ id: userId()!, updates: { name: name() } });
+        return;
+      }
       updateMutation.mutate({ id: userId()!, updates });
     } else {
       if (!name()) {
@@ -152,24 +197,41 @@ export default function UserPage() {
         {(isEditMode() ? "Edit " + name() : "Invite Team Member") + " | Nona Config Admin"}
       </Title>
       <div class="mx-auto max-w-3xl space-y-0">
-        {/* Step progress bar */}
-        <Show when={!isEditMode() && !createdInvite()}>
-          <UserStepProgress name={name()} email={email()} role={role()} />
+        <Show when={isEditLoading()}>
+          <UserFormSkeleton />
         </Show>
 
-        {/* Back button */}
-        <button
+        <Show when={!isEditLoading() && !canEditCurrentPage()}>
+          <div class="bg-surface-container-low border-outline-variant/15 rounded-xl border p-10 text-center">
+            <span class="material-symbols-outlined text-outline mb-3 block text-4xl">
+              lock
+            </span>
+            <p class="text-on-surface font-headline text-[15px] font-bold">Access denied</p>
+            <p class="text-on-surface-variant mt-1 text-sm">
+              Your account can only update its own profile details.
+            </p>
+          </div>
+        </Show>
+
+        <Show when={!isEditLoading() && canEditCurrentPage()}>
+          {/* Step progress bar */}
+          <Show when={!isEditMode() && !createdInvite()}>
+          <UserStepProgress name={name()} email={email()} role={role()} />
+          </Show>
+
+          {/* Back button */}
+          <button
           onClick={() => navigate("/users")}
           class="text-outline hover:text-primary group mb-8 flex cursor-pointer items-center gap-2 border-0 bg-transparent text-[12px] font-medium transition-colors"
-        >
+          >
           <span class="material-symbols-outlined text-[16px] transition-transform group-hover:-translate-x-1">
             arrow_back
           </span>
           <span>Back to Team Overview</span>
-        </button>
+          </button>
 
-        {/* Page header */}
-        <div class="mb-12 flex items-center gap-6">
+          {/* Page header */}
+          <div class="mb-12 flex items-center gap-6">
           <div class="from-primary to-primary-container flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-[0_0_20px_rgba(99,102,241,0.15)]">
             <span class="material-symbols-outlined text-on-primary text-2xl font-bold">
               {isEditMode() ? "manage_accounts" : "person_add"}
@@ -188,9 +250,9 @@ export default function UserPage() {
                 : "Configure identity and access level for the new user across your infrastructure."}
             </p>
           </div>
-        </div>
+          </div>
 
-        <Show when={!isEditMode() || !userQuery.isLoading} fallback={<UserFormSkeleton />}>
+          <Show when={!isEditMode() || !userQuery.isLoading} fallback={<UserFormSkeleton />}>
           <form onSubmit={handleSubmit}>
             <div class="grid grid-cols-1 gap-8">
               <Show when={createdInvite()}>
@@ -210,19 +272,24 @@ export default function UserPage() {
                 name={name()}
                 email={email()}
                 isEditMode={isEditMode()}
+                isEmailDisabled={isEditMode()}
                 onNameChange={setName}
                 onEmailChange={setEmail}
               />
 
               {/* Step 02 — Role Assignment */}
-              <UserRoleSelector role={role()} onChange={setRole} />
+              <Show when={allowUserManagement()}>
+                <UserRoleSelector role={role()} onChange={setRole} />
+              </Show>
 
               {/* Step 03 — Project Scope */}
-              <UserProjectScope
-                projects={projectsQuery.status === "success" ? (projectsQuery.data ?? []) : []}
-                selectedProjects={selectedProjects()}
-                onToggleProject={toggleProject}
-              />
+              <Show when={canEditProjectScope()}>
+                <UserProjectScope
+                  projects={projectsQuery.status === "success" ? (projectsQuery.data ?? []) : []}
+                  selectedProjects={selectedProjects()}
+                  onToggleProject={toggleProject}
+                />
+              </Show>
 
               {/* Footer actions */}
               <div class="flex items-center justify-between pt-4 pb-8">
@@ -254,6 +321,7 @@ export default function UserPage() {
               </div>
             </div>
           </form>
+          </Show>
         </Show>
       </div>
     </>

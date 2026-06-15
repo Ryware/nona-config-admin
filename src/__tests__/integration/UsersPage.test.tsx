@@ -32,6 +32,7 @@ describe('UsersPage', () => {
     localStorage.clear();
     sessionStorage.clear();
     localStorage.setItem('auth_token', mockToken);
+    localStorage.setItem('auth_session', JSON.stringify({ email: mockUsers[0].email, role: 'admin', isAdmin: true }));
     vi.restoreAllMocks();
   });
 
@@ -93,8 +94,7 @@ describe('UsersPage', () => {
 
     await screen.findByText(mockUsers[0].email);
 
-    const removeButtons = await screen.findAllByRole('button', { name: /remove/i });
-    fireEvent.click(removeButtons[0]);
+    fireEvent.click(await screen.findByTestId(`team-remove-${mockUsers[1].id}`));
 
     await waitFor(() => {
       // Confirmation modal has unique text "from this instance?"
@@ -103,7 +103,7 @@ describe('UsersPage', () => {
   });
 
   it('disables deletion for the current user', async () => {
-    localStorage.setItem('auth_session', JSON.stringify({ email: mockUsers[0].email, role: 'admin' }));
+    localStorage.setItem('auth_session', JSON.stringify({ email: mockUsers[0].email, role: 'admin', isAdmin: true }));
 
     renderWithProviders(() => <UsersPage />);
 
@@ -114,7 +114,7 @@ describe('UsersPage', () => {
   });
 
   it('still allows deleting other users when the current user is listed', async () => {
-    localStorage.setItem('auth_session', JSON.stringify({ email: mockUsers[0].email, role: 'admin' }));
+    localStorage.setItem('auth_session', JSON.stringify({ email: mockUsers[0].email, role: 'admin', isAdmin: true }));
 
     renderWithProviders(() => <UsersPage />);
 
@@ -142,5 +142,18 @@ describe('UsersPage', () => {
     });
 
     vi.restoreAllMocks();
+  });
+
+  it('hides management actions when persisted current user is viewer despite stale session role', async () => {
+    localStorage.setItem('auth_session', JSON.stringify({ email: mockUsers[1].email, role: 'editor', isAdmin: false }));
+
+    renderWithProviders(() => <UsersPage />);
+
+    await screen.findByText(mockUsers[1].email);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /invite member/i })).not.toBeInTheDocument();
+    });
+    expect(screen.queryByTestId(`team-remove-${mockUsers[0].id}`)).not.toBeInTheDocument();
   });
 });

@@ -12,6 +12,7 @@ interface ProjectApiKeysProps {
   isLoading: boolean;
   isCreating: boolean;
   deletingId: string | null;
+  canManage: boolean;
   onCreate: (data: CreateApiKeyRequest) => void;
   onDelete: (apiKeyId: string) => void;
   onCopied: (message: string) => void;
@@ -95,36 +96,38 @@ export function ProjectApiKeys(props: ProjectApiKeysProps) {
         </div>
       </div>
 
-      <div class="grid gap-2 md:grid-cols-[minmax(180px,1fr)_150px_190px_auto]">
-        <Input
-          data-testid="api-key-name-input"
-          value={name()}
-          onInput={event => setName(event.currentTarget.value)}
-          placeholder="Key name"
-          leftIcon="badge"
-        />
-        <Select
-          value={scope()}
-          onChange={value => setScope(value as ApiKey["scope"])}
-          options={SCOPE_OPTIONS}
-        />
-        <Select
-          value={environment()}
-          onChange={setEnvironment}
-          options={environmentOptions()}
-        />
-        <Button
-          data-testid="api-key-create-button"
-          type="button"
-          size="sm"
-          class="h-11"
-          disabled={!canCreate()}
-          onClick={handleCreate}
-        >
-          <MIcon name="add" class="text-[16px]" />
-          Create
-        </Button>
-      </div>
+      <Show when={props.canManage}>
+        <div class="grid gap-2 md:grid-cols-[minmax(180px,1fr)_150px_190px_auto]">
+          <Input
+            data-testid="api-key-name-input"
+            value={name()}
+            onInput={event => setName(event.currentTarget.value)}
+            placeholder="Key name"
+            leftIcon="badge"
+          />
+          <Select
+            value={scope()}
+            onChange={value => setScope(value as ApiKey["scope"])}
+            options={SCOPE_OPTIONS}
+          />
+          <Select
+            value={environment()}
+            onChange={setEnvironment}
+            options={environmentOptions()}
+          />
+          <Button
+            data-testid="api-key-create-button"
+            type="button"
+            size="sm"
+            class="h-11"
+            disabled={!canCreate()}
+            onClick={handleCreate}
+          >
+            <MIcon name="add" class="text-[16px]" />
+            Create
+          </Button>
+        </div>
+      </Show>
 
       <Show
         when={!props.isLoading}
@@ -182,16 +185,18 @@ export function ProjectApiKeys(props: ProjectApiKeysProps) {
                     >
                       <MIcon name="content_copy" class="text-[16px]" />
                     </button>
-                    <button
-                      data-testid={`api-key-delete-${apiKey.id}`}
-                      type="button"
-                      onClick={() => props.onDelete(apiKey.id)}
-                      disabled={props.deletingId === apiKey.id}
-                      class="text-outline hover:text-error hover:bg-error/10 cursor-pointer rounded-lg border-0 p-1.5 transition-all disabled:opacity-40"
-                      title="Delete API key"
-                    >
-                      <MIcon name="delete" class="text-[16px]" />
-                    </button>
+                    <Show when={props.canManage}>
+                      <button
+                        data-testid={`api-key-delete-${apiKey.id}`}
+                        type="button"
+                        onClick={() => props.onDelete(apiKey.id)}
+                        disabled={props.deletingId === apiKey.id}
+                        class="text-outline hover:text-error hover:bg-error/10 cursor-pointer rounded-lg border-0 p-1.5 transition-all disabled:opacity-40"
+                        title="Delete API key"
+                      >
+                        <MIcon name="delete" class="text-[16px]" />
+                      </button>
+                    </Show>
                   </div>
                 </div>
               )}

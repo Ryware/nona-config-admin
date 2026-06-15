@@ -33,6 +33,7 @@ function renderProjectPage(slug = 'my-app') {
 describe('ProjectPage', () => {
   beforeEach(() => {
     localStorage.setItem('auth_token', mockToken);
+    localStorage.setItem('auth_session', JSON.stringify({ email: 'admin@example.com', role: 'admin', isAdmin: true }));
     vi.restoreAllMocks();
     window.history.pushState({}, '', '/');
   });

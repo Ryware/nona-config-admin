@@ -10,6 +10,7 @@ export interface AuthSession {
   email: string;
   role: string;
   username?: string;
+  isAdmin?: boolean;
 }
 
 export const authStore = {
@@ -20,7 +21,13 @@ export const authStore = {
   saveSession(token: string, session: AuthSession, rememberMe = true): void {
     const storage = rememberMe ? localStorage : sessionStorage;
     storage.setItem("auth_token", token);
-    storage.setItem("auth_session", JSON.stringify(session));
+    storage.setItem(
+      "auth_session",
+      JSON.stringify({
+        ...session,
+        isAdmin: session.isAdmin ?? getIsAdminClaim(token)
+      })
+    );
   },
 
   clearSession(): void {
@@ -37,7 +44,13 @@ export const authStore = {
   getSession(): AuthSession | null {
     try {
       const raw = localStorage.getItem("auth_session") ?? sessionStorage.getItem("auth_session");
-      if (raw) return JSON.parse(raw) as AuthSession;
+      if (raw) {
+        const session = JSON.parse(raw) as AuthSession;
+        return {
+          ...session,
+          isAdmin: session.isAdmin ?? getIsAdminClaim(this.getToken() ?? "")
+        };
+      }
     } catch {
       // corrupted storage — treat as logged out
     }
@@ -83,3 +96,18 @@ export const authStore = {
     window.location.href = "/login";
   }
 };
+
+function getIsAdminClaim(token: string): boolean {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(payload)) as Record<string, unknown>;
+    const claim = decoded.isAdmin;
+
+    return claim === true || claim === "true";
+  } catch {
+    return false;
+  }
+}

@@ -17,6 +17,7 @@ interface ProjectParamEditDrawerProps {
   onClose: () => void;
   onSaveSettings: (data: { value: string; displayName: string; description: string }) => void;
   isSaving: boolean;
+  canManage: boolean;
   historyRevisions: ParamRevision[];
   onRestoreRevision: (revision: ParamRevision) => void;
 }
@@ -97,6 +98,8 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
   };
 
   const handleSave = () => {
+    if (!props.canManage) return;
+
     props.onSaveSettings({
       value: editVal().trim(),
       displayName: editDisplayName().trim(),
@@ -129,7 +132,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                     data-testid="parameter-edit-heading"
                     class="font-headline text-on-surface text-base font-bold"
                   >
-                    Edit Parameter
+                    {props.canManage ? "Edit Parameter" : "Parameter Details"}
                   </h3>
                   <p class="text-outline mt-0.5 font-mono text-[11px]">{entry.key}</p>
                 </div>
@@ -194,6 +197,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                         onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
                           setEditDisplayName(e.currentTarget.value)
                         }
+                        disabled={!props.canManage}
                         placeholder="Friendly name"
                         leftIcon="label"
                         data-testid="parameter-edit-display-name-input"
@@ -210,6 +214,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                         onInput={(e: InputEvent & { currentTarget: HTMLTextAreaElement }) =>
                           setEditDescription(e.currentTarget.value)
                         }
+                        disabled={!props.canManage}
                         rows={3}
                         maxLength={500}
                         class="bg-surface-container-lowest border-outline-variant/20 focus:border-primary focus:ring-primary/20 text-on-surface placeholder:text-outline/60 hover:border-outline-variant/30 w-full resize-none rounded-xl border px-4 py-2.5 text-[13px] transition-all outline-none focus:ring-2"
@@ -238,6 +243,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                         <Select
                           value={editVal()}
                           onChange={val => setEditVal(val)}
+                          disabled={!props.canManage}
                           options={[
                             { value: "true", label: "True / Active" },
                             { value: "false", label: "False / Inactive" }
@@ -251,6 +257,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                           onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
                             setEditVal(e.currentTarget.value)
                           }
+                          disabled={!props.canManage}
                           leftIcon="pin"
                         />
                       </Show>
@@ -258,7 +265,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                         <VisualJsonEditor
                           id="config-entry-edit-value"
                           value={editVal()}
-                          onChange={setEditVal}
+                          onChange={props.canManage ? setEditVal : () => undefined}
                         />
                       </Show>
                       <Show when={entry.contentType === "string"}>
@@ -268,6 +275,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                           onInput={(e: InputEvent & { currentTarget: HTMLInputElement }) =>
                             setEditVal(e.currentTarget.value)
                           }
+                          disabled={!props.canManage}
                           leftIcon="text_fields"
                           data-testid="parameter-edit-value-input"
                         />
@@ -368,16 +376,18 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                                 </div>
 
                                 {/* Restore action */}
-                                <div class="mt-3 flex justify-end">
-                                  <button
-                                    type="button"
-                                    onClick={() => props.onRestoreRevision(rev)}
-                                    class="text-primary hover:text-primary-container flex cursor-pointer items-center gap-1.5 border-0 bg-transparent px-0 text-[12px] font-medium transition-colors"
-                                  >
-                                    <MIcon name="history" class="text-[14px]" />
-                                    Restore this revision
-                                  </button>
-                                </div>
+                                <Show when={props.canManage}>
+                                  <div class="mt-3 flex justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => props.onRestoreRevision(rev)}
+                                      class="text-primary hover:text-primary-container flex cursor-pointer items-center gap-1.5 border-0 bg-transparent px-0 text-[12px] font-medium transition-colors"
+                                    >
+                                      <MIcon name="history" class="text-[14px]" />
+                                      Restore this revision
+                                    </button>
+                                  </div>
+                                </Show>
                               </div>
                             );
                           }}
@@ -412,15 +422,17 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                   >
                     Cancel
                   </button>
-                  <button
-                    data-testid="parameter-edit-save-button"
-                    type="button"
-                    onClick={handleSave}
-                    disabled={props.isSaving || isEditInvalid()}
-                    class="bg-primary text-on-primary flex-1 cursor-pointer rounded-xl border-0 py-2.5 text-[13px] font-semibold transition-all hover:brightness-110 disabled:opacity-40"
-                  >
-                    {props.isSaving ? "Saving…" : "Save"}
-                  </button>
+                  <Show when={props.canManage}>
+                    <button
+                      data-testid="parameter-edit-save-button"
+                      type="button"
+                      onClick={handleSave}
+                      disabled={props.isSaving || isEditInvalid()}
+                      class="bg-primary text-on-primary flex-1 cursor-pointer rounded-xl border-0 py-2.5 text-[13px] font-semibold transition-all hover:brightness-110 disabled:opacity-40"
+                    >
+                      {props.isSaving ? "Saving…" : "Save"}
+                    </button>
+                  </Show>
                 </div>
               </Show>
             </div>

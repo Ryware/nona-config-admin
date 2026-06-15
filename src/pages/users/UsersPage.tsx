@@ -2,6 +2,11 @@ import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { createMemo, createSignal, Show } from "solid-js";
+import {
+  canManageUsers,
+  canManageUsersFor,
+  isCurrentUser
+} from "../../entities/auth/model/permissions";
 import { authStore } from "../../entities/auth/model/store";
 import { userService } from "../../entities/user/api/user.service";
 import { userKeys } from "../../entities/user/queries/keys";
@@ -23,6 +28,7 @@ export default function UsersPage() {
   const [deleteTarget, setDeleteTarget] = createSignal<User | null>(null);
   const [search, setSearch] = createSignal("");
   const [roleFilter, setRoleFilter] = createSignal("all");
+  const sessionAllowsUserManagement = canManageUsers();
 
   const usersQuery = useQuery(() => ({
     queryKey: userKeys.list(),
@@ -41,6 +47,15 @@ export default function UsersPage() {
 
   const users = () => (usersQuery.status === "success" ? (usersQuery.data ?? []) : []);
   const currentUserEmail = () => authStore.getSession()?.email ?? "";
+  const currentUser = createMemo(() =>
+    users().find(user => user.email.toLowerCase() === currentUserEmail().toLowerCase())
+  );
+  const allowUserManagement = createMemo(
+    () =>
+      usersQuery.status === "success"
+        ? canManageUsersFor(currentUser())
+        : sessionAllowsUserManagement
+  );
 
   const filteredUsers = createMemo(() => {
     const q = search().toLowerCase().trim();
@@ -77,14 +92,16 @@ export default function UsersPage() {
               viewersCount={viewersCount()}
             />
           </div>
-          <button
-            data-testid="team-invite-button"
-            onClick={() => navigate("/user")}
-            class="bg-primary text-on-primary flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98]"
-          >
-            <span class="material-symbols-outlined text-[17px]">person_add</span>
-            Invite Member
-          </button>
+          <Show when={allowUserManagement()}>
+            <button
+              data-testid="team-invite-button"
+              onClick={() => navigate("/user")}
+              class="bg-primary text-on-primary flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105 active:scale-[0.98]"
+            >
+              <span class="material-symbols-outlined text-[17px]">person_add</span>
+              Invite Member
+            </button>
+          </Show>
         </div>
 
         {/* Error banner */}
@@ -109,9 +126,14 @@ export default function UsersPage() {
           totalUsersCount={users().length}
           filteredUsers={filteredUsers()}
           currentUserEmail={currentUserEmail()}
-          onEdit={user => navigate("/user", { state: { userId: user.id } })}
+          canManageUsers={allowUserManagement()}
+          onEdit={user => {
+            if (allowUserManagement() || isCurrentUser(user.email)) {
+              navigate("/user", { state: { userId: user.id } });
+            }
+          }}
           onDelete={user => setDeleteTarget(user)}
-          onInvite={() => navigate("/user")}
+          onInvite={allowUserManagement() ? () => navigate("/user") : undefined}
         />
       </div>
 

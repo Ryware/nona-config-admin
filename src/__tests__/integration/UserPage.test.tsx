@@ -72,6 +72,7 @@ function renderEditMode(userId: string) {
 describe("UserPage — invite mode (no userId in state)", () => {
   beforeEach(() => {
     localStorage.setItem("auth_token", mockToken);
+    localStorage.setItem("auth_session", JSON.stringify({ email: mockUsers[0].email, role: "admin", isAdmin: true }));
     vi.restoreAllMocks();
     window.history.pushState({}, "", "/user");
   });
@@ -107,8 +108,16 @@ describe("UserPage — invite mode (no userId in state)", () => {
     expect(screen.getByText("Viewer")).toBeInTheDocument();
   });
 
-  it("displays the list of projects in the project scope section", async () => {
+  it("hides the project scope section for the default editor role", async () => {
     renderInviteMode();
+    await screen.findByText("Editor");
+    expect(screen.queryByRole("heading", { name: /project scope/i })).not.toBeInTheDocument();
+  });
+
+  it("displays the list of projects in the project scope section for viewers", async () => {
+    renderInviteMode();
+    const viewerCard = await screen.findByText("Viewer");
+    fireEvent.click(viewerCard.closest('[class*="rounded-lg"]')!);
     // Find the section heading first, then wait for async project data within it
     const scopeHeading = await screen.findByRole("heading", { name: /project scope/i });
     const section = scopeHeading.closest("section")!;
@@ -120,11 +129,15 @@ describe("UserPage — invite mode (no userId in state)", () => {
   it('shows "No projects found" when there are no projects', async () => {
     server.use(http.get("http://localhost:5027/admin/projects", () => HttpResponse.json([])));
     renderInviteMode();
+    const viewerCard = await screen.findByText("Viewer");
+    fireEvent.click(viewerCard.closest('[class*="rounded-lg"]')!);
     expect(await screen.findByText(/no projects found/i)).toBeInTheDocument();
   });
 
   it("toggles project checkbox when a project row is clicked", async () => {
     renderInviteMode();
+    const viewerCard = await screen.findByText("Viewer");
+    fireEvent.click(viewerCard.closest('[class*="rounded-lg"]')!);
     const row = await screen.findByTestId(`invite-project-row-${mockProjects[0].urlSlug}`);
     const checkbox = screen.getByTestId(
       `invite-project-${mockProjects[0].urlSlug}`
@@ -176,6 +189,7 @@ describe("UserPage — invite mode (no userId in state)", () => {
 describe("UserPage — edit mode (userId present in state)", () => {
   beforeEach(() => {
     localStorage.setItem("auth_token", mockToken);
+    localStorage.setItem("auth_session", JSON.stringify({ email: mockUsers[0].email, role: "admin", isAdmin: true }));
     vi.restoreAllMocks();
   });
 
@@ -213,6 +227,20 @@ describe("UserPage — edit mode (userId present in state)", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/permission denied/i)).toBeInTheDocument();
+    });
+  });
+
+  it("hides role controls when persisted current user is viewer despite stale session role", async () => {
+    localStorage.setItem(
+      "auth_session",
+      JSON.stringify({ email: mockUsers[1].email, role: "editor", isAdmin: false })
+    );
+
+    renderEditMode(mockUsers[1].id);
+
+    expect(await screen.findByRole("heading", { name: /edit team member/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole("heading", { name: /role assignment/i })).not.toBeInTheDocument();
     });
   });
 });

@@ -11,6 +11,8 @@ interface ProjectGridProps {
   onNavigate: (slug: string) => void;
   onDeleteTarget: (project: Project) => void;
   onCreateClick: () => void;
+  canCreateProjects: boolean;
+  canDeleteProjects: boolean;
 }
 
 export function ProjectGrid(props: ProjectGridProps) {
@@ -48,16 +50,20 @@ export function ProjectGrid(props: ProjectGridProps) {
                 No projects yet
               </p>
               <p class="text-on-surface-variant mb-6 text-[13px]">
-                Create your first project to start managing configuration.
+                {props.canCreateProjects
+                  ? "Create your first project to start managing configuration."
+                  : "No projects are available for your account."}
               </p>
-              <button
-                data-testid="empty-projects-new-button"
-                onClick={() => props.onCreateClick()}
-                class="bg-primary text-on-primary inline-flex cursor-pointer items-center gap-1.5 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105"
-              >
-                <MIcon name="add" class="text-[17px]" />
-                New Project
-              </button>
+              <Show when={props.canCreateProjects}>
+                <button
+                  data-testid="empty-projects-new-button"
+                  onClick={() => props.onCreateClick()}
+                  class="bg-primary text-on-primary inline-flex cursor-pointer items-center gap-1.5 rounded-lg border-0 px-4 py-2 text-[13px] font-semibold transition-all hover:brightness-105"
+                >
+                  <MIcon name="add" class="text-[17px]" />
+                  New Project
+                </button>
+              </Show>
             </div>
           </Show>
         }
@@ -114,17 +120,19 @@ export function ProjectGrid(props: ProjectGridProps) {
                         })}
                       </span>
                       <div class="flex items-center gap-1">
-                        <button
-                          data-testid={`project-delete-${project.urlSlug}`}
-                          onClick={e => {
-                            e.stopPropagation();
-                            props.onDeleteTarget(project);
-                          }}
-                          class="text-outline hover:text-error hover:bg-error/10 cursor-pointer rounded-lg border-0 bg-transparent p-1.5 opacity-40 transition-colors group-hover:opacity-100 focus:opacity-100"
-                          title={`Delete ${project.name}`}
-                        >
-                          <MIcon name="delete_outline" class="text-[16px]" />
-                        </button>
+                        <Show when={props.canDeleteProjects}>
+                          <button
+                            data-testid={`project-delete-${project.urlSlug}`}
+                            onClick={e => {
+                              e.stopPropagation();
+                              props.onDeleteTarget(project);
+                            }}
+                            class="text-outline hover:text-error hover:bg-error/10 cursor-pointer rounded-lg border-0 bg-transparent p-1.5 opacity-40 transition-colors group-hover:opacity-100 focus:opacity-100"
+                            title={`Delete ${project.name}`}
+                          >
+                            <MIcon name="delete_outline" class="text-[16px]" />
+                          </button>
+                        </Show>
                         <div class="text-outline/50 group-hover:text-primary flex h-6 w-6 items-center justify-center rounded-md transition-colors">
                           <MIcon name="arrow_forward" class="text-[15px]" />
                         </div>
@@ -135,14 +143,16 @@ export function ProjectGrid(props: ProjectGridProps) {
               )}
             </For>
 
-            <button
-              data-testid="project-grid-new-button"
-              onClick={() => props.onCreateClick()}
-              class="border-outline-variant/20 text-outline hover:border-primary/30 hover:text-primary hover:bg-primary/5 flex min-h-37 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed bg-transparent p-5 transition-all"
-            >
-              <MIcon name="add" class="text-2xl" />
-              <span class="text-[12.5px] font-medium">New Project</span>
-            </button>
+            <Show when={props.canCreateProjects}>
+              <button
+                data-testid="project-grid-new-button"
+                onClick={() => props.onCreateClick()}
+                class="border-outline-variant/20 text-outline hover:border-primary/30 hover:text-primary hover:bg-primary/5 flex min-h-37 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed bg-transparent p-5 transition-all"
+              >
+                <MIcon name="add" class="text-2xl" />
+                <span class="text-[12.5px] font-medium">New Project</span>
+              </button>
+            </Show>
           </div>
         </Show>
       </Show>
