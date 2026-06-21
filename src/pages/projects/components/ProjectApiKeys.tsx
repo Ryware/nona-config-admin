@@ -91,7 +91,7 @@ export function ProjectApiKeys(props: ProjectApiKeysProps) {
             API Keys
           </p>
           <p class="text-on-surface-variant mt-1 text-xs">
-            Managed keys are scoped by access type and optional environment.
+            Keys belong to this project and can be limited by access type or environment.
           </p>
         </div>
       </div>
