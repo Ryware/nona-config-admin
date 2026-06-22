@@ -243,6 +243,39 @@ export const handlers = [
     return HttpResponse.json(entry);
   }),
 
+  http.get(`${BASE}/admin/projects/:projectId/environments/:envName/config-entries/:key/history`, ({ params }) => {
+    const entry = mockConfigEntries.find(
+      (c) => c.project === params.projectId && c.environment === params.envName && c.key === params.key,
+    );
+    if (!entry) return HttpResponse.json({ error: 'Not found' }, { status: 404 });
+    return HttpResponse.json([
+      {
+        project: entry.project,
+        environment: entry.environment,
+        key: entry.key,
+        version: entry.activeVersion,
+        value: entry.value,
+        contentType: entry.contentType,
+        scope: entry.scope,
+        createdAt: entry.updatedAt,
+        actor: 'admin@example.com',
+      },
+    ]);
+  }),
+
+  http.post(`${BASE}/admin/projects/:projectId/environments/:envName/config-entries/:key/rollback`, async ({ params, request }) => {
+    const body = await request.json() as { version?: number };
+    const entry = mockConfigEntries.find(
+      (c) => c.project === params.projectId && c.environment === params.envName && c.key === params.key,
+    );
+    if (!entry || !body.version) return HttpResponse.json({ error: 'Not found' }, { status: 404 });
+    return HttpResponse.json({
+      ...entry,
+      activeVersion: entry.activeVersion + 1,
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
   http.put(`${BASE}/admin/projects/:projectId/environments/:envName/config-entries/:key`, async ({ params, request }) => {
     const body = await request.json() as Record<string, unknown>;
     return HttpResponse.json({
@@ -251,6 +284,7 @@ export const handlers = [
       environment: params.envName,
       key: params.key,
       ...body,
+      activeVersion: mockConfigEntries[0].activeVersion + 1,
       updatedAt: new Date().toISOString(),
     });
   }),

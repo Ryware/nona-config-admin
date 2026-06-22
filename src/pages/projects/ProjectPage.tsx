@@ -20,9 +20,7 @@ import { ProjectApiKeys } from "./components/ProjectApiKeys";
 import { ProjectHeader } from "./components/ProjectHeader";
 import { ProjectPageSkeleton } from "./components/ProjectPageSkeleton";
 
-import { authStore } from "../../entities/auth/model/store";
 import { canManageProjectResources } from "../../entities/auth/model/permissions";
-import type { ParamRevision } from "../../entities/project/api/metadata.service";
 import {
   autoFormatKey,
   localParamMetadataService
@@ -34,6 +32,7 @@ import { useEscapeKey } from "../../shared/hooks/useEscapeKey";
 import { MSG } from "../../shared/lib/messages";
 import type {
   ConfigEntry,
+  ConfigEntryVersion,
   CreateConfigEntryRequest,
   CreateApiKeyRequest,
   CreateEnvironmentRequest,
@@ -55,7 +54,6 @@ export default function ProjectPage() {
   const [editingEntry, setEditingEntry] = createSignal<ConfigEntry | null>(null);
   const [editDisplayName, setEditDisplayName] = createSignal("");
   const [editDescription, setEditDescription] = createSignal("");
-  const [historyRevisions, setHistoryRevisions] = createSignal<ParamRevision[]>([]);
   const [showBulkImport, setShowBulkImport] = createSignal(false);
   const [deletingApiKeyId, setDeletingApiKeyId] = createSignal<string | null>(null);
 
@@ -95,6 +93,14 @@ export default function ProjectPage() {
     queryKey: projectKeys.configEntries(params.slug, activeEnvName()),
     queryFn: () => configEntryService.getAll(projectId(), activeEnvName()),
     enabled: !!project() && !!activeEnvName()
+  }));
+
+  const editingEntryKey = createMemo(() => editingEntry()?.key ?? "");
+
+  const configHistoryQuery = useQuery(() => ({
+    queryKey: projectKeys.configEntryHistory(params.slug, activeEnvName(), editingEntryKey()),
+    queryFn: () => configEntryService.history(projectId(), activeEnvName(), editingEntryKey()),
+    enabled: !!project() && !!activeEnvName() && !!editingEntryKey()
   }));
 
   const usersQuery = useQuery(() => ({
@@ -172,20 +178,10 @@ export default function ProjectPage() {
   const createConfigMutation = useMutation(() => ({
     mutationFn: (req: CreateConfigEntryRequest) =>
       configEntryService.upsert(req.projectId, activeEnvName(), req.key, req),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: projectKeys.configEntries(params.slug, activeEnvName())
       });
-      const meta = localParamMetadataService.getMeta(projectId(), activeEnvName(), variables.key);
-      localParamMetadataService.addRevision(
-        projectId(),
-        activeEnvName(),
-        variables.key,
-        variables.value,
-        authStore.getSession()?.email ?? "system",
-        meta.displayName,
-        meta.description
-      );
       setShowConfigForm(false);
       addToast(MSG.PARAM_CREATED, "success");
     },
@@ -210,9 +206,6 @@ export default function ProjectPage() {
     const meta = localParamMetadataService.getMeta(projectId(), activeEnvName(), entry.key);
     setEditDisplayName(meta.displayName);
     setEditDescription(meta.description);
-    setHistoryRevisions(
-      localParamMetadataService.getRevisions(projectId(), activeEnvName(), entry.key)
-    );
   };
 
   // Param update settings mutation
@@ -251,22 +244,9 @@ export default function ProjectPage() {
         });
       }
 
-      localParamMetadataService.addRevision(
-        projectId(),
-        activeEnvName(),
-        variables.key,
-        variables.value,
-        authStore.getSession()?.email ?? "system",
-        dispName,
-        desc
-      );
-
-      const entry = editingEntry();
-      if (entry) {
-        setHistoryRevisions(
-          localParamMetadataService.getRevisions(projectId(), activeEnvName(), entry.key)
-        );
-      }
+      queryClient.invalidateQueries({
+        queryKey: projectKeys.configEntryHistory(params.slug, activeEnvName(), variables.key)
+      });
 
       setEditingEntry(null);
       addToast(MSG.PARAM_UPDATED, "success");
@@ -284,16 +264,6 @@ export default function ProjectPage() {
         displayName: dispName,
         description: desc
       });
-      localParamMetadataService.addRevision(
-        projectId(),
-        activeEnvName(),
-        item.key,
-        item.value,
-        authStore.getSession()?.email ?? "system",
-        dispName,
-        desc
-      );
-
       await configEntryService.upsert(projectId(), activeEnvName(), item.key, {
         value: item.value,
         contentType: item.contentType,
@@ -308,29 +278,30 @@ export default function ProjectPage() {
     addToast(MSG.bulkImportSuccess(selectedItems.length), "success");
   };
 
-  const handleRestoreRevision = (rev: ParamRevision) => {
+  const rollbackConfigMutation = useMutation(() => ({
+    mutationFn: (req: { key: string; version: number }) =>
+      configEntryService.rollback(projectId(), activeEnvName(), req.key, {
+        version: req.version
+      }),
+    onSuccess: (entry, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectKeys.configEntries(params.slug, activeEnvName())
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectKeys.configEntryHistory(params.slug, activeEnvName(), variables.key)
+      });
+      setEditingEntry(entry);
+      addToast(MSG.PARAM_ROLLED_BACK, "success");
+    },
+    onError: () => addToast(MSG.PARAM_ROLLBACK_FAILED, "error")
+  }));
+
+  const handleRollbackVersion = (version: ConfigEntryVersion) => {
     const entry = editingEntry();
     if (entry) {
-      const currentMeta = localParamMetadataService.getMeta(
-        projectId(),
-        activeEnvName(),
-        entry.key
-      );
-      const targetDisplayName =
-        rev.displayName !== undefined ? rev.displayName : currentMeta.displayName;
-      const targetDescription =
-        rev.description !== undefined ? rev.description : currentMeta.description;
-
-      setEditDisplayName(targetDisplayName);
-      setEditDescription(targetDescription);
-
-      updateConfigMutation.mutate({
+      rollbackConfigMutation.mutate({
         key: entry.key,
-        value: rev.value,
-        contentType: entry.contentType,
-        scope: entry.scope,
-        displayName: targetDisplayName,
-        description: targetDescription
+        version: version.version
       });
     }
   };
@@ -479,8 +450,10 @@ export default function ProjectPage() {
             }}
             isSaving={updateConfigMutation.isPending}
             canManage={canManageProject()}
-            historyRevisions={historyRevisions()}
-            onRestoreRevision={handleRestoreRevision}
+            historyVersions={configHistoryQuery.status === "success" ? (configHistoryQuery.data ?? []) : []}
+            isHistoryLoading={configHistoryQuery.isLoading}
+            isRollingBack={rollbackConfigMutation.isPending}
+            onRollbackVersion={handleRollbackVersion}
           />
         </Show>
       </div>

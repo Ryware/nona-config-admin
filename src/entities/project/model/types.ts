@@ -39,8 +39,21 @@ export interface ConfigEntry {
   value: string;
   contentType: 'text' | 'number' | 'boolean' | 'json';
   scope: 'client' | 'server' | 'all';
+  activeVersion: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ConfigEntryVersion {
+  project: string;
+  environment: string;
+  key: string;
+  version: number;
+  value: string;
+  contentType: 'text' | 'number' | 'boolean' | 'json';
+  scope: 'client' | 'server' | 'all';
+  createdAt: string;
+  actor: string;
 }
 
 export interface CreateConfigEntryRequest {
@@ -55,6 +68,10 @@ export interface UpdateConfigEntryRequest {
   value: string;
   contentType?: 'text' | 'number' | 'boolean' | 'json';
   scope?: 'client' | 'server' | 'all';
+}
+
+export interface RollbackConfigEntryRequest {
+  version: number;
 }
 
 export interface ApiKey {

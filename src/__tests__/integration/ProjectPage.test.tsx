@@ -122,6 +122,7 @@ describe('ProjectPage', () => {
                 value: 'staging-value',
                 contentType: 'text',
                 scope: 'all',
+                activeVersion: 1,
                 createdAt: '2024-01-01T00:00:00Z',
                 updatedAt: '2024-01-01T00:00:00Z',
               },
