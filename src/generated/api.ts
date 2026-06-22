@@ -573,10 +573,12 @@ export interface paths {
                 /** @description OK */
                 200: {
                     headers: {
+                        /** @description Logical Nona value type such as json, text, number, or boolean. */
+                        "X-Nona-Content-Type"?: string;
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": string;
+                        "application/json": string;
                     };
                 };
                 /** @description Unauthorized */
@@ -585,9 +587,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
                         "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
                     };
                 };
                 /** @description Not Found */
@@ -596,9 +596,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
                         "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };

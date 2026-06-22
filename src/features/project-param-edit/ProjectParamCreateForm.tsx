@@ -9,7 +9,7 @@ interface ProjectParamCreateFormProps {
   onSubmit: (data: {
     key: string;
     value: string;
-    contentType: "string" | "number" | "boolean" | "json";
+    contentType: "text" | "number" | "boolean" | "json";
     scope: "client" | "server" | "all";
     displayName: string;
     description: string;
@@ -20,7 +20,7 @@ interface ProjectParamCreateFormProps {
 export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
   const [cfgKey, setCfgKey] = createSignal("");
   const [cfgValue, setCfgValue] = createSignal("");
-  const [cfgType, setCfgType] = createSignal<"string" | "number" | "boolean" | "json">("string");
+  const [cfgType, setCfgType] = createSignal<"text" | "number" | "boolean" | "json">("text");
   const [cfgDisplayName, setCfgDisplayName] = createSignal("");
   const [cfgDescription, setCfgDescription] = createSignal("");
 
@@ -92,10 +92,10 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
             <Select
               value={cfgType()}
               onChange={(val: string) => {
-                setCfgType(val as "string" | "number" | "boolean" | "json");
+                setCfgType(val as "text" | "number" | "boolean" | "json");
                 setCfgValue("");
               }}
-              options={["string", "number", "boolean", "json"]}
+              options={["text", "number", "boolean", "json"]}
             />
           </div>
         </div>
@@ -165,7 +165,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
         <Show when={cfgType() === "json"}>
           <VisualJsonEditor id="config-entry-value" value={cfgValue()} onChange={setCfgValue} />
         </Show>
-        <Show when={cfgType() === "string"}>
+        <Show when={cfgType() === "text"}>
           <Input
             data-testid="parameter-value-input"
             id="config-entry-value"

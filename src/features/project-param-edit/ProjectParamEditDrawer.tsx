@@ -268,7 +268,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                           onChange={props.canManage ? setEditVal : () => undefined}
                         />
                       </Show>
-                      <Show when={entry.contentType === "string"}>
+                      <Show when={entry.contentType === "text"}>
                         <Input
                           type="text"
                           value={editVal()}

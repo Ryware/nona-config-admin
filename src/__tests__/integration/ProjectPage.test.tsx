@@ -120,7 +120,7 @@ describe('ProjectPage', () => {
                 environment: 'staging',
                 key: 'STAGING_ONLY_KEY',
                 value: 'staging-value',
-                contentType: 'string',
+                contentType: 'text',
                 scope: 'all',
                 createdAt: '2024-01-01T00:00:00Z',
                 updatedAt: '2024-01-01T00:00:00Z',

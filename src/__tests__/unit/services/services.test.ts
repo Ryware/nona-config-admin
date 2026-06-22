@@ -85,7 +85,7 @@ describe('configEntryService', () => {
   it('upsert updates a config entry value', async () => {
     const result = await configEntryService.upsert('my-app', 'production', 'API_URL', {
       value: 'https://new-api.example.com',
-      contentType: 'string',
+      contentType: 'text',
       scope: 'server',
     });
     expect(result.value).toBe('https://new-api.example.com');

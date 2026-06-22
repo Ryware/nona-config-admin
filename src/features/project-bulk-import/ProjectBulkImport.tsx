@@ -5,7 +5,7 @@ import type { ConfigEntry } from "../../types";
 export interface ParsedImport {
   key: string;
   value: string;
-  contentType: 'string' | 'number' | 'boolean' | 'json';
+  contentType: 'text' | 'number' | 'boolean' | 'json';
   scope: 'client' | 'server' | 'all';
   alreadyExists: boolean;
   selected: boolean;
@@ -48,10 +48,11 @@ export function ProjectBulkImport(props: ProjectBulkImportProps) {
       
       const rawKey = matches[0].replace(/^"|"$/g, "").trim();
       const rawVal = matches[1].replace(/^"|"$/g, "").trim();
-      const rawType = matches[2]?.replace(/^"|"$/g, "").trim().toLowerCase() ?? "string";
+      const rawType = matches[2]?.replace(/^"|"$/g, "").trim().toLowerCase() ?? "text";
       const rawScope = matches[3]?.replace(/^"|"$/g, "").trim().toLowerCase() ?? "all";
       
-      const cleanType: ConfigEntry['contentType'] = (["string", "number", "boolean", "json"] as const).includes(rawType as ConfigEntry['contentType']) ? rawType as ConfigEntry['contentType'] : "string";
+      const normalizedRawType = rawType === "string" ? "text" : rawType;
+      const cleanType: ConfigEntry['contentType'] = (["text", "number", "boolean", "json"] as const).includes(normalizedRawType as ConfigEntry['contentType']) ? normalizedRawType as ConfigEntry['contentType'] : "text";
       const cleanScope: ConfigEntry['scope'] = (["client", "server", "all"] as const).includes(rawScope as ConfigEntry['scope']) ? rawScope as ConfigEntry['scope'] : "all";
       
       results.push({
@@ -73,9 +74,9 @@ export function ProjectBulkImport(props: ProjectBulkImportProps) {
         if (isRecord(item) && item.key) {
           const contentType =
             typeof item.contentType === "string" &&
-            ["string", "number", "boolean", "json"].includes(item.contentType)
+            ["text", "number", "boolean", "json"].includes(item.contentType)
               ? item.contentType
-              : "string";
+              : "text";
           const scope =
             typeof item.scope === "string" && ["client", "server", "all"].includes(item.scope)
               ? item.scope
@@ -90,7 +91,7 @@ export function ProjectBulkImport(props: ProjectBulkImportProps) {
       }
     } else if (isRecord(obj)) {
       for (const [k, v] of Object.entries(obj)) {
-        let t: 'string' | 'number' | 'boolean' | 'json' = "string";
+        let t: 'text' | 'number' | 'boolean' | 'json' = "text";
         let valStr = "";
         if (typeof v === "object" && v !== null) {
           t = "json";
