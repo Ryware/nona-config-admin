@@ -576,9 +576,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["ConfigValueResponse"];
-                        "application/json": components["schemas"]["ConfigValueResponse"];
-                        "text/json": components["schemas"]["ConfigValueResponse"];
+                        "text/plain": string;
                     };
                 };
                 /** @description Unauthorized */
@@ -1756,10 +1754,6 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
-        };
-        ConfigValueResponse: {
-            value: string;
-            contentType: string;
         };
         CreateApiKeyRequest: {
             name: string;
