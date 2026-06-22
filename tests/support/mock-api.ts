@@ -28,8 +28,21 @@ type ConfigEntry = {
   value: string;
   contentType: "text" | "number" | "boolean" | "json";
   scope: "client" | "server" | "all";
+  activeVersion: number;
   createdAt: string;
   updatedAt: string;
+};
+
+type ConfigEntryVersion = {
+  project: string;
+  environment: string;
+  key: string;
+  version: number;
+  value: string;
+  contentType: "text" | "number" | "boolean" | "json";
+  scope: "client" | "server" | "all";
+  createdAt: string;
+  actor: string;
 };
 
 type User = {
@@ -180,8 +193,22 @@ export async function mockAdminApi(page: Page) {
       value: "https://api.example.com",
       contentType: "text",
       scope: "all",
+      activeVersion: 1,
       createdAt: "2024-01-01T00:00:00Z",
       updatedAt: "2024-01-01T00:00:00Z"
+    }
+  ];
+  let configEntryVersions: ConfigEntryVersion[] = [
+    {
+      project: "my-app",
+      environment: "production",
+      key: "API_URL",
+      version: 1,
+      value: "https://api.example.com",
+      contentType: "text",
+      scope: "all",
+      createdAt: "2024-01-01T00:00:00Z",
+      actor: "admin@example.com"
     }
   ];
   let apiKeys: ApiKey[] = [
@@ -352,6 +379,62 @@ export async function mockAdminApi(page: Page) {
       return;
     }
 
+    const configHistoryMatch = path.match(
+      /^\/admin\/projects\/my-app\/environments\/production\/config-entries\/([^/]+)\/history$/
+    );
+    if (method === "GET" && configHistoryMatch) {
+      const key = decodeURIComponent(configHistoryMatch[1]);
+      await response(
+        route,
+        configEntryVersions
+          .filter(version => version.key === key)
+          .sort((a, b) => b.version - a.version)
+      );
+      return;
+    }
+
+    const configRollbackMatch = path.match(
+      /^\/admin\/projects\/my-app\/environments\/production\/config-entries\/([^/]+)\/rollback$/
+    );
+    if (method === "POST" && configRollbackMatch) {
+      const key = decodeURIComponent(configRollbackMatch[1]);
+      const body = JSON.parse(request.postData() || "{}") as { version?: number };
+      const existing = configEntries.find(entry => entry.key === key);
+      const target = configEntryVersions.find(
+        version => version.key === key && version.version === body.version
+      );
+      if (!existing || !target) {
+        await response(route, { error: "Version not found" }, 404);
+        return;
+      }
+
+      const entryVersions = configEntryVersions.filter(version => version.key === key);
+      const nextVersion = Math.max(...entryVersions.map(version => version.version), 0) + 1;
+      const entry: ConfigEntry = {
+        ...existing,
+        value: target.value,
+        contentType: target.contentType,
+        scope: target.scope,
+        activeVersion: nextVersion,
+        updatedAt: now
+      };
+      const version: ConfigEntryVersion = {
+        project: entry.project,
+        environment: entry.environment,
+        key: entry.key,
+        version: nextVersion,
+        value: entry.value,
+        contentType: entry.contentType,
+        scope: entry.scope,
+        createdAt: now,
+        actor: "admin@example.com"
+      };
+      configEntries = configEntries.map(item => (item.key === key ? entry : item));
+      configEntryVersions = [...configEntryVersions, version];
+      await response(route, entry);
+      return;
+    }
+
     const configMatch = path.match(
       /^\/admin\/projects\/my-app\/environments\/production\/config-entries\/([^/]+)$/
     );
@@ -361,6 +444,10 @@ export async function mockAdminApi(page: Page) {
       if (method === "PUT") {
         const body = JSON.parse(request.postData() || "{}") as Partial<ConfigEntry>;
         const existing = configEntries.find(entry => entry.key === key);
+        const entryVersions = configEntryVersions.filter(version => version.key === key);
+        const nextVersion = entryVersions.length === 0
+          ? 1
+          : Math.max(...entryVersions.map(version => version.version)) + 1;
         const entry: ConfigEntry = {
           project: "my-app",
           environment: "production",
@@ -368,18 +455,32 @@ export async function mockAdminApi(page: Page) {
           value: String(body.value ?? existing?.value ?? ""),
           contentType: body.contentType ?? existing?.contentType ?? "text",
           scope: body.scope ?? existing?.scope ?? "all",
+          activeVersion: nextVersion,
           createdAt: existing?.createdAt ?? now,
           updatedAt: now
+        };
+        const version: ConfigEntryVersion = {
+          project: entry.project,
+          environment: entry.environment,
+          key: entry.key,
+          version: nextVersion,
+          value: entry.value,
+          contentType: entry.contentType,
+          scope: entry.scope,
+          createdAt: now,
+          actor: "admin@example.com"
         };
         configEntries = existing
           ? configEntries.map(item => (item.key === key ? entry : item))
           : [...configEntries, entry];
+        configEntryVersions = [...configEntryVersions, version];
         await response(route, entry);
         return;
       }
 
       if (method === "DELETE") {
         configEntries = configEntries.filter(entry => entry.key !== key);
+        configEntryVersions = configEntryVersions.filter(version => version.key !== key);
         await noContent(route);
         return;
       }

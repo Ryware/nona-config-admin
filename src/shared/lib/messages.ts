@@ -6,9 +6,11 @@ export const MSG = {
   // --- Parameters ---
   PARAM_CREATED: "Parameter created",
   PARAM_UPDATED: "Parameter updated successfully",
+  PARAM_ROLLED_BACK: "Parameter rolled back",
   PARAM_DELETED: "Parameter deleted",
   PARAM_CREATE_FAILED: "Failed to create parameter",
   PARAM_UPDATE_FAILED: "Failed to update parameter",
+  PARAM_ROLLBACK_FAILED: "Failed to roll back parameter",
   PARAM_DELETE_FAILED: "Failed to delete parameter",
 
   // --- Environments ---

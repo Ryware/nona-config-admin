@@ -24,8 +24,10 @@ export type {
   Environment,
   CreateEnvironmentRequest,
   ConfigEntry,
+  ConfigEntryVersion,
   CreateConfigEntryRequest,
   UpdateConfigEntryRequest,
+  RollbackConfigEntryRequest,
   ApiKey,
   CreateApiKeyRequest,
 } from "../entities/project/model/types";
@@ -53,5 +55,4 @@ export interface PaginatedResponse<T> {
   page: number;
   pageSize: number;
 }
-
 

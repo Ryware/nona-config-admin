@@ -91,6 +91,20 @@ describe('configEntryService', () => {
     expect(result.value).toBe('https://new-api.example.com');
   });
 
+  it('history returns config entry versions', async () => {
+    const result = await configEntryService.history('my-app', 'production', 'API_URL');
+    expect(result[0].version).toBe(1);
+    expect(result[0].value).toBe('https://api.example.com');
+  });
+
+  it('rollback returns the new active config entry', async () => {
+    const result = await configEntryService.rollback('my-app', 'production', 'API_URL', {
+      version: 1,
+    });
+    expect(result.key).toBe('API_URL');
+    expect(result.activeVersion).toBeGreaterThan(1);
+  });
+
   it('delete resolves without error', async () => {
     await expect(configEntryService.delete('my-app', 'production', 'API_URL')).resolves.toBeDefined();
   });

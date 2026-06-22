@@ -1,13 +1,10 @@
 import type { JSX } from "solid-js";
 import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
-import type { ParamRevision } from "../../entities/project/api/metadata.service";
 import { MIcon } from "../../shared/ui/icons";
 import { Input } from "../../shared/ui/input";
 import { Select } from "../../shared/ui/select";
 import { VisualJsonEditor } from "../../shared/ui/visual-json-editor";
-import type { ConfigEntry } from "../../types";
-
-export type { ParamRevision };
+import type { ConfigEntry, ConfigEntryVersion } from "../../types";
 
 interface ProjectParamEditDrawerProps {
   entry: ConfigEntry | null;
@@ -18,8 +15,10 @@ interface ProjectParamEditDrawerProps {
   onSaveSettings: (data: { value: string; displayName: string; description: string }) => void;
   isSaving: boolean;
   canManage: boolean;
-  historyRevisions: ParamRevision[];
-  onRestoreRevision: (revision: ParamRevision) => void;
+  historyVersions: ConfigEntryVersion[];
+  isHistoryLoading: boolean;
+  isRollingBack: boolean;
+  onRollbackVersion: (version: ConfigEntryVersion) => void;
 }
 
 interface FieldRowProps {
@@ -135,6 +134,9 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                     {props.canManage ? "Edit Parameter" : "Parameter Details"}
                   </h3>
                   <p class="text-outline mt-0.5 font-mono text-[11px]">{entry.key}</p>
+                  <p class="text-primary mt-1 font-mono text-[10px] font-semibold">
+                    active v{entry.activeVersion}
+                  </p>
                 </div>
                 <button
                   onClick={() => props.onClose()}
@@ -167,7 +169,7 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                       : "text-outline hover:text-on-surface bg-transparent"
                   }`}
                 >
-                  History ({props.historyRevisions.length})
+                  History ({props.historyVersions.length})
                 </button>
               </div>
 
@@ -183,6 +185,14 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                       </span>
                       <span class="bg-primary/10 text-primary border-primary/20 rounded-full border px-2.5 py-0.5 font-mono text-[11px]">
                         {props.activeEnvName}
+                      </span>
+                    </div>
+                    <div class="flex items-center justify-between py-1">
+                      <span class="text-outline text-[11px] font-medium tracking-[0.05em]">
+                        Active version
+                      </span>
+                      <span class="bg-secondary/10 text-secondary border-secondary/20 rounded-full border px-2.5 py-0.5 font-mono text-[11px]">
+                        v{entry.activeVersion}
                       </span>
                     </div>
 
@@ -303,96 +313,124 @@ export function ProjectParamEditDrawer(props: ProjectParamEditDrawerProps) {
                 <Show when={activeDrawerTab() === "history"}>
                   <div>
                     <p class="text-outline mb-5 text-[11px] font-medium tracking-[0.05em]">
-                      Revision timeline
+                      Version timeline
                     </p>
                     <Show
-                      when={props.historyRevisions.length > 0}
+                      when={!props.isHistoryLoading}
                       fallback={
-                        <div class="text-outline py-12 text-center text-[12px]">
-                          No revision history.
+                        <div class="space-y-5">
+                          <For each={[1, 2, 3]}>
+                            {() => (
+                              <div class="space-y-3">
+                                <div class="skeleton h-4 w-40 rounded" />
+                                <div class="skeleton h-12 w-full rounded-lg" />
+                              </div>
+                            )}
+                          </For>
                         </div>
                       }
                     >
-                      <div class="border-outline-variant/20 relative space-y-7 border-l pl-5">
-                        <For each={props.historyRevisions}>
-                          {(rev, index) => {
-                            const changes = createMemo(() => {
-                              const prev = props.historyRevisions[index() + 1];
-                              return prev
-                                ? {
-                                    isInitial: false,
-                                    value: rev.value !== prev.value,
-                                    displayName: rev.displayName !== prev.displayName,
-                                    description: rev.description !== prev.description
-                                  }
-                                : {
-                                    isInitial: true,
-                                    value: true,
-                                    displayName: !!rev.displayName,
-                                    description: !!rev.description
-                                  };
-                            });
+                      <Show
+                        when={props.historyVersions.length > 0}
+                        fallback={
+                          <div class="text-outline py-12 text-center text-[12px]">
+                            No version history.
+                          </div>
+                        }
+                      >
+                        <div class="border-outline-variant/20 relative space-y-7 border-l pl-5">
+                          <For each={props.historyVersions}>
+                            {(version, index) => {
+                              const changes = createMemo(() => {
+                                const prev = props.historyVersions[index() + 1];
+                                return prev
+                                  ? {
+                                      isInitial: false,
+                                      value: version.value !== prev.value,
+                                      contentType: version.contentType !== prev.contentType,
+                                      scope: version.scope !== prev.scope
+                                    }
+                                  : {
+                                      isInitial: true,
+                                      value: true,
+                                      contentType: true,
+                                      scope: true
+                                    };
+                              });
+                              const isActive = () => version.version === entry.activeVersion;
 
-                            return (
-                              <div class="relative">
-                                {/* Timeline dot */}
-                                <div class="bg-primary/70 ring-surface-container-low absolute top-1.5 -left-6.25 h-2 w-2 rounded-full ring-2" />
-
-                                {/* Actor + timestamp */}
-                                <div class="mb-3 flex items-baseline justify-between gap-2">
-                                  <span class="text-on-surface truncate text-[13px] font-medium">
-                                    {rev.actor}
-                                  </span>
-                                  <span class="text-outline shrink-0 font-mono text-[10px]">
-                                    {fmtRevDate(rev.timestamp)}
-                                  </span>
-                                </div>
-
-                                {/* Field rows */}
-                                <div class="divide-outline-variant/8 space-y-0 divide-y">
-                                  <Show when={rev.displayName !== undefined}>
-                                    <FieldRow
-                                      label="Friendly name"
-                                      value={rev.displayName}
-                                      changed={changes().displayName}
-                                      initial={changes().isInitial}
-                                    />
-                                  </Show>
-                                  <Show when={rev.description !== undefined}>
-                                    <FieldRow
-                                      label="Description"
-                                      value={rev.description}
-                                      changed={changes().description}
-                                      initial={changes().isInitial}
-                                    />
-                                  </Show>
-                                  <FieldRow
-                                    label="Value"
-                                    value={rev.value}
-                                    changed={changes().value}
-                                    initial={changes().isInitial}
-                                    mono
+                              return (
+                                <div class="relative">
+                                  <div
+                                    class={`ring-surface-container-low absolute top-1.5 -left-6.25 h-2 w-2 rounded-full ring-2 ${
+                                      isActive() ? "bg-secondary" : "bg-primary/70"
+                                    }`}
                                   />
-                                </div>
 
-                                {/* Restore action */}
-                                <Show when={props.canManage}>
-                                  <div class="mt-3 flex justify-end">
-                                    <button
-                                      type="button"
-                                      onClick={() => props.onRestoreRevision(rev)}
-                                      class="text-primary hover:text-primary-container flex cursor-pointer items-center gap-1.5 border-0 bg-transparent px-0 text-[12px] font-medium transition-colors"
-                                    >
-                                      <MIcon name="history" class="text-[14px]" />
-                                      Restore this revision
-                                    </button>
+                                  <div class="mb-3 flex items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                      <div class="flex flex-wrap items-center gap-2">
+                                        <span class="text-on-surface font-mono text-[13px] font-bold">
+                                          v{version.version}
+                                        </span>
+                                        <Show when={isActive()}>
+                                          <span class="bg-secondary/10 text-secondary border-secondary/20 rounded-full border px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase">
+                                            active
+                                          </span>
+                                        </Show>
+                                      </div>
+                                      <span class="text-on-surface-variant block truncate text-[12px]">
+                                        {version.actor}
+                                      </span>
+                                    </div>
+                                    <span class="text-outline shrink-0 font-mono text-[10px]">
+                                      {fmtRevDate(version.createdAt)}
+                                    </span>
                                   </div>
-                                </Show>
-                              </div>
-                            );
-                          }}
-                        </For>
-                      </div>
+
+                                  <div class="divide-outline-variant/8 space-y-0 divide-y">
+                                    <FieldRow
+                                      label="Value"
+                                      value={version.value}
+                                      changed={changes().value}
+                                      initial={changes().isInitial}
+                                      mono
+                                    />
+                                    <FieldRow
+                                      label="Datatype"
+                                      value={version.contentType}
+                                      changed={changes().contentType}
+                                      initial={changes().isInitial}
+                                      mono
+                                    />
+                                    <FieldRow
+                                      label="Scope"
+                                      value={version.scope}
+                                      changed={changes().scope}
+                                      initial={changes().isInitial}
+                                      mono
+                                    />
+                                  </div>
+
+                                  <Show when={props.canManage && !isActive()}>
+                                    <div class="mt-3 flex justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => props.onRollbackVersion(version)}
+                                        disabled={props.isRollingBack}
+                                        class="text-primary hover:text-primary-container flex cursor-pointer items-center gap-1.5 border-0 bg-transparent px-0 text-[12px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                                      >
+                                        <MIcon name="history" class="text-[14px]" />
+                                        Rollback to v{version.version}
+                                      </button>
+                                    </div>
+                                  </Show>
+                                </div>
+                              );
+                            }}
+                          </For>
+                        </div>
+                      </Show>
                     </Show>
                   </div>
                 </Show>
