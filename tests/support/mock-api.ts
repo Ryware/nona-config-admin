@@ -26,7 +26,7 @@ type ConfigEntry = {
   environment: string;
   key: string;
   value: string;
-  contentType: "string" | "number" | "boolean" | "json";
+  contentType: "text" | "number" | "boolean" | "json";
   scope: "client" | "server" | "all";
   createdAt: string;
   updatedAt: string;
@@ -178,7 +178,7 @@ export async function mockAdminApi(page: Page) {
       environment: "production",
       key: "API_URL",
       value: "https://api.example.com",
-      contentType: "string",
+      contentType: "text",
       scope: "all",
       createdAt: "2024-01-01T00:00:00Z",
       updatedAt: "2024-01-01T00:00:00Z"
@@ -366,7 +366,7 @@ export async function mockAdminApi(page: Page) {
           environment: "production",
           key,
           value: String(body.value ?? existing?.value ?? ""),
-          contentType: body.contentType ?? existing?.contentType ?? "string",
+          contentType: body.contentType ?? existing?.contentType ?? "text",
           scope: body.scope ?? existing?.scope ?? "all",
           createdAt: existing?.createdAt ?? now,
           updatedAt: now

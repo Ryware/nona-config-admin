@@ -65,7 +65,7 @@ export const mockConfigEntries: ConfigEntry[] = [
     environment: 'production',
     key: 'API_URL',
     value: 'https://api.example.com',
-    contentType: 'string',
+    contentType: 'text',
     scope: 'server',
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',

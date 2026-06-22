@@ -53,7 +53,7 @@
 //    }
 //
 //  Client (src/entities/project/model/types.ts → UpdateConfigEntryRequest):
-//    contentType: 'string' | 'number' | 'boolean' | 'json';
+//    contentType: 'text' | 'number' | 'boolean' | 'json';
 //    scope: 'client' | 'server' | 'all';
 //
 //  Reason: The spec does not declare the enum values. The narrower union types
@@ -122,7 +122,7 @@
 //    }
 //
 //  Client (src/entities/project/model/types.ts → ConfigEntry):
-//    contentType: 'string' | 'number' | 'boolean' | 'json';
+//    contentType: 'text' | 'number' | 'boolean' | 'json';
 //    scope: 'client' | 'server' | 'all';
 //
 //  Same root cause as OVERRIDE 2 — the spec lacks enum annotations.
