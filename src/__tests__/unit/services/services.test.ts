@@ -1,9 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { http, HttpResponse } from 'msw';
 import { projectService } from '../../../entities/project/api/project.service';
 import { environmentService } from '../../../entities/project/api/environment.service';
 import { configEntryService } from '../../../entities/project/api/config-entry.service';
 import { userService } from '../../../entities/user/api/user.service';
 import { mockProjects, mockEnvironments, mockConfigEntries, mockUsers, mockToken } from '../../mocks/data';
+import { server } from '../../mocks/server';
+
+const BASE = 'http://localhost:5027';
 
 beforeEach(() => {
   localStorage.setItem('auth_token', mockToken);
@@ -89,6 +93,34 @@ describe('configEntryService', () => {
       scope: 'server',
     });
     expect(result.value).toBe('https://new-api.example.com');
+  });
+
+  it('upsert encodes URL-significant key characters before sending the request', async () => {
+    let requestedPath = '';
+    server.use(
+      http.put(`${BASE}/admin/projects/:projectId/environments/:envName/config-entries/:key`, ({ request }) => {
+        requestedPath = new URL(request.url).pathname;
+        return HttpResponse.json({
+          project: 'my-app',
+          environment: 'production',
+          key: 'feature?flag#one',
+          value: 'true',
+          contentType: 'boolean',
+          scope: 'client',
+          activeVersion: 2,
+          createdAt: '2026-06-21T10:00:00Z',
+          updatedAt: '2026-06-22T10:00:00Z',
+        });
+      }),
+    );
+
+    await configEntryService.upsert('my-app', 'production', 'feature?flag#one', {
+      value: 'true',
+      contentType: 'boolean',
+      scope: 'client',
+    });
+
+    expect(requestedPath).toBe('/admin/projects/my-app/environments/production/config-entries/feature%3Fflag%23one');
   });
 
   it('history returns config entry versions', async () => {
