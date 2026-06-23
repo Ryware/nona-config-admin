@@ -4,23 +4,54 @@ import { Select } from "../../shared/ui/select";
 import { VisualJsonEditor } from "../../shared/ui/visual-json-editor";
 import { FormField } from "../../widgets/auth-shell/FormField";
 
+type ConfigEntryContentType = "text" | "number" | "boolean" | "json";
+type ConfigEntryScope = "client" | "server" | "all";
+
 interface ProjectParamCreateFormProps {
   onCancel: () => void;
   onSubmit: (data: {
     key: string;
     value: string;
-    contentType: "text" | "number" | "boolean" | "json";
-    scope: "client" | "server" | "all";
+    contentType: ConfigEntryContentType;
+    scope: ConfigEntryScope;
     displayName: string;
     description: string;
   }) => void;
   isPending: boolean;
 }
 
+export function isValidConfigEntryValue(contentType: ConfigEntryContentType, value: string): boolean {
+  const trimmed = value.trim();
+
+  if (trimmed.length === 0) {
+    return false;
+  }
+
+  if (contentType === "text") {
+    return true;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+
+    if (contentType === "json") {
+      return true;
+    }
+
+    if (contentType === "number") {
+      return typeof parsed === "number" && Number.isFinite(parsed);
+    }
+
+    return typeof parsed === "boolean";
+  } catch {
+    return false;
+  }
+}
+
 export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
   const [cfgKey, setCfgKey] = createSignal("");
   const [cfgValue, setCfgValue] = createSignal("");
-  const [cfgType, setCfgType] = createSignal<"text" | "number" | "boolean" | "json">("text");
+  const [cfgType, setCfgType] = createSignal<ConfigEntryContentType>("text");
   const [cfgDisplayName, setCfgDisplayName] = createSignal("");
   const [cfgDescription, setCfgDescription] = createSignal("");
 
@@ -30,21 +61,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
     }
   };
 
-  const isValidJson = (str: string): boolean => {
-    try {
-      JSON.parse(str);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const isAddInvalid = () => {
-    if (cfgType() === "json") {
-      return !isValidJson(cfgValue());
-    }
-    return false;
-  };
+  const isAddInvalid = () => !isValidConfigEntryValue(cfgType(), cfgValue());
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
@@ -92,7 +109,7 @@ export function ProjectParamCreateForm(props: ProjectParamCreateFormProps) {
             <Select
               value={cfgType()}
               onChange={(val: string) => {
-                setCfgType(val as "text" | "number" | "boolean" | "json");
+                setCfgType(val as ConfigEntryContentType);
                 setCfgValue("");
               }}
               options={["text", "number", "boolean", "json"]}

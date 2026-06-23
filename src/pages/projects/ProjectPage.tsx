@@ -39,6 +39,9 @@ import type {
   Project
 } from "../../types";
 
+const errorMessage = (caught: unknown, fallback: string) =>
+  caught instanceof Error && caught.message ? caught.message : fallback;
+
 export default function ProjectPage() {
   const params = useParams<{ slug: string }>();
   const queryClient = useQueryClient();
@@ -185,7 +188,7 @@ export default function ProjectPage() {
       setShowConfigForm(false);
       addToast(MSG.PARAM_CREATED, "success");
     },
-    onError: () => addToast(MSG.PARAM_CREATE_FAILED, "error")
+    onError: error => addToast(errorMessage(error, MSG.PARAM_CREATE_FAILED), "error")
   }));
 
   // Param deletion mutation
@@ -251,7 +254,7 @@ export default function ProjectPage() {
       setEditingEntry(null);
       addToast(MSG.PARAM_UPDATED, "success");
     },
-    onError: () => addToast(MSG.PARAM_UPDATE_FAILED, "error")
+    onError: error => addToast(errorMessage(error, MSG.PARAM_UPDATE_FAILED), "error")
   }));
 
   // Bulk import callback
@@ -293,7 +296,7 @@ export default function ProjectPage() {
       setEditingEntry(entry);
       addToast(MSG.PARAM_ROLLED_BACK, "success");
     },
-    onError: () => addToast(MSG.PARAM_ROLLBACK_FAILED, "error")
+    onError: error => addToast(errorMessage(error, MSG.PARAM_ROLLBACK_FAILED), "error")
   }));
 
   const handleRollbackVersion = (version: ConfigEntryVersion) => {

@@ -99,6 +99,36 @@ describe('ProjectPage', () => {
     });
   });
 
+  it('shows backend validation message when parameter creation fails', async () => {
+    server.use(
+      http.put(
+        'http://localhost:5027/admin/projects/:projectId/environments/:envName/config-entries/:key',
+        () =>
+          HttpResponse.json(
+            { error: "Value must be 'true' or 'false' when contentType is 'boolean'." },
+            { status: 400 },
+          ),
+      ),
+    );
+
+    renderProjectPage('my-app');
+
+    const addParamButton = await screen.findByRole('button', { name: /add parameter/i });
+    fireEvent.click(addParamButton);
+
+    fireEvent.input(await screen.findByTestId('parameter-key-input'), {
+      target: { value: 'sdfgsdfg' },
+    });
+    fireEvent.input(await screen.findByTestId('parameter-value-input'), {
+      target: { value: 'not-a-boolean' },
+    });
+    fireEvent.click(screen.getByTestId('parameter-create-submit-button'));
+
+    expect(
+      await screen.findByText("Value must be 'true' or 'false' when contentType is 'boolean'."),
+    ).toBeInTheDocument();
+  });
+
   it('shows the Projects fallback when slug does not match any project', async () => {
     renderProjectPage('nonexistent-project');
 
