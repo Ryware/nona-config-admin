@@ -1015,127 +1015,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/projects/{projectId}/environments/{environmentName}/config-entries/{key}/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    projectId: string;
-                    environmentName: string;
-                    key: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ConfigEntryVersionDto"][];
-                        "application/json": components["schemas"]["ConfigEntryVersionDto"][];
-                        "text/json": components["schemas"]["ConfigEntryVersionDto"][];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
-                        "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/projects/{projectId}/environments/{environmentName}/config-entries/{key}/rollback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    projectId: string;
-                    environmentName: string;
-                    key: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["RollbackConfigEntryRequest"];
-                    "text/json": components["schemas"]["RollbackConfigEntryRequest"];
-                    "application/*+json": components["schemas"]["RollbackConfigEntryRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ConfigEntryDto"];
-                        "application/json": components["schemas"]["ConfigEntryDto"];
-                        "text/json": components["schemas"]["ConfigEntryDto"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
-                        "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
-                        "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/projects/{projectId}/environments": {
         parameters: {
             query?: never;
@@ -1869,25 +1748,10 @@ export interface components {
             value: string;
             contentType: string;
             scope: string;
-            /** Format: int32 */
-            activeVersion: number | string;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
-        };
-        ConfigEntryVersionDto: {
-            project: string;
-            environment: string;
-            key: string;
-            /** Format: int32 */
-            version: number | string;
-            value: string;
-            contentType: string;
-            scope: string;
-            /** Format: date-time */
-            createdAt: string;
-            actor: string;
         };
         CreateApiKeyRequest: {
             name: string;
@@ -1973,10 +1837,6 @@ export interface components {
         };
         RequestPasswordResetCommand: {
             email: string;
-        };
-        RollbackConfigEntryRequest: {
-            /** Format: int32 */
-            version: number | string;
         };
         SsoLoginRequest: {
             idToken: string;
