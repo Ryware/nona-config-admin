@@ -1,6 +1,7 @@
 # Nona Config Admin
 
 [![CI](https://github.com/Ryware/nona-config-admin/actions/workflows/ci.yml/badge.svg)](https://github.com/Ryware/nona-config-admin/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Ryware/nona-config-admin/badge)](https://scorecard.dev/viewer/?uri=github.com/Ryware/nona-config-admin)
 
 Admin panel for Nona Config management system.
 
