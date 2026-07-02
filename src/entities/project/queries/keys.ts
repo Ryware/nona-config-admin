@@ -30,6 +30,10 @@ export const projectKeys = {
   configEntryHistory: (slug: string, env: string, key: string) =>
     [...projectKeys.configEntries(slug, env), key, "history"] as const,
 
+  /** Share links for a specific config entry */
+  configEntryShareLinks: (slug: string, env: string, key: string) =>
+    [...projectKeys.configEntries(slug, env), key, "share-links"] as const,
+
   /** Managed API keys for a project */
   apiKeys: (slug: string) => [...projectKeys.detail(slug), "api-keys"] as const,
 } as const;

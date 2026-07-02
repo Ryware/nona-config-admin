@@ -4,6 +4,7 @@ import {
   mockApiKeys,
   mockEnvironments,
   mockConfigEntries,
+  mockShareLinks,
   mockUsers,
   mockToken,
 } from './data';
@@ -235,6 +236,36 @@ export const handlers = [
     return HttpResponse.json(entries);
   }),
 
+  http.get(`${BASE}/admin/projects/:projectId/environments/:envName/config-entries/:key/share-links`, ({ params }) => {
+    const links = mockShareLinks.filter(
+      (link) =>
+        link.project === params.projectId &&
+        link.environment === params.envName &&
+        link.key === params.key,
+    );
+    return HttpResponse.json(links);
+  }),
+
+  http.post(`${BASE}/admin/projects/:projectId/environments/:envName/config-entries/:key/share-links`, async ({ params, request }) => {
+    const body = await request.json() as { expiration?: string; canEdit?: boolean };
+    return HttpResponse.json({
+      id: 99,
+      token: 'AbCdEf1234567890',
+      project: params.projectId,
+      environment: params.envName,
+      key: params.key,
+      canEdit: body.canEdit ?? true,
+      createdBy: 'admin@example.com',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      revokedAt: null,
+    }, { status: 201 });
+  }),
+
+  http.delete(`${BASE}/admin/projects/:projectId/environments/:envName/config-entries/:key/share-links/:shareLinkId`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   http.get(`${BASE}/admin/projects/:projectId/environments/:envName/config-entries/:key`, ({ params }) => {
     const entry = mockConfigEntries.find(
       (c) => c.project === params.projectId && c.environment === params.envName && c.key === params.key,
@@ -291,6 +322,39 @@ export const handlers = [
 
   http.delete(`${BASE}/admin/projects/:projectId/environments/:envName/config-entries/:key`, () => {
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Public Share Links ───────────────────────────────────────────────────────
+  http.get(`${BASE}/public/share-links/:token`, ({ params }) => {
+    if (params.token === 'Revoked123456789') {
+      return HttpResponse.json(
+        { error: 'This share link has been revoked.', errorCode: 'share_link_revoked' },
+        { status: 410 },
+      );
+    }
+
+    const entry = mockConfigEntries[0];
+    return HttpResponse.json({
+      environment: entry.environment,
+      key: entry.key,
+      value: entry.value,
+      contentType: entry.contentType,
+      canEdit: true,
+      expiresAt: '2099-01-01T00:00:00Z',
+    });
+  }),
+
+  http.put(`${BASE}/public/share-links/:token`, async ({ request }) => {
+    const body = await request.json() as { value?: string };
+    const entry = mockConfigEntries[0];
+    return HttpResponse.json({
+      environment: entry.environment,
+      key: entry.key,
+      value: body.value ?? entry.value,
+      contentType: entry.contentType,
+      canEdit: true,
+      expiresAt: '2099-01-01T00:00:00Z',
+    });
   }),
 
   // ── Users ─────────────────────────────────────────────────────────────────────

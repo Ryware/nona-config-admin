@@ -56,6 +56,40 @@ export interface ConfigEntryVersion {
   actor: string;
 }
 
+export interface ParameterShareLink {
+  id: number;
+  project: string;
+  environment: string;
+  key: string;
+  canEdit: boolean;
+  createdBy: string;
+  createdAt: string;
+  expiresAt: string;
+  revokedAt?: string | null;
+}
+
+export interface CreatedParameterShareLink extends ParameterShareLink {
+  token: string;
+}
+
+export interface CreateParameterShareLinkRequest {
+  expiration?: "1h" | "1d" | "3d" | "30d" | "12m";
+  canEdit: boolean;
+}
+
+export interface SharedParameter {
+  environment: string;
+  key: string;
+  value: string;
+  contentType: 'text' | 'number' | 'boolean' | 'json';
+  canEdit: boolean;
+  expiresAt: string;
+}
+
+export interface UpdateSharedParameterRequest {
+  value: string;
+}
+
 export interface CreateConfigEntryRequest {
   projectId: string;
   key: string;

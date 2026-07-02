@@ -172,4 +172,18 @@ describe('ProjectPage', () => {
 
     expect(await screen.findByText('STAGING_ONLY_KEY')).toBeInTheDocument();
   });
+
+  it('generates a shareable link for a parameter', async () => {
+    renderProjectPage('my-app');
+
+    expect(await screen.findByText('API_URL')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('parameter-share-API_URL'));
+
+    expect(await screen.findByTestId('parameter-share-dialog')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('parameter-share-create-button'));
+
+    const generatedUrl = await screen.findByTestId('parameter-share-generated-url');
+    expect(generatedUrl).toHaveValue(`${window.location.origin}/share/AbCdEf1234567890`);
+  });
 });

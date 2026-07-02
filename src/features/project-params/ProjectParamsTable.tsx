@@ -8,6 +8,7 @@ interface ProjectParamsTableProps {
   activeEnvName: string;
   filteredConfig: ConfigEntry[];
   onSelectEntry: (entry: ConfigEntry) => void;
+  onShareEntry: (entry: ConfigEntry) => void;
   onDeleteEntry: (key: string) => void;
   canManage: boolean;
   copiedKey: string | null;
@@ -149,15 +150,26 @@ export function ProjectParamsTable(props: ProjectParamsTableProps) {
                       </td>
                       <td class="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                         <Show when={props.canManage}>
-                          <button
-                            data-testid={`parameter-delete-${entry.key}`}
-                            onClick={() => props.onDeleteEntry(entry.key)}
-                            class="text-outline hover:text-error hover:bg-error/10 cursor-pointer rounded-lg border-0 bg-transparent p-1.5 opacity-40 transition-opacity group-hover:opacity-100 focus:opacity-100"
-                            title={`Delete parameter ${entry.key}`}
-                            aria-label={`Delete parameter ${entry.key}`}
-                          >
-                            <MIcon name="delete_outline" class="text-[18px]" />
-                          </button>
+                          <div class="flex justify-end gap-1">
+                            <button
+                              data-testid={`parameter-share-${entry.key}`}
+                              onClick={() => props.onShareEntry(entry)}
+                              class="text-outline hover:text-primary hover:bg-primary/10 cursor-pointer rounded-lg border-0 bg-transparent p-1.5 opacity-40 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                              title={`Share parameter ${entry.key}`}
+                              aria-label={`Share parameter ${entry.key}`}
+                            >
+                              <MIcon name="ios_share" class="text-[18px]" />
+                            </button>
+                            <button
+                              data-testid={`parameter-delete-${entry.key}`}
+                              onClick={() => props.onDeleteEntry(entry.key)}
+                              class="text-outline hover:text-error hover:bg-error/10 cursor-pointer rounded-lg border-0 bg-transparent p-1.5 opacity-40 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                              title={`Delete parameter ${entry.key}`}
+                              aria-label={`Delete parameter ${entry.key}`}
+                            >
+                              <MIcon name="delete_outline" class="text-[18px]" />
+                            </button>
+                          </div>
                         </Show>
                       </td>
                     </tr>

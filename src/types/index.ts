@@ -25,6 +25,11 @@ export type {
   CreateEnvironmentRequest,
   ConfigEntry,
   ConfigEntryVersion,
+  ParameterShareLink,
+  CreatedParameterShareLink,
+  CreateParameterShareLinkRequest,
+  SharedParameter,
+  UpdateSharedParameterRequest,
   CreateConfigEntryRequest,
   UpdateConfigEntryRequest,
   RollbackConfigEntryRequest,
@@ -55,4 +60,3 @@ export interface PaginatedResponse<T> {
   page: number;
   pageSize: number;
 }
-

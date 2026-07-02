@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   const isAnalyze = env.ANALYZE === 'true'
   const proxy = proxyTarget
     ? Object.fromEntries(
-        ['/auth', '/admin', '/api', '/openapi', '/scalar'].map((route) => [
+        ['/auth', '/admin', '/api', '/public', '/openapi', '/scalar'].map((route) => [
           route,
           {
             target: proxyTarget,

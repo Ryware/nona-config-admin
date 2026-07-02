@@ -24,6 +24,7 @@ interface ProjectParamsTabProps {
   }) => void;
   isCreatePending: boolean;
   onSelectEntry: (entry: ConfigEntry) => void;
+  onShareEntry: (entry: ConfigEntry) => void;
   onDeleteEntry: (key: string) => void;
   canManage: boolean;
   copiedKey: string | null;
@@ -88,6 +89,7 @@ export function ProjectParamsTab(props: ProjectParamsTabProps) {
           activeEnvName={props.activeEnvName}
           filteredConfig={props.filteredConfig}
           onSelectEntry={props.onSelectEntry}
+          onShareEntry={props.onShareEntry}
           onDeleteEntry={props.onDeleteEntry}
           canManage={props.canManage}
           copiedKey={props.copiedKey}

@@ -12,6 +12,10 @@ export const MSG = {
   PARAM_UPDATE_FAILED: "Failed to update parameter",
   PARAM_ROLLBACK_FAILED: "Failed to roll back parameter",
   PARAM_DELETE_FAILED: "Failed to delete parameter",
+  SHARE_LINK_CREATED: "Share link created",
+  SHARE_LINK_CREATE_FAILED: "Failed to create share link",
+  SHARE_LINK_REVOKED: "Share link revoked",
+  SHARE_LINK_REVOKE_FAILED: "Failed to revoke share link",
 
   // --- Environments ---
   ENV_CREATED: "Environment created",

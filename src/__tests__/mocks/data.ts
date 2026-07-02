@@ -1,4 +1,11 @@
-import type { Project, Environment, ConfigEntry, User, ApiKey } from '../../types';
+import type {
+  Project,
+  Environment,
+  ConfigEntry,
+  User,
+  ApiKey,
+  ParameterShareLink,
+} from '../../types';
 
 export const mockProjects: Project[] = [
   {
@@ -92,6 +99,20 @@ export const mockConfigEntries: ConfigEntry[] = [
     activeVersion: 1,
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
+  },
+];
+
+export const mockShareLinks: ParameterShareLink[] = [
+  {
+    id: 1,
+    project: 'my-app',
+    environment: 'production',
+    key: 'API_URL',
+    canEdit: true,
+    createdBy: 'admin@example.com',
+    createdAt: '2024-01-01T00:00:00Z',
+    expiresAt: '2099-01-01T00:00:00Z',
+    revokedAt: null,
   },
 ];
 

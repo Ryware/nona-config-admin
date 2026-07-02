@@ -50,6 +50,11 @@ export default function App(): JSX.Element {
                   />
                 </Route>
 
+                <Route
+                  path="/share/:token"
+                  component={lazy(() => import("../pages/shared/SharedParameterPage"))}
+                />
+
                 <Route component={ProtectedRoute}>
                   <Route
                     path="/dashboard"

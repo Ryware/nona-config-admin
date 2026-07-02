@@ -15,6 +15,7 @@ import type { ParsedImport } from "../../features/project-bulk-import/ProjectBul
 import { ProjectBulkImport } from "../../features/project-bulk-import/ProjectBulkImport";
 import { ProjectEnvironments } from "../../features/project-environments/ProjectEnvironments";
 import { ProjectParamEditDrawer } from "../../features/project-param-edit/ProjectParamEditDrawer";
+import { ParameterShareDialog } from "../../features/project-param-share/ParameterShareDialog";
 import { ProjectParamsTab } from "../../features/project-params/ProjectParamsTab";
 import { ProjectApiKeys } from "./components/ProjectApiKeys";
 import { ProjectHeader } from "./components/ProjectHeader";
@@ -33,6 +34,7 @@ import { MSG } from "../../shared/lib/messages";
 import type {
   ConfigEntry,
   ConfigEntryVersion,
+  CreateParameterShareLinkRequest,
   CreateConfigEntryRequest,
   CreateApiKeyRequest,
   CreateEnvironmentRequest,
@@ -55,6 +57,9 @@ export default function ProjectPage() {
   const [confirmDeleteEntry, setConfirmDeleteEntry] = createSignal<string | null>(null);
   const [confirmDeleteEnv, setConfirmDeleteEnv] = createSignal<string | null>(null);
   const [editingEntry, setEditingEntry] = createSignal<ConfigEntry | null>(null);
+  const [sharingEntry, setSharingEntry] = createSignal<ConfigEntry | null>(null);
+  const [generatedShareUrl, setGeneratedShareUrl] = createSignal<string | null>(null);
+  const [revokingShareLinkId, setRevokingShareLinkId] = createSignal<number | null>(null);
   const [editDisplayName, setEditDisplayName] = createSignal("");
   const [editDescription, setEditDescription] = createSignal("");
   const [showBulkImport, setShowBulkImport] = createSignal(false);
@@ -99,11 +104,18 @@ export default function ProjectPage() {
   }));
 
   const editingEntryKey = createMemo(() => editingEntry()?.key ?? "");
+  const sharingEntryKey = createMemo(() => sharingEntry()?.key ?? "");
 
   const configHistoryQuery = useQuery(() => ({
     queryKey: projectKeys.configEntryHistory(params.slug, activeEnvName(), editingEntryKey()),
     queryFn: () => configEntryService.history(projectId(), activeEnvName(), editingEntryKey()),
     enabled: !!project() && !!activeEnvName() && !!editingEntryKey()
+  }));
+
+  const shareLinksQuery = useQuery(() => ({
+    queryKey: projectKeys.configEntryShareLinks(params.slug, activeEnvName(), sharingEntryKey()),
+    queryFn: () => configEntryService.listShareLinks(projectId(), activeEnvName(), sharingEntryKey()),
+    enabled: !!project() && !!activeEnvName() && !!sharingEntryKey()
   }));
 
   const usersQuery = useQuery(() => ({
@@ -147,9 +159,20 @@ export default function ProjectPage() {
     }
   };
 
+  const copyShareUrl = async (value: string) => {
+    try {
+      await writeClipboard(value);
+      addToast(MSG.COPIED, "success");
+    } catch {
+      addToast(MSG.COPY_FAILED, "error");
+    }
+  };
+
   // Close drawers on Escape
   useEscapeKey(() => {
     setEditingEntry(null);
+    setSharingEntry(null);
+    setGeneratedShareUrl(null);
     setShowConfigForm(false);
     setShowEnvForm(false);
     setShowBulkImport(false);
@@ -209,6 +232,11 @@ export default function ProjectPage() {
     const meta = localParamMetadataService.getMeta(projectId(), activeEnvName(), entry.key);
     setEditDisplayName(meta.displayName);
     setEditDescription(meta.description);
+  };
+
+  const handleOpenShareDialog = (entry: ConfigEntry) => {
+    setSharingEntry(entry);
+    setGeneratedShareUrl(null);
   };
 
   // Param update settings mutation
@@ -308,6 +336,52 @@ export default function ProjectPage() {
       });
     }
   };
+
+  const createShareLinkMutation = useMutation(() => ({
+    mutationFn: (data: CreateParameterShareLinkRequest) => {
+      const entry = sharingEntry();
+      if (!entry) {
+        throw new Error("No parameter selected");
+      }
+
+      return configEntryService.createShareLink(projectId(), activeEnvName(), entry.key, data);
+    },
+    onSuccess: shareLink => {
+      queryClient.invalidateQueries({
+        queryKey: projectKeys.configEntryShareLinks(params.slug, activeEnvName(), shareLink.key)
+      });
+      setGeneratedShareUrl(`${window.location.origin}/share/${shareLink.token}`);
+      addToast(MSG.SHARE_LINK_CREATED, "success");
+    },
+    onError: error => addToast(errorMessage(error, MSG.SHARE_LINK_CREATE_FAILED), "error")
+  }));
+
+  const revokeShareLinkMutation = useMutation(() => ({
+    mutationFn: (shareLinkId: number) => {
+      const entry = sharingEntry();
+      if (!entry) {
+        throw new Error("No parameter selected");
+      }
+
+      return configEntryService.revokeShareLink(
+        projectId(),
+        activeEnvName(),
+        entry.key,
+        shareLinkId
+      );
+    },
+    onSuccess: () => {
+      const entry = sharingEntry();
+      if (entry) {
+        queryClient.invalidateQueries({
+          queryKey: projectKeys.configEntryShareLinks(params.slug, activeEnvName(), entry.key)
+        });
+      }
+      addToast(MSG.SHARE_LINK_REVOKED, "success");
+    },
+    onError: error => addToast(errorMessage(error, MSG.SHARE_LINK_REVOKE_FAILED), "error"),
+    onSettled: () => setRevokingShareLinkId(null)
+  }));
 
   const createApiKeyMutation = useMutation(() => ({
     mutationFn: (data: CreateApiKeyRequest) => projectService.createApiKey(projectId(), data),
@@ -425,6 +499,7 @@ export default function ProjectPage() {
             }}
             isCreatePending={createConfigMutation.isPending}
             onSelectEntry={handleOpenEditDrawer}
+            onShareEntry={handleOpenShareDialog}
             onDeleteEntry={setConfirmDeleteEntry}
             canManage={canManageProject()}
             copiedKey={copiedKey()}
@@ -457,6 +532,25 @@ export default function ProjectPage() {
             isHistoryLoading={configHistoryQuery.isLoading}
             isRollingBack={rollbackConfigMutation.isPending}
             onRollbackVersion={handleRollbackVersion}
+          />
+
+          <ParameterShareDialog
+            entry={sharingEntry()}
+            shareLinks={shareLinksQuery.status === "success" ? (shareLinksQuery.data ?? []) : []}
+            generatedUrl={generatedShareUrl()}
+            isLoading={shareLinksQuery.isLoading}
+            isCreating={createShareLinkMutation.isPending}
+            revokingId={revokingShareLinkId()}
+            onClose={() => {
+              setSharingEntry(null);
+              setGeneratedShareUrl(null);
+            }}
+            onCreate={data => createShareLinkMutation.mutate(data)}
+            onRevoke={shareLinkId => {
+              setRevokingShareLinkId(shareLinkId);
+              revokeShareLinkMutation.mutate(shareLinkId);
+            }}
+            onCopy={copyShareUrl}
           />
         </Show>
       </div>
